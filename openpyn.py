@@ -8,7 +8,7 @@ def main(server,udp):
     if udp:
         port = "udp1194"
 
-    subprocess.run(["sudo","openvpn","--config","/files/", server.lower() + ".nordvpn.com." + port + ".ovpn",\
+    subprocess.run(["sudo","openvpn","--config","files/" + server.lower() + ".nordvpn.com." + port + ".ovpn",\
     "--auth-user-pass","pass.txt"], stdin=subprocess.PIPE)
 
 
