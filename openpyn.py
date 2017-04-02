@@ -3,13 +3,13 @@
 import subprocess
 import argparse
 
-def main(server,udp):
+def main(server, udp):
     port = "tcp443"
     if udp:
         port = "udp1194"
 
-    subprocess.run(["sudo","openvpn","--config","files/" + server.lower() + ".nordvpn.com." + port + ".ovpn",\
-    "--auth-user-pass","pass.txt"], stdin=subprocess.PIPE)
+    subprocess.run(["sudo", "openvpn", "--config", "./files/" + server.lower() + ".nordvpn.com." + port + ".ovpn",\
+    "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
