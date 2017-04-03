@@ -29,7 +29,7 @@ def main(server, countryCode, udp, background):
 
 def findBestServers(countryCode):
     serverList = []
-    BestServerList = []
+    betterServerList = []
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
         'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
@@ -53,18 +53,21 @@ def findBestServers(countryCode):
 
     # sort list by the server load
     serverList.sort(key=operator.itemgetter(1))
-    # only choose servers with < 70% load then top 5 of them
+    # only choose servers with < 70% load then top 10 of them
     for server in serverList:
         serverLoad = int(server[1])
-        if serverLoad < 70 and len(BestServerList) < 10:
-            BestServerList.append(server)
+        if serverLoad < 70 and len(betterServerList) < 5:
+            betterServerList.append(server)
 
-    print("Top Servers in ", countryCode, "are :", BestServerList)
-    return BestServerList
+    print("Top Servers in ", countryCode, "are :", betterServerList)
+    return betterServerList
 
 
-def chooseBestServer(BestServerList):
-    for i in BestServerList:
+def chooseBestServer(betterServerList):
+    bestServerList = []
+    for i in betterServerList:
+        # tempList to append 2  lists into it
+        tempList = []
         ping = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", "10"], stdout=subprocess.PIPE)
         # pipe the output of ping to grep.
         pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=ping.stdout)
@@ -73,10 +76,14 @@ def chooseBestServer(BestServerList):
         pingString = pingString[:pingString.find(" ")]
         pingList = pingString.split("/")
         print(pingList)
-        pingAvg = pingList[1]
-        pingMDev = pingList[3]
+        # pingAvg = pingList[1]
+        # pingMDev = pingList[3]
+        tempList.append(i)
+        tempList.append(pingList)
+        bestServerList.append(tempList)
 
-    chosenServerList = BestServerList[random.randrange(0, len(BestServerList))]
+    print("bestServerList: ", bestServerList)
+    chosenServerList = betterServerList[random.randrange(0, len(betterServerList))]
     chosenServer = chosenServerList[0]  # the first value, "server name"
     return chosenServer
 
