@@ -8,6 +8,8 @@ import random
 
 
 def main(server, country, udp):
+    server = server.lower()
+    country = country.lower()
     port = "tcp443"
     if udp:
         port = "udp1194"
@@ -19,13 +21,18 @@ def main(server, country, udp):
     elif server:
         connection = connect(server, port)
 
+
 def findBestServers(country):
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
         'ba': 'Brazil', 'de': 'Denmark', 'es': 'Estonia', 'fi': 'Finland'}
     country = countryDic[country]
-    url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN+servers&country=" + country + "&action=getGroupRows"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
+    url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
+    +servers&country=" + country + "&action=getGroupRows"
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
+    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
+
     serverList = []
     BestServerList = []
 
@@ -35,8 +42,7 @@ def findBestServers(country):
         print("Invalid URL Provided")
 
     for i in response:
-        #print(i["short"], i["load"], i["exists"])
-        #only add if the server is online
+        # only add if the server is online
         if i["exists"] is True:
             serverList.append([i["short"], i["load"]])
 
@@ -51,15 +57,17 @@ def findBestServers(country):
     print(BestServerList)
     return BestServerList
 
+
 def chooseBestServer(BestServerList):
     chosenServerList = BestServerList[random.randrange(0, len(BestServerList) - 1)]
     chosenServer = chosenServerList[0]  # the first value, server
     return chosenServer
 
+
 def connect(server, port):
     print("CONNECTING TO SERVER", server, port)
     subprocess.run(
-        ["sudo", "openvpn", "--config", "./files/" + server.lower() +
+        ["sudo", "openvpn", "--config", "./files/" + server +
             ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"],
         stdin=subprocess.PIPE)
 
