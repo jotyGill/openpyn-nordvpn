@@ -12,9 +12,9 @@ def main(server, countryCode, udp, background):
     if udp:
         port = "udp1194"
 
-    if country:
-        country = country.lower()
-        bestServers = findBestServers(country)
+    if countryCode:
+        countryCode = countryCode.lower()
+        bestServers = findBestServers(countryCode)
         chosenServer = chooseBestServer(bestServers)
         connection = connect(chosenServer, port, background)
     elif server:
@@ -29,9 +29,9 @@ def findBestServers(countryCode):
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
         'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
         'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden'}
-    country = countryDic[country]
+    countryCode = countryDic[countryCode]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
-    +servers&country=" + country + "&action=getGroupRows"
+    +servers&country=" + countryCode + "&action=getGroupRows"
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
@@ -54,7 +54,7 @@ def findBestServers(countryCode):
         if serverLoad < 70 and len(BestServerList) < 5:
             BestServerList.append(server)
 
-    print("Top Servers in ", country, "are :", BestServerList)
+    print("Top Servers in ", countryCode, "are :", BestServerList)
     return BestServerList
 
 
@@ -81,11 +81,14 @@ if __name__ == '__main__':
         '-u', '--udp', help='use port UDP-1194 instead of the default TCP-443',
         action='store_true')
     parser.add_argument(
-        '-c', '--country', help='Specifiy Country with 2 letter name, i.e au,\
+        '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letter name, i.e au,\
          A server among the top 5 servers will be used automatically.')
+    parser.add_argument(
+        'countryCode', help='Country Code can also be speficied without "-c"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
         action='store_true')
 
     args = parser.parse_args()
-    main(args.server, args.country, args.udp, args.background)
+
+    main(args.server, args.countryCode, args.udp, args.background)
