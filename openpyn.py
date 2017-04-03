@@ -46,17 +46,15 @@ def findBestServers(country):
         if i["exists"] is True:
             serverList.append([i["short"], i["load"]])
 
-    print(serverList)
     # sort list by the server load
     serverList.sort(key=operator.itemgetter(1))
-    print(serverList)
     # only choose servers with < 70% load then top 5 of them
     for server in serverList:
         serverLoad = int(server[1])
         if serverLoad < 70 and len(BestServerList) < 5:
             BestServerList.append(server)
 
-    print(BestServerList)
+    print("Top Servers in "country, "are :", BestServerList)
     return BestServerList
 
 
