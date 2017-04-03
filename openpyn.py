@@ -8,17 +8,17 @@ import random
 
 
 def main(server, country, udp):
-    server = server.lower()
-    country = country.lower()
     port = "tcp443"
     if udp:
         port = "udp1194"
 
     if country:
+        country = country.lower()
         bestServers = findBestServers(country)
         chosenServer = chooseBestServer(bestServers)
         connection = connect(chosenServer, port)
     elif server:
+        server = server.lower()
         connection = connect(server, port)
 
 
