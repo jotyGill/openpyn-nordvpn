@@ -6,15 +6,15 @@ import operator
 countryDic = {
     'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
     'ba': 'Brazil', 'de': 'Denmark', 'es': 'Estonia', 'fi': 'Finland'}
-country = countryDic["au"]
-url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN+servers&country=" + country + "&action=getGroupRows"
+countryValue = countryDic["au"]
+url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN+servers&country=" + countryValue + "&action=getGroupRows"
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
 serverList = []
 BestServerList = []
 
 try:
     response = requests.get(url, headers=headers).json()
-except HTTPError as e:
+except HTTPError as e: #@todo ask for server instead
     print("Invalid URL Provided")
 
 for i in response:
