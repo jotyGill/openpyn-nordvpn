@@ -16,8 +16,8 @@ def main(server, country, udp):
         bestServers = findBestServers(country)
         chosenServer = chooseBestServer(bestServers)
         connection = connect(chosenServer, port)
-    print(type(country))
-
+    elif server:
+        connection = connect(server, port)
 
 def findBestServers(country):
     countryDic = {
@@ -57,6 +57,7 @@ def chooseBestServer(BestServerList):
     return chosenServer
 
 def connect(server, port):
+    print("CONNECTING TO SERVER", server, port)
     subprocess.run(
         ["sudo", "openvpn", "--config", "./files/" + server.lower() +
             ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"],
