@@ -7,7 +7,7 @@ import operator
 import random
 
 
-def main(server, country, udp):
+def main(server, country, udp, background):
     port = "tcp443"
     if udp:
         port = "udp1194"
@@ -16,10 +16,10 @@ def main(server, country, udp):
         country = country.lower()
         bestServers = findBestServers(country)
         chosenServer = chooseBestServer(bestServers)
-        connection = connect(chosenServer, port)
+        connection = connect(chosenServer, port, background)
     elif server:
         server = server.lower()
-        connection = connect(server, port)
+        connection = connect(server, port, background)
 
 
 def findBestServers(country):
@@ -65,12 +65,12 @@ def chooseBestServer(BestServerList):
     return chosenServer
 
 
-def connect(server, port):
+def connect(server, port, background):
     print("CONNECTING TO SERVER", server, port)
-    subprocess.run(
-        ["sudo", "openvpn", "--config", "./files/" + server +
-            ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"],
-        stdin=subprocess.PIPE)
+    if background:
+        subprocess.Popen(["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
+    else:
+        subprocess.run(["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
@@ -84,6 +84,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c', '--country', help='Specifiy Country with 2 letter name, i.e au,\
          A server among the top 5 servers will be used automatically.')
+    parser.add_argument(
+        '-b', '--background', help='Run script in the background',
+        action='store_true')
 
     args = parser.parse_args()
-    main(args.server, args.country, args.udp)
+    main(args.server, args.country, args.udp, args.background)
