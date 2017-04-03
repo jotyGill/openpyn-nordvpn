@@ -23,6 +23,8 @@ def main(server, country, udp):
 
 
 def findBestServers(country):
+    serverList = []
+    BestServerList = []
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
         'ba': 'Brazil', 'de': 'Denmark', 'es': 'Estonia', 'fi': 'Finland'}
@@ -33,13 +35,10 @@ def findBestServers(country):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
 
-    serverList = []
-    BestServerList = []
-
     try:
         response = requests.get(url, headers=headers).json()
     except HTTPError as e:  # @todo ask for server instead
-        print("Invalid URL Provided")
+        print("Cannot GET the json from nordvpn.com")
 
     for i in response:
         # only add if the server is online
@@ -47,8 +46,10 @@ def findBestServers(country):
             serverList.append([i["short"], i["load"]])
 
     print(serverList)
+    # sort list by the server load
     serverList.sort(key=operator.itemgetter(1))
     print(serverList)
+    # only choose servers with < 70% load then top 5 of them
     for server in serverList:
         serverLoad = int(server[1])
         if serverLoad < 70 and len(BestServerList) < 5:
@@ -59,8 +60,8 @@ def findBestServers(country):
 
 
 def chooseBestServer(BestServerList):
-    chosenServerList = BestServerList[random.randrange(0, len(BestServerList) - 1)]
-    chosenServer = chosenServerList[0]  # the first value, server
+    chosenServerList = BestServerList[random.randrange(0, len(BestServerList))]
+    chosenServer = chosenServerList[0]  # the first value, "server name"
     return chosenServer
 
 
