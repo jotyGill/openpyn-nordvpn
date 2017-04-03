@@ -7,7 +7,7 @@ import operator
 import random
 
 
-def main(server, country, udp, background):
+def main(server, countryCode, udp, background):
     port = "tcp443"
     if udp:
         port = "udp1194"
@@ -22,13 +22,13 @@ def main(server, country, udp, background):
         connection = connect(server, port, background)
 
 
-def findBestServers(country):
+def findBestServers(countryCode):
     serverList = []
     BestServerList = []
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
-        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland', 'uk': 'United Kingdom',
-        'nl': 'Netherlands', 'se': 'Sweden'}
+        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
+        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden'}
     country = countryDic[country]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + country + "&action=getGroupRows"
@@ -54,7 +54,7 @@ def findBestServers(country):
         if serverLoad < 70 and len(BestServerList) < 5:
             BestServerList.append(server)
 
-    print("Top Servers in "country, "are :", BestServerList)
+    print("Top Servers in ", country, "are :", BestServerList)
     return BestServerList
 
 
