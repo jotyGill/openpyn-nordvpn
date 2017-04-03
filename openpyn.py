@@ -5,7 +5,6 @@ import argparse
 import requests
 import operator
 import random
-import re
 
 # @todo dynamic files lcation
 # @todo kill switch
@@ -56,7 +55,7 @@ def findBestServers(countryCode):
     # only choose servers with < 70% load then top 10 of them
     for server in serverList:
         serverLoad = int(server[1])
-        if serverLoad < 70 and len(betterServerList) < 5:
+        if serverLoad < 70 and len(betterServerList) < 10:
             betterServerList.append(server)
 
     print("Top Servers in ", countryCode, "are :", betterServerList)
@@ -75,16 +74,30 @@ def chooseBestServer(betterServerList):
         pingString = pingString[pingString.find("= ") + 2:]
         pingString = pingString[:pingString.find(" ")]
         pingList = pingString.split("/")
-        print(pingList)
         # pingAvg = pingList[1]
         # pingMDev = pingList[3]
         tempList.append(i)
+        # change str values in pingList to ints
+        pingList = list(map(float, pingList))
+        pingList = list(map(int, pingList))
+        print(pingList)
         tempList.append(pingList)
         bestServerList.append(tempList)
+    # sort by Avg and Median Deveation
+    bestServerList = sorted(bestServerList, key=lambda item: (item[1][1], item[1][3]))
+    bestServerList2 = []
+
+    # 5 top servers or if less than 5 in total
+    for serverCounter in range(5):
+        if serverCounter < len(bestServerList):
+            bestServerList2.append(bestServerList[serverCounter])
+            serverCounter += 1
+
 
     print("bestServerList: ", bestServerList)
-    chosenServerList = betterServerList[random.randrange(0, len(betterServerList))]
-    chosenServer = chosenServerList[0]  # the first value, "server name"
+    print("bestServerList2: ", bestServerList2)
+    chosenServerList = bestServerList2[random.randrange(0, len(bestServerList2))]
+    chosenServer = bestServerList2[0][0][0]  # the first value, "server name"
     return chosenServer
 
 
