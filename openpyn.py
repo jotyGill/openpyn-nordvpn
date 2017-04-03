@@ -27,7 +27,8 @@ def findBestServers(country):
     BestServerList = []
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
-        'ba': 'Brazil', 'de': 'Denmark', 'es': 'Estonia', 'fi': 'Finland'}
+        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland', 'uk': 'United Kingdom',
+        'nl': 'Netherlands', 'se': 'Sweden'}
     country = countryDic[country]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + country + "&action=getGroupRows"
