@@ -5,6 +5,11 @@ import argparse
 import requests
 import operator
 import random
+import re
+
+# @todo dynamic files lcation
+# @todo kill switch
+# @todo ping to determine quality
 
 
 def main(server, countryCode, udp, background):
@@ -51,7 +56,7 @@ def findBestServers(countryCode):
     # only choose servers with < 70% load then top 5 of them
     for server in serverList:
         serverLoad = int(server[1])
-        if serverLoad < 70 and len(BestServerList) < 5:
+        if serverLoad < 70 and len(BestServerList) < 10:
             BestServerList.append(server)
 
     print("Top Servers in ", countryCode, "are :", BestServerList)
@@ -59,6 +64,18 @@ def findBestServers(countryCode):
 
 
 def chooseBestServer(BestServerList):
+    for i in BestServerList:
+        ping = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", "10"], stdout=subprocess.PIPE)
+        # pipe the output of ping to grep.
+        pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=ping.stdout)
+        pingString = str(pingOut)
+        pingString = pingString[pingString.find("= ") + 2:]
+        pingString = pingString[:pingString.find(" ")]
+        pingList = pingString.split("/")
+        print(pingList)
+        pingAvg = pingList[1]
+        pingMDev = pingList[3]
+
     chosenServerList = BestServerList[random.randrange(0, len(BestServerList))]
     chosenServer = chosenServerList[0]  # the first value, "server name"
     return chosenServer
