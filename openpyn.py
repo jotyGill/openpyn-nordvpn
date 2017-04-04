@@ -143,7 +143,7 @@ if __name__ == '__main__':
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
         '-t', '--topServers', type=int, default=10, help='Specifiy the number of Top \
-         Servers to choose from the NordVPN\'s Sever list, These will be \
+         Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=10')
     parser.add_argument(
         '-p', '--pings', type=str, default=10, help='Specifiy number of pings \
