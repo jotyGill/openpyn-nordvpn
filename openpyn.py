@@ -11,14 +11,14 @@ import random
 # @todo ping to determine quality
 
 
-def main(server, countryCode, udp, background):
+def main(server, countryCode, udp, background, loadThreshold, topServers):
     port = "tcp443"
     if udp:
         port = "udp1194"
 
     if countryCode:
         countryCode = countryCode.lower()
-        bestServers = findBestServers(countryCode)
+        bestServers = findBetterServers(countryCode, loadThreshold, topServers)
         chosenServer = chooseBestServer(bestServers)
         connection = connect(chosenServer, port, background)
     elif server:
@@ -26,7 +26,7 @@ def main(server, countryCode, udp, background):
         connection = connect(server, port, background)
 
 
-def findBestServers(countryCode):
+def findBetterServers(countryCode, loadThreshold, topServers):
     serverList = []
     betterServerList = []
     countryDic = {
@@ -55,7 +55,7 @@ def findBestServers(countryCode):
     # only choose servers with < 70% load then top 10 of them
     for server in serverList:
         serverLoad = int(server[1])
-        if serverLoad < 70 and len(betterServerList) < 10:
+        if serverLoad < loadThreshold and len(betterServerList) < topServers:
             betterServerList.append(server)
 
     print("Top Servers in ", countryCode, "are :", betterServerList)
@@ -76,28 +76,27 @@ def chooseBestServer(betterServerList):
         pingList = pingString.split("/")
         # pingAvg = pingList[1]
         # pingMDev = pingList[3]
-        tempList.append(i)
         # change str values in pingList to ints
         pingList = list(map(float, pingList))
         pingList = list(map(int, pingList))
         print(pingList)
+        tempList.append(i)
         tempList.append(pingList)
         bestServerList.append(tempList)
     # sort by Avg and Median Deveation
     bestServerList = sorted(bestServerList, key=lambda item: (item[1][1], item[1][3]))
     bestServerList2 = []
 
-    # 5 top servers or if less than 5 in total
+    # 5 top servers or if less than 5 totel servers
     for serverCounter in range(5):
         if serverCounter < len(bestServerList):
             bestServerList2.append(bestServerList[serverCounter])
             serverCounter += 1
 
-
     print("bestServerList: ", bestServerList)
     print("bestServerList2: ", bestServerList2)
     chosenServerList = bestServerList2[random.randrange(0, len(bestServerList2))]
-    chosenServer = bestServerList2[0][0][0]  # the first value, "server name"
+    chosenServer = chosenServerList[0][0]  # the first value, "server name"
     return chosenServer
 
 
@@ -121,11 +120,21 @@ if __name__ == '__main__':
         '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letter name, i.e au,\
          A server among the top 5 servers will be used automatically.')
     parser.add_argument(
-        'countryCode', help='Country Code can also be speficied without "-c"')
+        'countryCode', help='Country Code can also be speficied without "-c,"\
+         i.e "./openpyn.py au"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
         action='store_true')
+    parser.add_argument(
+        '-l', '--loadThreshold', type=int, default=70, help='Specifiy load threashold, \
+        rejects servers with more load than this, DEFAULT=70')
+    parser.add_argument(
+        '-t', '--topServers', type=int, default=10, help='Specifiy the number of Top \
+         Servers to choose from the NordVPN\'s Sever list, These will be \
+         Pinged. DEFAULT=10')
 
     args = parser.parse_args()
 
-    main(args.server, args.countryCode, args.udp, args.background)
+    main(
+        args.server, args.countryCode, args.udp, args.background,
+        args.loadThreshold, args.topServers)
