@@ -11,15 +11,18 @@ import random
 # @todo ping to determine quality
 
 
-def main(server, countryCode, udp, background, loadThreshold, topServers):
+def main(
+    server, countryCode, udp, background, loadThreshold,
+        topServers, pings, toppestServers):
     port = "tcp443"
     if udp:
         port = "udp1194"
 
     if countryCode:
         countryCode = countryCode.lower()
-        bestServers = findBetterServers(countryCode, loadThreshold, topServers)
-        chosenServer = chooseBestServer(bestServers)
+        betterServerList = findBetterServers(countryCode, loadThreshold, topServers)
+        pingServerList = pingServers(betterServerList, pings)
+        chosenServer = chooseBestServer(pingServerList, toppestServers)
         connection = connect(chosenServer, port, background)
     elif server:
         server = server.lower()
@@ -58,54 +61,64 @@ def findBetterServers(countryCode, loadThreshold, topServers):
         if serverLoad < loadThreshold and len(betterServerList) < topServers:
             betterServerList.append(server)
 
-    print("Top Servers in ", countryCode, "are :", betterServerList)
+    print("According to NordVPN least busy " + str(topServers) + " Servers in ",
+          countryCode, "are :", betterServerList)
     return betterServerList
 
-
-def chooseBestServer(betterServerList):
-    bestServerList = []
+def pingServers(betterServerList, ping):
+    pingServerList = []
     for i in betterServerList:
         # tempList to append 2  lists into it
         tempList = []
-        ping = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", "10"], stdout=subprocess.PIPE)
+        pingP = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", ping], stdout=subprocess.PIPE)
         # pipe the output of ping to grep.
-        pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=ping.stdout)
+        pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=pingP.stdout)
         pingString = str(pingOut)
         pingString = pingString[pingString.find("= ") + 2:]
         pingString = pingString[:pingString.find(" ")]
         pingList = pingString.split("/")
-        # pingAvg = pingList[1]
-        # pingMDev = pingList[3]
         # change str values in pingList to ints
         pingList = list(map(float, pingList))
         pingList = list(map(int, pingList))
-        print(pingList)
+        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", pingList)
         tempList.append(i)
         tempList.append(pingList)
-        bestServerList.append(tempList)
-    # sort by Avg and Median Deveation
-    bestServerList = sorted(bestServerList, key=lambda item: (item[1][1], item[1][3]))
-    bestServerList2 = []
+        pingServerList.append(tempList)
+    # sort by Ping Avg and Median Deveation
+    pingServerList = sorted(pingServerList, key=lambda item: (item[1][1], item[1][3]))
+    return pingServerList
+
+def chooseBestServer(pingServerList, toppestServers):
+    bestServersList = []
+    bestServersNameList = []
 
     # 5 top servers or if less than 5 totel servers
-    for serverCounter in range(5):
-        if serverCounter < len(bestServerList):
-            bestServerList2.append(bestServerList[serverCounter])
+    for serverCounter in range(toppestServers):
+        if serverCounter < len(pingServerList):
+            bestServersList.append(pingServerList[serverCounter])
             serverCounter += 1
+    # populate bestServerList
+    for i in bestServersList:
+        bestServersNameList.append(i[0][0])
 
-    print("bestServerList: ", bestServerList)
-    print("bestServerList2: ", bestServerList2)
-    chosenServerList = bestServerList2[random.randrange(0, len(bestServerList2))]
+    print("Top " + str(toppestServers) + " Servers with best Ping are:", bestServersNameList)
+    chosenServerList = bestServersList[random.randrange(0, len(bestServersList))]
     chosenServer = chosenServerList[0][0]  # the first value, "server name"
+    print("Out of the Best Available Servers, Randomly Selected ", chosenServer,
+          "with Ping of  min/avg/max/mdev = ", chosenServerList[1])
     return chosenServer
 
 
 def connect(server, port, background):
-    print("CONNECTING TO SERVER", server, port)
+    print("CONNECTING TO SERVER", server, " ON PORT", port)
     if background:
-        subprocess.Popen(["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
+        subprocess.Popen(
+            ["sudo", "openvpn", "--config", "./files/" + server +
+                ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
     else:
-        subprocess.run(["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
+        subprocess.run(
+            ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
@@ -132,9 +145,15 @@ if __name__ == '__main__':
         '-t', '--topServers', type=int, default=10, help='Specifiy the number of Top \
          Servers to choose from the NordVPN\'s Sever list, These will be \
          Pinged. DEFAULT=10')
+    parser.add_argument(
+        '-p', '--pings', type=str, default=10, help='Specifiy number of pings \
+        to be sent to each server to determine quality, DEFAULT=10')
+    parser.add_argument(
+        '-tt', '--toppestServers', type=int, default=5, help='After ping tests \
+        the final server count to randomly choose a server from, DEFAULT=5')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.udp, args.background,
-        args.loadThreshold, args.topServers)
+        args.loadThreshold, args.topServers, args.pings, args.toppestServers)
