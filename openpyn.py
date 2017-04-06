@@ -35,7 +35,7 @@ def findBetterServers(countryCode, loadThreshold, topServers):
     countryDic = {
         'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
         'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
-        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden'}
+        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
     countryCode = countryDic[countryCode]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + countryCode + "&action=getGroupRows"
@@ -70,9 +70,13 @@ def pingServers(betterServerList, ping):
     for i in betterServerList:
         # tempList to append 2  lists into it
         tempList = []
-        pingP = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", ping], stdout=subprocess.PIPE)
-        # pipe the output of ping to grep.
-        pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=pingP.stdout)
+        try:
+            pingP = subprocess.Popen(["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", ping], stdout=subprocess.PIPE)
+            # pipe the output of ping to grep.
+            pingOut = subprocess.check_output(("grep", "min/avg/max/mdev"), stdin=pingP.stdout)
+        except subprocess.CalledProcessError as e:
+            print("Ping Failed to :", i[0], "Skipping it")
+            continue
         pingString = str(pingOut)
         pingString = pingString[pingString.find("= ") + 2:]
         pingString = pingString[:pingString.find(" ")]
