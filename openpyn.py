@@ -8,7 +8,6 @@ import random
 
 # @todo dynamic files lcation
 # @todo kill switch
-# @todo ping to determine quality
 
 
 def main(
@@ -46,7 +45,9 @@ def findBetterServers(countryCode, loadThreshold, topServers):
     try:
         response = requests.get(url, headers=headers).json()
     except HTTPError as e:  # @todo ask for server instead
-        print("Cannot GET the json from nordvpn.com")
+        print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
+        using '-s' for example '-s au10'")
+        exit()
 
     for i in response:
         # only add if the server is online
@@ -64,6 +65,7 @@ def findBetterServers(countryCode, loadThreshold, topServers):
     print("According to NordVPN least busy " + str(topServers) + " Servers in ",
           countryCode, "are :", betterServerList)
     return betterServerList
+
 
 def pingServers(betterServerList, ping):
     pingServerList = []
@@ -91,6 +93,7 @@ def pingServers(betterServerList, ping):
     # sort by Ping Avg and Median Deveation
     pingServerList = sorted(pingServerList, key=lambda item: (item[1][1], item[1][3]))
     return pingServerList
+
 
 def chooseBestServer(pingServerList, toppestServers):
     bestServersList = []
