@@ -8,15 +8,18 @@ import random
 
 # @todo dynamic files lcation
 # @todo work arround, when used '-b' without 'sudo'
-# @todo kill switch
+# @todo update files on the fly
 
 
 def main(
     server, countryCode, udp, background, loadThreshold,
-        topServers, pings, toppestServers, kill):
+        topServers, pings, toppestServers, kill, update):
     port = "tcp443"
     if kill:
         killProcess()
+        exit()
+    elseif update:
+        updateOpenpyn()
         exit()
     if udp:
         port = "udp1194"
@@ -131,6 +134,14 @@ def killProcess():
     # if openvpnProcesses != "openvpn: no process found":
 
 
+def updateOpenpyn():
+    try:
+        subprocess.run(["wget", "https://nordvpn.com/api/files/zip"])
+        subprocess.run(["unzip", "-u", "-o", "zip", "-d", "./files/"])
+    except subprocess.CalledProcessError:
+        print("Exception occured while wgetting zip")
+
+
 def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
@@ -180,10 +191,13 @@ if __name__ == '__main__':
         '-k', '--kill', help='Kill any running Openvnp process, very usefull \
         to kill openpyn process running in background with "-b" switch',
         action='store_true')
+    parser.add_argument(
+        '--update', help='Fetch the latest config files from nord\'s site',
+        action='store_true')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings,
-        args.toppestServers, args.kill)
+        args.toppestServers, args.kill, args.update)
