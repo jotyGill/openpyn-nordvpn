@@ -12,18 +12,23 @@ import random
 
 
 def main(
-    server, countryCode, udp, background, loadThreshold,
+    server, countryCode, country, udp, background, loadThreshold,
         topServers, pings, toppestServers, kill, update):
     port = "tcp443"
+    if udp:
+        port = "udp1194"
+
     if kill:
         killProcess()
         exit()
     elif update:
         updateOpenpyn()
         exit()
-    if udp:
-        port = "udp1194"
 
+    # if only "-c" used then
+    if countryCode is None and server is None:
+        countryCode = country
+    # not if both "-c" or positional arg are present
     if countryCode:
         countryCode = countryCode.lower()
         betterServerList = findBetterServers(countryCode, loadThreshold, topServers)
@@ -169,7 +174,7 @@ if __name__ == '__main__':
          A server among the top 5 servers will be used automatically.')
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
-        'countryCode', nargs='?', help='Country Code can also be speficied without "-c,"\
+        'country', nargs='?', help='Country Code can also be speficied without "-c,"\
          i.e "./openpyn.py au"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
@@ -182,7 +187,7 @@ if __name__ == '__main__':
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=10')
     parser.add_argument(
-        '-p', '--pings', type=str, default=10, help='Specifiy number of pings \
+        '-p', '--pings', type=str, default="10", help='Specifiy number of pings \
         to be sent to each server to determine quality, DEFAULT=10')
     parser.add_argument(
         '-tt', '--toppestServers', type=int, default=5, help='After ping tests \
@@ -198,6 +203,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(
-        args.server, args.countryCode, args.udp, args.background,
+        args.server, args.countryCode, args.country, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings,
         args.toppestServers, args.kill, args.update)
