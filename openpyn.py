@@ -13,8 +13,11 @@ import random
 
 def main(
     server, countryCode, udp, background, loadThreshold,
-        topServers, pings, toppestServers):
+        topServers, pings, toppestServers, kill):
     port = "tcp443"
+    if kill:
+        killProcess()
+        exit()
     if udp:
         port = "udp1194"
 
@@ -153,8 +156,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letter name, i.e au,\
          A server among the top 5 servers will be used automatically.')
+    # use nargs='?' to make a positional arg optinal
     parser.add_argument(
-        'countryCode', help='Country Code can also be speficied without "-c,"\
+        'countryCode', nargs='?', help='Country Code can also be speficied without "-c,"\
          i.e "./openpyn.py au"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
@@ -172,9 +176,14 @@ if __name__ == '__main__':
     parser.add_argument(
         '-tt', '--toppestServers', type=int, default=5, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=5')
+    parser.add_argument(
+        '-k', '--kill', help='Kill any running Openvnp process, very usefull \
+        to kill openpyn process running in background with "-b" switch',
+        action='store_true')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.udp, args.background,
-        args.loadThreshold, args.topServers, args.pings, args.toppestServers)
+        args.loadThreshold, args.topServers, args.pings,
+        args.toppestServers, args.kill)
