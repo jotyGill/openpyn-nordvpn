@@ -28,7 +28,7 @@ def main(
     # if only "-c" used then
     if countryCode is None and server is None:
         countryCode = country
-    # not if both "-c" or positional arg are present
+    # if either "-c" or positional arg f.e "au" is present
     if countryCode:
         countryCode = countryCode.lower()
         betterServerList = findBetterServers(countryCode, loadThreshold, topServers)
