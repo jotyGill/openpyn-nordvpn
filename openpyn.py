@@ -118,12 +118,14 @@ def chooseBestServer(pingServerList, toppestServers):
 
 
 def killProcess():
-    print("killing running openvpn processes")
     try:
+        openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
+        print("killing running openvpn processes")
         subprocess.run(["sudo", "killall", "openvpn"])
-    except TypeError:
-        print("Exception killing openvpn")
-
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the openvpnProcesses issued non 0 result, "not found"
+        print("No openvpn process found")
+    # if openvpnProcesses != "openvpn: no process found":
 
 
 def connect(server, port, background):
