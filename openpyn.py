@@ -7,6 +7,7 @@ import operator
 import random
 
 # @todo dynamic files lcation
+# @todo work arround, when used '-b' without 'sudo'
 # @todo kill switch
 
 
@@ -116,8 +117,19 @@ def chooseBestServer(pingServerList, toppestServers):
     return chosenServer
 
 
+def killProcess():
+    print("killing running openvpn processes")
+    try:
+        subprocess.run(["sudo", "killall", "openvpn"])
+    except TypeError:
+        print("Exception killing openvpn")
+
+
+
 def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
+
+    killProcess()   # killing existing openvpn processes
     if background:
         subprocess.Popen(
             ["sudo", "openvpn", "--config", "./files/" + server +
