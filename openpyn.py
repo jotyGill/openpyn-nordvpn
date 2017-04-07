@@ -18,7 +18,7 @@ def main(
     if kill:
         killProcess()
         exit()
-    elseif update:
+    elif update:
         updateOpenpyn()
         exit()
     if udp:
