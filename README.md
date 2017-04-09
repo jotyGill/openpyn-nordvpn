@@ -44,7 +44,7 @@ optional arguments:
 
   -t TOPSERVERS, --topServers TOPSERVERS
                         Specifiy the number of Top Servers to choose from the
-                        NordVPN's Sever list for the given Country, These will
+                        NordVPN\'s Sever list for the given Country, These will
                         be Pinged. DEFAULT=10
 
   -p PINGS, --pings PINGS
@@ -58,5 +58,5 @@ optional arguments:
   -k, --kill            Kill any running Openvnp process, very usefull to kill
                         openpyn process running in background with "-b" switch
 
-  --update              Fetch the latest config files from nord's site
+  --update              Fetch the latest config files from nord\'s site
   ```
