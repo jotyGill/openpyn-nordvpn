@@ -1,11 +1,11 @@
-# OpenPyn 
+# OpenPyn
 A python3 script to easily connect to, VPN servers hosted by NordVPN. Find the least busy servers (from Nordvpn's website) with lowest latency from you.
 
 ## Instructions
 1. Clone this repo to a desited location:
 ``` bash
-	$ git clone https://github.com/jotyGill/OpenPyn.git
-  $ cd OpenPyn
+$ git clone https://github.com/jotyGill/OpenPyn.git
+$ cd OpenPyn
 ```
 2. Download/Update the latest vpn config files from NordVPN by:
 ``` bash
