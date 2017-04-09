@@ -1,4 +1,4 @@
-# NordVPN server benchmarker
+# OpenPyn 
 A python3 script to easily connect to, VPN servers hosted by NordVPN. Find the least busy servers (from Nordvpn's website) with lowest latency from you.
 
 ## Instructions
