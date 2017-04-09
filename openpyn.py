@@ -143,6 +143,7 @@ def updateOpenpyn():
     try:
         subprocess.run(["wget", "https://nordvpn.com/api/files/zip"])
         subprocess.run(["unzip", "-u", "-o", "zip", "-d", "./files/"])
+        subprocess.run(["rm", "zip"])
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
