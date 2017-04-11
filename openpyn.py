@@ -8,7 +8,8 @@ import random
 
 # @todo dynamic files lcation
 # @todo work arround, when used '-b' without 'sudo'
-# @todo update files on the fly
+# @todo display appropriate no of servers when some get removed from the list
+# because load on them is more than loadThreshold
 
 
 def main(
@@ -171,8 +172,7 @@ if __name__ == '__main__':
         '-u', '--udp', help='use port UDP-1194 instead of the default TCP-443',
         action='store_true')
     parser.add_argument(
-        '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letter name, i.e au,\
-         A server among the top 5 servers will be used automatically.')
+        '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letters, i.e au,')
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be speficied without "-c,"\
@@ -184,15 +184,15 @@ if __name__ == '__main__':
         '-l', '--loadThreshold', type=int, default=70, help='Specifiy load threashold, \
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
-        '-t', '--topServers', type=int, default=10, help='Specifiy the number of Top \
+        '-t', '--topServers', type=int, default=6, help='Specifiy the number of Top \
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
-         Pinged. DEFAULT=10')
+         Pinged. DEFAULT=6')
     parser.add_argument(
         '-p', '--pings', type=str, default="10", help='Specifiy number of pings \
         to be sent to each server to determine quality, DEFAULT=10')
     parser.add_argument(
-        '-tt', '--toppestServers', type=int, default=5, help='After ping tests \
-        the final server count to randomly choose a server from, DEFAULT=5')
+        '-tt', '--toppestServers', type=int, default=3, help='After ping tests \
+        the final server count to randomly choose a server from, DEFAULT=3')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very usefull \
         to kill openpyn process running in background with "-b" switch',

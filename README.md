@@ -13,13 +13,43 @@ A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. 
 $ git clone https://github.com/jotyGill/OpenPyn.git
 $ cd OpenPyn
 ```
-2. Download/Update the latest vpn config files from NordVPN by:
+2. Install the dependecies if they are not already present.
 ``` bash
-  $ ./openpyn --update
+  $ sudo apt install openvpn
+  $ sudo pip install requests
 ```
-3. That's it, run the script.
+3. Create a "pass.txt" in the root of OpenPyn with openvpn compatible "auth-user-pass" file.
+``` bash
+  youruser@name.com    #first line
+  yourpass   #second line
+```
+4. Download/Update the latest vpn config files from NordVPN by:
+``` bash
+  $ ./openpyn.py --update
+```
+5. That's it, run the script!
 
-## Usage
+## Basic Usage
+* At minimum, you only need to specifiy the countryCode, default port is TCP-443, If you want to use
+UDP-1194 instead, use "-u" switch.
+``` bash
+  ./openpyn.py us -u
+```
+* To find the least loaded 10 NordVPN servers in US and connect to one of the top 2 servers that
+have the lowest latency from you.
+``` bash
+  ./openpyn.py us -t 10 -tt 2
+```
+* To run the script in background (after it initiates the connection)
+``` bash
+  ./openpyn.py us -b
+```
+To kill a running openvpn connection (background or shell window).
+``` bash
+  ./openpyn.py -k
+```
+
+## Usage Options
 ``` bash
 usage: openpyn.py [-h] [-s SERVER] [-u] [-c COUNTRYCODE] [-b] [-l LOADTHRESHOLD] [-t TOPSERVERS]
 [-p PINGS] [-tt TOPPESTSERVERS] [-k] [--update] [country]
@@ -38,9 +68,7 @@ optional arguments:
   -u, --udp             use port UDP-1194 instead of the default TCP-443
 
   -c COUNTRYCODE, --countryCode COUNTRYCODE
-                        Specifiy Country Code with 2 letter name, i.e au, A
-                        server among the top 5 servers will be used
-                        automatically.
+                        Specifiy Country Code with 2 letters i.e au
 
   -b, --background      Run script in the background
 
@@ -51,7 +79,7 @@ optional arguments:
   -t TOPSERVERS, --topServers TOPSERVERS
                         Specifiy the number of Top Servers to choose from the
                         NordVPN\'s Sever list for the given Country, These will
-                        be Pinged. DEFAULT=10
+                        be Pinged. DEFAULT=6
 
   -p PINGS, --pings PINGS
                         Specifiy number of pings to be sent to each server to
@@ -59,7 +87,7 @@ optional arguments:
 
   -tt TOPPESTSERVERS, --toppestServers TOPPESTSERVERS
                         After ping tests the final server count to randomly
-                        choose a server from, DEFAULT=5
+                        choose a server from, DEFAULT=3
 
   -k, --kill            Kill any running Openvnp process, very usefull to kill
                         openpyn process running in background with "-b" switch
