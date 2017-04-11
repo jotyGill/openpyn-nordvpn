@@ -1,5 +1,5 @@
 # OpenPyn
-A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. Easily the least busy servers (current data from Nordvpn's website) with lowest latency from you.
+A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you.
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
@@ -44,7 +44,7 @@ have the lowest latency from you.
 ``` bash
   ./openpyn.py us -b
 ```
-To kill a running openvpn connection (background or shell window).
+* To kill a running openvpn connection (background or shell window).
 ``` bash
   ./openpyn.py -k
 ```
