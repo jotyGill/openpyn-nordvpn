@@ -76,6 +76,9 @@ optional arguments:
 
   -b, --background      Run script in the background
 
+  -d COUNTRYCODE, --display COUNTRYCODE
+                        Display servers and info about them in a given country
+
   -l LOADTHRESHOLD, --loadThreshold LOADTHRESHOLD
                         Specifiy load threashold, rejects servers with more
                         load than this, DEFAULT=70

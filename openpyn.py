@@ -12,15 +12,17 @@ import random
 # because load on them is more than loadThreshold
 # @todo display all servers (with load) in a given country
 # @todo seperate getLoad
+# @todo check for openvpn tcp and udp support on servers
+
+countryDic = {
+    'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
+    'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
+    'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
 
 
 def main(
     server, countryCode, country, udp, background, loadThreshold,
         topServers, pings, toppestServers, kill, update, display):
-    countryDic = {
-        'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
-        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
-        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
     port = "tcp443"
 
     if udp:
@@ -34,7 +36,6 @@ def main(
         exit()
     elif display is not None:
         displayServers(display)
-        exit()
 
     # if only "-c" used then
     if countryCode is None and server is None:
@@ -156,6 +157,23 @@ def updateOpenpyn():
 
 
 def displayServers(display):
+    countryCode = countryDic[display]
+    url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
+    +servers&country=" + countryCode + "&action=getGroupRows"
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
+    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
+
+    try:
+        response = requests.get(url, headers=headers).json()
+    except HTTPError as e:  # @todo ask for server instead
+        print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
+        using '-s' for example '-s au10'")
+        exit()
+    # print(response)
+    for i in response:
+        print("Server =", i["short"], ", Load =", i["load"], ", Country =",
+              i["country"], ", Location =", i["location"])
     exit()
 
 
