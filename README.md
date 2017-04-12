@@ -13,12 +13,12 @@ A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. 
 $ git clone https://github.com/jotyGill/OpenPyn.git
 $ cd OpenPyn
 ```
-2. Install the dependecies if they are not already present.
+2. Install the dependencies if they are not already present.
 ``` bash
   $ sudo apt install openvpn
   $ sudo pip install requests
 ```
-3. Create a "pass.txt" in the root of OpenPyn with openvpn compatible "auth-user-pass" file.
+3. Create a "pass.txt" in the root of OpenPyn with openvpn compatible "auth-user-pass" file format.
 ``` bash
   youruser@name.com    #first line
   yourpass   #second line
@@ -27,7 +27,7 @@ $ cd OpenPyn
 ``` bash
   $ ./openpyn.py --update
 ```
-5. That's it, run the script!
+5. That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
 * At minimum, you only need to specifiy the countryCode, default port is TCP-443, If you want to use
@@ -40,9 +40,13 @@ have the lowest latency from you.
 ``` bash
   ./openpyn.py us -t 10 -tt 2
 ```
+* To quickly connect to a specific server.
+``` bash
+  ./openpyn.py -s au10
+```
 * To run the script in background (after it initiates the connection)
 ``` bash
-  ./openpyn.py us -b
+  sudo ./openpyn.py us -b #needs sudo to use openvpn
 ```
 * To kill a running openvpn connection (background or shell window).
 ``` bash

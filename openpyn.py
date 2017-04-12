@@ -6,16 +6,23 @@ import requests
 import operator
 import random
 
-# @todo dynamic files lcation
+# @todo install.sh
 # @todo work arround, when used '-b' without 'sudo'
 # @todo display appropriate no of servers when some get removed from the list
 # because load on them is more than loadThreshold
+# @todo display all servers (with load) in a given country
+# @todo seperate getLoad
 
 
 def main(
     server, countryCode, country, udp, background, loadThreshold,
-        topServers, pings, toppestServers, kill, update):
+        topServers, pings, toppestServers, kill, update, display):
+    countryDic = {
+        'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
+        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
+        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
     port = "tcp443"
+
     if udp:
         port = "udp1194"
 
@@ -24,6 +31,9 @@ def main(
         exit()
     elif update:
         updateOpenpyn()
+        exit()
+    elif display is not None:
+        displayServers(display)
         exit()
 
     # if only "-c" used then
@@ -44,10 +54,6 @@ def main(
 def findBetterServers(countryCode, loadThreshold, topServers):
     serverList = []
     betterServerList = []
-    countryDic = {
-        'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
-        'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
-        'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
     countryCode = countryDic[countryCode]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + countryCode + "&action=getGroupRows"
@@ -149,6 +155,10 @@ def updateOpenpyn():
         print("Exception occured while wgetting zip")
 
 
+def displayServers(display):
+    exit()
+
+
 def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
@@ -200,10 +210,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
+    parser.add_argument(
+        '-d', '--display', type=str, help='Display all servers in a given country\
+        with their loadThreshold')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.country, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings,
-        args.toppestServers, args.kill, args.update)
+        args.toppestServers, args.kill, args.update, args.display)
