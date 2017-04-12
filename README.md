@@ -36,14 +36,18 @@ UDP-1194 instead, use "-u" switch.
 ``` bash
   ./openpyn.py us -u
 ```
+* To quickly connect to a specific server.
+``` bash
+  ./openpyn.py -s au10
+```
+* To find information about (display) the available servers in a given country.
+``` bash
+  ./openpyn.py -d uk
+```
 * To find the least loaded 10 NordVPN servers in US and connect to one of the top 2 servers that
 have the lowest latency from you.
 ``` bash
   ./openpyn.py us -t 10 -tt 2
-```
-* To quickly connect to a specific server.
-``` bash
-  ./openpyn.py -s au10
 ```
 * To run the script in background (after it initiates the connection)
 ``` bash
@@ -51,7 +55,7 @@ have the lowest latency from you.
 ```
 * To kill a running openvpn connection (background or shell window).
 ``` bash
-  ./openpyn.py -k
+  sudo ./openpyn.py -k
 ```
 
 ## Usage Options
@@ -91,7 +95,7 @@ optional arguments:
 
   -p PINGS, --pings PINGS
                         Specifiy number of pings to be sent to each server to
-                        determine quality, DEFAULT=10
+                        determine quality, DEFAULT=5
 
   -tt TOPPESTSERVERS, --toppestServers TOPPESTSERVERS
                         After ping tests the final server count to randomly

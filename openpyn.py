@@ -10,8 +10,7 @@ import random
 # @todo work arround, when used '-b' without 'sudo'
 # @todo display appropriate no of servers when some get removed from the list
 # because load on them is more than loadThreshold
-# @todo seperate getData
-# @todo check for openvpn tcp and udp support on servers
+# @todo check for openvpn tcp and udp support on servers()
 # @todo find and display server's locations (cities)
 
 countryDic = {
@@ -212,8 +211,8 @@ if __name__ == '__main__':
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=6')
     parser.add_argument(
-        '-p', '--pings', type=str, default="10", help='Specifiy number of pings \
-        to be sent to each server to determine quality, DEFAULT=10')
+        '-p', '--pings', type=str, default="5", help='Specifiy number of pings \
+        to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
         '-tt', '--toppestServers', type=int, default=3, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=3')
