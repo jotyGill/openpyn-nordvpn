@@ -10,9 +10,9 @@ import random
 # @todo work arround, when used '-b' without 'sudo'
 # @todo display appropriate no of servers when some get removed from the list
 # because load on them is more than loadThreshold
-# @todo display all servers (with load) in a given country
-# @todo seperate getLoad
+# @todo seperate getData
 # @todo check for openvpn tcp and udp support on servers
+# @todo find and display server's locations (cities)
 
 countryDic = {
     'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
@@ -52,9 +52,8 @@ def main(
         connection = connect(server, port, background)
 
 
-def findBetterServers(countryCode, loadThreshold, topServers):
-    serverList = []
-    betterServerList = []
+def getData(countryCode):
+    jsonResList = []
     countryCode = countryDic[countryCode]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + countryCode + "&action=getGroupRows"
@@ -68,11 +67,20 @@ def findBetterServers(countryCode, loadThreshold, topServers):
         print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
         using '-s' for example '-s au10'")
         exit()
-
     for i in response:
+        jsonResList.append(i)
+    return jsonResList
+
+
+def findBetterServers(countryCode, loadThreshold, topServers):
+    jsonResList = getData(countryCode)
+    serverList = []
+    betterServerList = []
+
+    for res in jsonResList:
         # only add if the server is online
-        if i["exists"] is True:
-            serverList.append([i["short"], i["load"]])
+        if res["exists"] is True:
+            serverList.append([res["short"], res["load"]])
 
     # sort list by the server load
     serverList.sort(key=operator.itemgetter(1))
@@ -149,7 +157,7 @@ def killProcess():
 
 def updateOpenpyn():
     try:
-        subprocess.run(["wget", "https://nordvpn.com/api/files/zip"])
+        subprocess.run(["wget", "-N", "https://nordvpn.com/api/files/zip"])
         subprocess.run(["unzip", "-u", "-o", "zip", "-d", "./files/"])
         subprocess.run(["rm", "zip"])
     except subprocess.CalledProcessError:
@@ -157,23 +165,11 @@ def updateOpenpyn():
 
 
 def displayServers(display):
-    countryCode = countryDic[display]
-    url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
-    +servers&country=" + countryCode + "&action=getGroupRows"
-
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
-    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
-
-    try:
-        response = requests.get(url, headers=headers).json()
-    except HTTPError as e:  # @todo ask for server instead
-        print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
-        using '-s' for example '-s au10'")
-        exit()
-    # print(response)
-    for i in response:
-        print("Server =", i["short"], ", Load =", i["load"], ", Country =",
-              i["country"], ", Location =", i["location"])
+    jsonResList = getData(display)
+    # print server info
+    for res in jsonResList:
+        print("Server =", res["short"], ", Load =", res["load"], ", Country =",
+              res["country"], ", Location =", res["location"])
     exit()
 
 

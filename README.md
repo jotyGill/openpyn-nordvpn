@@ -6,6 +6,7 @@ A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. 
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Option to run the script in the background.
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
+* Find and display nord servers (with extra info) in a given country.
 
 ## Instructions
 1. Clone this repo to a desired location:
