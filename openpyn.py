@@ -8,10 +8,11 @@ import random
 
 # @todo install.sh
 # @todo work arround, when used '-b' without 'sudo'
-# @todo display appropriate no of servers when some get removed from the list
-# because load on them is more than loadThreshold
 # @todo check for openvpn tcp and udp support on servers()
 # @todo find and display server's locations (cities)
+# @todo utilise iptables to ensure no ip leakage when reconnecting.
+# @todo redirect DNS quereis to prevent dns leakage.
+
 
 countryDic = {
     'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
@@ -22,8 +23,8 @@ countryDic = {
 def main(
     server, countryCode, country, udp, background, loadThreshold,
         topServers, pings, toppestServers, kill, update, display):
-    port = "tcp443"
 
+    port = "tcp443"
     if udp:
         port = "udp1194"
 
@@ -89,8 +90,8 @@ def findBetterServers(countryCode, loadThreshold, topServers):
         if serverLoad < loadThreshold and len(betterServerList) < topServers:
             betterServerList.append(server)
 
-    print("According to NordVPN least busy " + str(topServers) + " Servers in ",
-          countryCode, "are :", betterServerList)
+    print("According to NordVPN least busy " + str(len(betterServerList)) + " Servers, in",
+          countryCode, "with Load less than", loadThreshold, "are :", betterServerList)
     return betterServerList
 
 
@@ -145,13 +146,13 @@ def chooseBestServer(pingServerList, toppestServers):
 
 def killProcess():
     try:
+        print("Killing any running openvpn processes")
         openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
-        print("killing running openvpn processes")
+        # When it returns "0", proceed
         subprocess.run(["sudo", "killall", "openvpn"])
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpnProcesses issued non 0 result, "not found"
         print("No openvpn process found")
-    # if openvpnProcesses != "openvpn: no process found":
 
 
 def updateOpenpyn():
