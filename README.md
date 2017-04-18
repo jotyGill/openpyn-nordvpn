@@ -5,9 +5,10 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Automatically connect to least busy, low latency servers in a given country.
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
 * Quickly Connect to any specific server. i.e au10 or us20.
-* Option to run the script in the background (requires "sudo").
+* Downloads and Updates (modifications) the latest config files from NordVPN.
+* Option to run the script in the background (requires "sudo ./openpyn.py").
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
-* Find and display nord servers (with extra info) in a given country.
+* Find and display nord vpn servers (with extra info) in a given country.
 
 ## Instructions
 1. Clone this repo to a desired location:
