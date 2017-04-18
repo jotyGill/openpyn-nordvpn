@@ -5,6 +5,7 @@ import argparse
 import requests
 import operator
 import random
+import os.path
 
 # @todo install.sh
 # @todo work arround, when used '-b' without 'sudo'
@@ -175,23 +176,34 @@ def displayServers(display):
 
 def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
+    killProcess()   # kill existing openvpn processes
+    osIsDebianBased = os.path.isfile("/sbin/resolvconf")
 
-    killProcess()   # killing existing openvpn processes
+    if osIsDebianBased:  # Debian Based OS
+        # tunnel dns throught vpn by changing /etc/resolv.conf using
+        # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
+        if background:
+            subprocess.Popen(
+                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                    + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
+                    "--up ./update-resolv-conf.sh",
+                    "--down ./update-resolv-conf.sh"])
+        else:
+            subprocess.run(
+                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                    + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
+                    "--up", "./update-resolv-conf.sh",
+                    "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
-    # tunnel dns throught vpn by changing /etc/resolv.conf using
-    # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
-    if background:
-        subprocess.Popen(
-            ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
-                + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
-                "--up ./update-resolv-conf.sh",
-                "--down ./update-resolv-conf.sh"])
-    else:
-        subprocess.run(
-            ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
-                + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
-                "--up", "./update-resolv-conf.sh",
-                "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
+    else:       # If not Dabian Based
+        if background:
+            subprocess.Popen(
+                ["sudo", "openvpn", "--config", "./files/" + server +
+                 ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
+        else:
+            subprocess.run(
+                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                 + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
