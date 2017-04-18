@@ -1,25 +1,26 @@
-# OpenPyn
-A python3 script to easily connect to, VPN (OpenVPN) servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you.
+# openpyn
+A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
+* Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
 * Quickly Connect to any specific server. i.e au10 or us20.
-* Option to run the script in the background.
+* Option to run the script in the background (requires "sudo").
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
 * Find and display nord servers (with extra info) in a given country.
 
 ## Instructions
 1. Clone this repo to a desired location:
 ``` bash
-$ git clone https://github.com/jotyGill/OpenPyn.git
-$ cd OpenPyn
+$ git clone https://github.com/jotyGill/openpyn.git
+$ cd openpyn
 ```
 2. Install the dependencies if they are not already present.
 ``` bash
   $ sudo apt install openvpn
   $ sudo pip install requests
 ```
-3. Create a "pass.txt" in the root of OpenPyn with openvpn compatible "auth-user-pass" file format.
+3. Create a "pass.txt" in the root of openpyn with openvpn compatible "auth-user-pass" file format.
 ``` bash
   youruser@name.com    #first line
   yourpass   #second line

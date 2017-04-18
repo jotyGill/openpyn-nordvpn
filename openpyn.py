@@ -178,7 +178,7 @@ def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
     killProcess()   # kill existing openvpn processes
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
-    # osIsDebianBased = False
+    osIsDebianBased = False
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -186,8 +186,8 @@ def connect(server, port, background):
             subprocess.Popen(
                 ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
                     + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
-                    "--up ./update-resolv-conf.sh",
-                    "--down ./update-resolv-conf.sh"])
+                    "--up", "./update-resolv-conf.sh",
+                    "--down", "./update-resolv-conf.sh"])
         else:
             subprocess.run(
                 ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
