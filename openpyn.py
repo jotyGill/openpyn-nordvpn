@@ -11,7 +11,7 @@ import random
 # @todo check for openvpn tcp and udp support on servers()
 # @todo find and display server's locations (cities)
 # @todo utilise iptables to ensure no ip leakage when reconnecting.
-# @todo redirect DNS quereis to prevent dns leakage.
+# @todo create a combined config of server list(on fly) for failover
 
 
 countryDic = {
@@ -136,7 +136,7 @@ def chooseBestServer(pingServerList, toppestServers):
     for i in bestServersList:
         bestServersNameList.append(i[0][0])
 
-    print("Top " + str(toppestServers) + " Servers with best Ping are:", bestServersNameList)
+    print("Top " + str(len(bestServersList)) + " Servers with best Ping are:", bestServersNameList)
     chosenServerList = bestServersList[random.randrange(0, len(bestServersList))]
     chosenServer = chosenServerList[0][0]  # the first value, "server name"
     print("Out of the Best Available Servers, Randomly Selected ", chosenServer,
@@ -177,14 +177,21 @@ def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
     killProcess()   # killing existing openvpn processes
+
+    # tunnel dns throught vpn by changing /etc/resolv.conf using
+    # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
     if background:
         subprocess.Popen(
-            ["sudo", "openvpn", "--config", "./files/" + server +
-                ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
+            ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
+                "--up ./update-resolv-conf.sh",
+                "--down ./update-resolv-conf.sh"])
     else:
         subprocess.run(
             ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
-                + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
+                + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
+                "--up", "./update-resolv-conf.sh",
+                "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
