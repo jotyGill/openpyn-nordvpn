@@ -178,7 +178,7 @@ def connect(server, port, background):
     print("CONNECTING TO SERVER", server, " ON PORT", port)
     killProcess()   # kill existing openvpn processes
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
-    osIsDebianBased = False
+    # osIsDebianBased = False
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -196,14 +196,10 @@ def connect(server, port, background):
                     "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
     else:       # If not Debian Based
-        print("NOT DEBAIN BASED OS: MAKE SURE RUNNING AS SUDO!! \
-            TO PATCH DNS LEAKS To Manually Change '/etc/resolv.conf'")
-        nordDNS1 = 'sudo echo "nameserver 162.242.211.137" > /etc/resolv.conf'
-        nordDNS2 = 'sudo echo "nameserver 78.46.223.24" >> /etc/resolv.conf'
-        openDNS3 = 'sudo echo "nameserver 208.67.222.220" >> /etc/resolv.conf'
-        subprocess.run(nordDNS1, shell=True)
-        subprocess.run(nordDNS2, shell=True)
-        subprocess.run(openDNS3, shell=True)
+        print("NOT DEBIAN BASED OS: Mannully Applying Patch to Tunnel DNS Through " +
+              "The VPN Tunnel By Modifying '/etc/resolv.conf'")
+        dnsPatch = subprocess.run(["sudo", "./manual-dns-patch.sh"], stdin=subprocess.PIPE)
+
         if background:
             subprocess.Popen(
                 ["sudo", "openvpn", "--config", "./files/" + server +
