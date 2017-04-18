@@ -12,8 +12,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 ## Instructions
 1. Clone this repo to a desired location:
 ``` bash
-$ git clone https://github.com/jotyGill/openpyn.git
-$ cd openpyn
+$ git clone https://github.com/jotyGill/openpyn-nordvpn.git
+$ cd openpyn-nordvpn
 ```
 2. Install the dependencies if they are not already present.
 ``` bash
