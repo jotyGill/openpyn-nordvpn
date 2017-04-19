@@ -42,9 +42,9 @@ UDP-1194 instead, use "-u" switch.
   ./openpyn.py us -u
 ```
 * To list all the Countries and their Country Codes where NordVPN hosts servers.
-''' bash
+``` bash
   ./openpyn.py -ls
-'''
+```
 * To quickly connect to a specific server.
 ``` bash
   ./openpyn.py -s au10
