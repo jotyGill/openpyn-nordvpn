@@ -10,6 +10,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
 * Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use)
 * Finds and displays nord vpn servers (with extra info) in a given country.
+* Country codes mapping for all countries that host servers by Nord (use 'us','uk' instead of full names).
 
 ## Instructions
 1. Clone this repo to a desired location:
@@ -21,6 +22,7 @@ $ cd openpyn-nordvpn
 ``` bash
   $ sudo apt install openvpn
   $ sudo pip install requests
+  $ sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
 3. Create a "pass.txt" in the root of openpyn with openvpn compatible "auth-user-pass" file format.
 ``` bash
@@ -66,7 +68,7 @@ have the lowest latency from you.
 usage: openpyn.py [-h] [-s SERVER] [-u] [-c COUNTRYCODE] [-b] [-l LOADTHRESHOLD] [-t TOPSERVERS]
 [-p PINGS] [-tt TOPPESTSERVERS] [-k] [--update] [country]
 
-A python3 script to easily connect to, VPN servers hosted by NordVPN.
+A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you. It Tunnels DNS traffic through the VPN which otherwise would go through your ISP!
 
 positional arguments:
   country               Country Code can also be speficied without "-c," i.em"./openpyn.py au"
@@ -106,6 +108,9 @@ optional arguments:
 
   -k, --kill            Kill any running Openvnp process, very usefull to kill
                         openpyn process running in background with "-b" switch
+
+  --updateCountries     Fetch the latest countries from nord's site and update
+                        the country code mappings
 
   --update              Fetch the latest config files from nord\'s site
   ```
