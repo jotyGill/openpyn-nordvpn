@@ -44,7 +44,7 @@ def main(
     # if either "-c" or positional arg f.e "au" is present
     if countryCode:
         countryCode = countryCode.lower()
-        betterServerList = findBetterServers(countryCode, loadThreshold, topServers)
+        betterServerList = findBetterServers(countryCode, loadThreshold, topServers, udp)
         pingServerList = pingServers(betterServerList, pings)
         chosenServer = chooseBestServer(pingServerList, toppestServers)
         connection = connect(chosenServer, port, background)
@@ -73,7 +73,7 @@ def getData(countryCode):
     return jsonResList
 
 
-def findBetterServers(countryCode, loadThreshold, topServers):
+def findBetterServers(countryCode, loadThreshold, topServers, udp):
     jsonResList = getData(countryCode)
     serverList = []
     betterServerList = []
@@ -81,7 +81,14 @@ def findBetterServers(countryCode, loadThreshold, topServers):
     for res in jsonResList:
         # only add if the server is online
         if res["exists"] is True:
-            serverList.append([res["short"], res["load"]])
+            # when connecting using UDP only append if it supports OpenVPN-UDP
+            if udp is True and res["feature"]["openvpn_udp"] is True:
+                serverList.append([res["short"], res["load"]])
+                # print("UDP SERVESR :", res["feature"], res["feature"]["openvpn_udp"])
+            # when connecting using TCP only append if it supports OpenVPN-TCP
+            elif udp is False and res["feature"]["openvpn_tcp"] is True:
+                serverList.append([res["short"], res["load"]])
+                # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
 
     # sort list by the server load
     serverList.sort(key=operator.itemgetter(1))
@@ -90,9 +97,13 @@ def findBetterServers(countryCode, loadThreshold, topServers):
         serverLoad = int(server[1])
         if serverLoad < loadThreshold and len(betterServerList) < topServers:
             betterServerList.append(server)
-
-    print("According to NordVPN least busy " + str(len(betterServerList)) + " Servers, in",
-          countryCode, "with Load less than", loadThreshold, "are :", betterServerList)
+    if udp:
+        usedProtocol = "OPENVPN-UDP"
+    else:
+        usedProtocol = "OPENVPN-TCP"
+    print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
+          countryCode.upper(), "With 'Load' less than", loadThreshold,
+          "Which Support", usedProtocol, "are :", betterServerList)
     return betterServerList
 
 
