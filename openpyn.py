@@ -22,8 +22,8 @@ with open("country-mappings.json", 'r') as countryMappingsFile:
 
 
 def main(
-    server, countryCode, country, udp, background, loadThreshold,
-        topServers, pings, toppestServers, kill, update, display, updateCountries):
+    server, countryCode, country, udp, background, loadThreshold, topServers,
+        pings, toppestServers, kill, update, display, updateCountries, listCountries):
 
     port = "tcp443"
     if udp:
@@ -39,6 +39,8 @@ def main(
         displayServers(display)
     elif updateCountries:
         updateCountryCodes()
+    elif listCountries:
+        listAllCountries()
 
     # if only "-c" used then
     if countryCode is None and server is None:
@@ -186,7 +188,8 @@ def displayServers(display):
     print("The NordVPN Servers In", display.upper(), "Are :")
     for res in jsonResList:
         print("Server =", res["short"], ", Load =", res["load"], ", Country =",
-              res["country"], ", Location =", res["location"])
+              res["country"], ", OpenVPN TCP Support =", res["feature"]["openvpn_tcp"],
+              ", OpenVPN UDP Support =", res["feature"]["openvpn_udp"], '\n')
     exit()
 
 
@@ -220,6 +223,12 @@ def updateCountryCodes():
     with open("country-mappings.json", 'w') as countryMappingsFile:
         json.dump(countryMappings, countryMappingsFile)
         countryMappingsFile.close()
+    exit()
+
+
+def listAllCountries():
+    for key in countryDic.keys():
+        print("Full Name : " + countryDic[key] + "      Country Code : " + key + '\n')
     exit()
 
 
@@ -302,10 +311,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--display', type=str, help='Display all servers in a given country\
         with their loadThreshold')
+    parser.add_argument(
+        '-ls', '--listCountries', help='List all the countries, with Country \
+        Codes to Use', action='store_true')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.country, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings, args.toppestServers,
-        args.kill, args.update, args.display, args.updateCountries)
+        args.kill, args.update, args.display, args.updateCountries, args.listCountries)
