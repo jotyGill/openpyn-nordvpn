@@ -6,24 +6,24 @@ import requests
 import operator
 import random
 import os.path
+import json
+
 
 # @todo install.sh
 # @todo work arround, when used '-b' without 'sudo'
-# @todo check for openvpn tcp and udp support on servers()
 # @todo find and display server's locations (cities)
 # @todo utilise iptables to ensure no ip leakage when reconnecting.
 # @todo create a combined config of server list(on fly) for failover
 
-
-countryDic = {
-    'au': 'Australia', 'ca': 'Canada', 'at': 'Austria', 'be': 'Belgium',
-    'ba': 'Brazil', 'de': 'Germany', 'fr': 'France', 'fi': 'Finland',
-    'uk': 'United Kingdom', 'nl': 'Netherlands', 'se': 'Sweden', 'us': 'United States'}
+countryDic = {}
+with open("country-mappings.json", 'r') as countryMappingsFile:
+    countryDic = json.load(countryMappingsFile)
+    countryMappingsFile.close()
 
 
 def main(
-    server, countryCode, country, udp, background, loadThreshold,
-        topServers, pings, toppestServers, kill, update, display):
+    server, countryCode, country, udp, background, loadThreshold, topServers,
+        pings, toppestServers, kill, update, display, updateCountries, listCountries):
 
     port = "tcp443"
     if udp:
@@ -37,6 +37,10 @@ def main(
         exit()
     elif display is not None:
         displayServers(display)
+    elif updateCountries:
+        updateCountryCodes()
+    elif listCountries:
+        listAllCountries()
 
     # if only "-c" used then
     if countryCode is None and server is None:
@@ -53,9 +57,12 @@ def main(
         connection = connect(server, port, background)
 
 
-def getData(countryCode):
+def getData(countryCode=None, countryName=None):
     jsonResList = []
-    countryCode = countryDic[countryCode]
+    if countryName is not None:
+        countryCode = countryName
+    else:
+        countryCode = countryDic[countryCode]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
     +servers&country=" + countryCode + "&action=getGroupRows"
 
@@ -74,7 +81,7 @@ def getData(countryCode):
 
 
 def findBetterServers(countryCode, loadThreshold, topServers, udp):
-    jsonResList = getData(countryCode)
+    jsonResList = getData(countryCode=countryCode)
     serverList = []
     betterServerList = []
 
@@ -177,11 +184,51 @@ def updateOpenpyn():
 
 
 def displayServers(display):
-    jsonResList = getData(display)
-    # print server info
+    jsonResList = getData(countryCode=display)
+    print("The NordVPN Servers In", display.upper(), "Are :")
     for res in jsonResList:
         print("Server =", res["short"], ", Load =", res["load"], ", Country =",
-              res["country"], ", Location =", res["location"])
+              res["country"], ", OpenVPN TCP Support =", res["feature"]["openvpn_tcp"],
+              ", OpenVPN UDP Support =", res["feature"]["openvpn_udp"], '\n')
+    exit()
+
+
+def updateCountryCodes():
+    from bs4 import BeautifulSoup
+
+    countryNames = set()
+    countryMappings = {}
+    url = "https://nordvpn.com/servers/"
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
+    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
+
+    try:
+        response = requests.get(url, headers=headers)
+    except HTTPError as e:  # @todo ask for server instead
+        print("Cannot GET")
+
+    try:
+        bsObj = BeautifulSoup(response.text, "html.parser")
+    except AttributeError as e:
+        print("html.parser CANT parse the URL's text")
+
+    for ref in bsObj.find_all('span', {"class": "country-name hidden-xs"}):
+        countryNames.add((ref.get_text()).strip())
+    print("Updating Country Code Mappings: \n")
+    for eachCountry in countryNames:
+        jsonResList = getData(countryName=eachCountry)
+        print(jsonResList[0]["short"][0:2], jsonResList[0]["country"])
+        countryMappings.update({jsonResList[0]["short"][0:2]: jsonResList[0]["country"]})
+    with open("country-mappings.json", 'w') as countryMappingsFile:
+        json.dump(countryMappings, countryMappingsFile)
+        countryMappingsFile.close()
+    exit()
+
+
+def listAllCountries():
+    for key in countryDic.keys():
+        print("Full Name : " + countryDic[key] + "      Country Code : " + key + '\n')
     exit()
 
 
@@ -259,12 +306,18 @@ if __name__ == '__main__':
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
     parser.add_argument(
+        '--updateCountries', help='Fetch the latest countries from nord\'s site\
+        and update the country code mappings', action='store_true')
+    parser.add_argument(
         '-d', '--display', type=str, help='Display all servers in a given country\
         with their loadThreshold')
+    parser.add_argument(
+        '-ls', '--listCountries', help='List all the countries, with Country \
+        Codes to Use', action='store_true')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.country, args.udp, args.background,
-        args.loadThreshold, args.topServers, args.pings,
-        args.toppestServers, args.kill, args.update, args.display)
+        args.loadThreshold, args.topServers, args.pings, args.toppestServers,
+        args.kill, args.update, args.display, args.updateCountries, args.listCountries)
