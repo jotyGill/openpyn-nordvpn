@@ -8,7 +8,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Downloads and Updates (modifications) the latest config files from NordVPN.
 * Option to run the script in the background (requires "sudo ./openpyn.py").
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
-* Find and display nord vpn servers (with extra info) in a given country.
+* Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use)
+* Finds and displays nord vpn servers (with extra info) in a given country.
 
 ## Instructions
 1. Clone this repo to a desired location:
