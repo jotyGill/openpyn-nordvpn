@@ -165,6 +165,8 @@ def chooseBestServer(pingServerList, toppestServers):
 
 def killProcess():
     try:
+        print("Flushing iptables OUTPUT chain")
+        subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
         print("Killing any running openvpn processes")
         openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
@@ -242,13 +244,13 @@ def connect(server, port, background):
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
         if background:
             subprocess.Popen(
-                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
                     + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
                     "--up", "./update-resolv-conf.sh",
                     "--down", "./update-resolv-conf.sh"])
         else:
             subprocess.run(
-                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
                     + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
                     "--up", "./update-resolv-conf.sh",
                     "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
@@ -260,11 +262,11 @@ def connect(server, port, background):
 
         if background:
             subprocess.Popen(
-                ["sudo", "openvpn", "--config", "./files/" + server +
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server +
                  ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
         else:
             subprocess.run(
-                ["sudo", "openvpn", "--config", "./files/" + server + ".nordvpn.com."
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
                  + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
 
 
