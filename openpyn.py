@@ -438,8 +438,8 @@ if __name__ == '__main__':
         '-ls', '--listCountries', help='List all the countries, with Country \
         Codes to Use', action='store_true')
     parser.add_argument(
-        '-f', '--forceFW', help='Enfore Firewall rules to \
-        drop traffic when tunnel breaks', action='store_true')
+        '-f', '--forceFW', help='Enfore Firewall rules to drop traffic when tunnel breaks\
+        , Force disable DNS traffic going to any other interface', action='store_true')
 
     args = parser.parse_args()
 
