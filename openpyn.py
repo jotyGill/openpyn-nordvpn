@@ -23,7 +23,8 @@ with open("country-mappings.json", 'r') as countryMappingsFile:
 
 def main(
     server, countryCode, country, udp, background, loadThreshold, topServers,
-        pings, toppestServers, kill, update, display, updateCountries, listCountries):
+        pings, toppestServers, kill, update, display, updateCountries,
+        listCountries, forceFW):
 
     port = "tcp443"
     if udp:
@@ -165,8 +166,20 @@ def chooseBestServer(pingServerList, toppestServers):
 
 def killProcess():
     try:
-        print("Flushing iptables OUTPUT chain")
+        print("Flushing iptables INPUT and OUTPUT chains")
         subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
+        # allow all outgoing traffic
+        subprocess.run("sudo iptables -P OUTPUT ACCEPT", shell=True)
+
+        subprocess.run(["sudo", "iptables", "-F", "INPUT"])
+        subprocess.run(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
+        subprocess.run(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
+        subprocess.run("sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT", shell=True)
+        # best practice, stops spoofing
+        subprocess.run("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP", shell=True)
+        # drop anything else incoming
+        subprocess.run("sudo iptables -P INPUT DROP", shell=True)
+
         print("Killing any running openvpn processes")
         openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
@@ -316,10 +329,14 @@ if __name__ == '__main__':
     parser.add_argument(
         '-ls', '--listCountries', help='List all the countries, with Country \
         Codes to Use', action='store_true')
+    parser.add_argument(
+        '-f', '--forceFW', type=str, help='Enfore Firewall rules to \
+        drop traffic when tunnel breaks')
 
     args = parser.parse_args()
 
     main(
         args.server, args.countryCode, args.country, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings, args.toppestServers,
-        args.kill, args.update, args.display, args.updateCountries, args.listCountries)
+        args.kill, args.update, args.display, args.updateCountries, args.listCountries,
+        args.forceFW)
