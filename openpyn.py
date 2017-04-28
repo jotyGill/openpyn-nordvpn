@@ -15,7 +15,7 @@ import json
 # @todo create a combined config of server list(on fly) for failover
 
 countryDic = {}
-with open("country-mappings.json", 'r') as countryMappingsFile:
+with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFile:
     countryDic = json.load(countryMappingsFile)
     countryMappingsFile.close()
 
@@ -212,9 +212,9 @@ def clearFWRules():
 
 def updateOpenpyn():
     try:
-        subprocess.run(["wget", "-N", "https://nordvpn.com/api/files/zip"])
-        subprocess.run(["unzip", "-u", "-o", "zip", "-d", "./files/"])
-        subprocess.run(["rm", "zip"])
+        subprocess.run(["sudo", "wget", "-N", "https://nordvpn.com/api/files/zip", "-P", "/usr/share/openpyn/"])
+        subprocess.run(["sudo", "unzip", "-u", "-o", "/usr/share/openpyn/zip", "-d", "/usr/share/openpyn/files/"])
+        subprocess.run(["sudo", "rm", "/usr/share/openpyn/zip"])
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
@@ -298,7 +298,7 @@ def findInterfaces():
 
 def findVpnServerIP(server, port):
     # grab the ip address of vpnserver from the config file
-    fullPath = "./files/" + server + ".nordvpn.com." + port + ".ovpn"
+    fullPath = "/usr/share/openpyn/files/" + server + ".nordvpn.com." + port + ".ovpn"
     with open(fullPath, 'r') as configFile:
         for line in configFile:
             if "remote " in line:
@@ -365,30 +365,35 @@ def connect(server, port, background):
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
         if background:
             subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
-                    + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
-                    "--up", "./update-resolv-conf.sh",
-                    "--down", "./update-resolv-conf.sh"])
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                    "/usr/share/openpyn/pass.txt", "--script-security", "2",
+                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
         else:
             subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
-                    + port + ".ovpn", "--auth-user-pass", "pass.txt", "--script-security", "2",
-                    "--up", "./update-resolv-conf.sh",
-                    "--down", "./update-resolv-conf.sh"], stdin=subprocess.PIPE)
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                    "/usr/share/openpyn/pass.txt", "--script-security", "2",
+                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
     else:       # If not Debian Based
         print("NOT DEBIAN BASED OS: Mannully Applying Patch to Tunnel DNS Through " +
               "The VPN Tunnel By Modifying '/etc/resolv.conf'")
-        dnsPatch = subprocess.run(["sudo", "./manual-dns-patch.sh"], stdin=subprocess.PIPE)
+        dnsPatch = subprocess.run(
+            ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"], stdin=subprocess.PIPE)
 
         if background:
             subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server +
-                 ".nordvpn.com." + port + ".ovpn", "--auth-user-pass", "pass.txt"])
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn",
+                    "--auth-user-pass", "/usr/share/openpyn/pass.txt"])
         else:
             subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "./files/" + server + ".nordvpn.com."
-                 + port + ".ovpn", "--auth-user-pass", "pass.txt"], stdin=subprocess.PIPE)
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                    "/usr/share/openpyn/pass.txt"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
@@ -404,7 +409,7 @@ if __name__ == '__main__':
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be speficied without "-c,"\
-         i.e "./openpyn.py au"')
+         i.e "openpyn.py au"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
         action='store_true')
