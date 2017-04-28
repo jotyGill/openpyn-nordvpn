@@ -12,7 +12,6 @@ import json
 # @todo install.sh
 # @todo work arround, when used '-b' without 'sudo'
 # @todo find and display server's locations (cities)
-# @todo utilise iptables to ensure no ip leakage when reconnecting.
 # @todo create a combined config of server list(on fly) for failover
 
 countryDic = {}
@@ -31,7 +30,8 @@ def main(
         port = "udp1194"
 
     if kill:
-        killProcess()
+        killVpnProcesses()
+        clearFWRules()
         exit()
     elif update:
         updateOpenpyn()
@@ -42,6 +42,9 @@ def main(
         updateCountryCodes()
     elif listCountries:
         listAllCountries()
+    # only clear/touch FW Rules if "-f" used
+    elif forceFW:
+        clearFWRules()
 
     # if only "-c" used then
     if countryCode is None and server is None:
@@ -52,9 +55,23 @@ def main(
         betterServerList = findBetterServers(countryCode, loadThreshold, topServers, udp)
         pingServerList = pingServers(betterServerList, pings)
         chosenServer = chooseBestServer(pingServerList, toppestServers)
+        # if "-f" used appy Firewall rules
+        if forceFW:
+            networkInterfaces = findInterfaces()
+            for interF in networkInterfaces:
+                print(interF)
+            vpnServerIp = findVpnServerIP(chosenServer, port)
+            applyFirewallRules(networkInterfaces, vpnServerIp)
         connection = connect(chosenServer, port, background)
     elif server:
         server = server.lower()
+        # if "-f" used appy Firewall rules
+        if forceFW:
+            networkInterfaces = findInterfaces()
+            for interF in networkInterfaces:
+                print(interF)
+            vpnServerIp = findVpnServerIP(server, port)
+            applyFirewallRules(networkInterfaces, vpnServerIp)
         connection = connect(server, port, background)
 
 
@@ -164,22 +181,8 @@ def chooseBestServer(pingServerList, toppestServers):
     return chosenServer
 
 
-def killProcess():
+def killVpnProcesses():
     try:
-        print("Flushing iptables INPUT and OUTPUT chains")
-        subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
-        # allow all outgoing traffic
-        subprocess.run("sudo iptables -P OUTPUT ACCEPT", shell=True)
-
-        subprocess.run(["sudo", "iptables", "-F", "INPUT"])
-        subprocess.run(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
-        subprocess.run(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
-        subprocess.run("sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT", shell=True)
-        # best practice, stops spoofing
-        subprocess.run("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP", shell=True)
-        # drop anything else incoming
-        subprocess.run("sudo iptables -P INPUT DROP", shell=True)
-
         print("Killing any running openvpn processes")
         openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
@@ -187,6 +190,24 @@ def killProcess():
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpnProcesses issued non 0 result, "not found"
         print("No openvpn process found")
+        return
+
+
+def clearFWRules():
+    print("Flushing iptables INPUT and OUTPUT chains AND Applying defualt Rules")
+    subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
+    # allow all outgoing traffic
+    subprocess.run("sudo iptables -P OUTPUT ACCEPT", shell=True)
+
+    subprocess.run(["sudo", "iptables", "-F", "INPUT"])
+    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
+    subprocess.run(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
+    subprocess.run("sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT", shell=True)
+    # best practice, stops spoofing
+    subprocess.run("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP", shell=True)
+    # drop anything else incoming
+    subprocess.run("sudo iptables -P INPUT DROP", shell=True)
+    return
 
 
 def updateOpenpyn():
@@ -247,9 +268,96 @@ def listAllCountries():
     exit()
 
 
+def findInterfaces():
+    interfaceList = []
+    interfaceDetailsList = []
+
+    interfaces = subprocess.check_output("ls /sys/class/net", shell=True)
+    interfaceString = str(interfaces)
+    interfaceString = interfaceString[2:-3]
+    interfaceList = interfaceString.split('\\n')
+
+    for interface in interfaceList:
+        showInterface = subprocess.check_output(["ip", "addr", "show", interface])
+        showInterfaceStr = str(showInterface)
+        ipaddress = showInterfaceStr[showInterfaceStr.find("inet") + 5:]
+        ipaddress = ipaddress[:ipaddress.find(" ")]
+        subnetmask = ipaddress[ipaddress.find("/") + 1:]
+        ipaddress = ipaddress[:ipaddress.find("/")]
+
+        showInterfaceStr = showInterfaceStr[5:showInterfaceStr.find(">")+1]
+        showInterfaceStr = showInterfaceStr.replace(":", "").replace("<", "").replace(">", "")
+
+        showInterfaceList = showInterfaceStr.split(" ")
+        if ipaddress != "":
+            showInterfaceList.append(ipaddress)
+            showInterfaceList.append(subnetmask)
+        interfaceDetailsList.append(showInterfaceList)
+    return interfaceDetailsList
+
+
+def findVpnServerIP(server, port):
+    # grab the ip address of vpnserver from the config file
+    fullPath = "./files/" + server + ".nordvpn.com." + port + ".ovpn"
+    with open(fullPath, 'r') as configFile:
+        for line in configFile:
+            if "remote " in line:
+                vpnServerIp = line[7:]
+                vpnServerIp = vpnServerIp[:vpnServerIp.find(" ")]
+                print(vpnServerIp)
+        configFile.close()
+        return vpnServerIp
+
+
+def applyFirewallRules(interfaceDetailsList, vpnServerIp):
+    # Empty the INPUT and OUTPUT chain of any current rules
+    subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
+    subprocess.run(["sudo", "iptables", "-F", "INPUT"])
+
+    # Allow all traffic out over the vpn tunnel
+    subprocess.run("sudo iptables -A OUTPUT -o tun+ -j ACCEPT", shell=True)
+    # accept traffic that comes through tun that you connect to
+    subprocess.run("sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -i tun+ -j ACCEPT", shell=True)
+    for interface in interfaceDetailsList:
+
+        # if interface is active with an IP in it, don't send DNS requests to it
+        if len(interface) == 4 and "tun" not in interface[0]:
+            subprocess.run(
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
+                    "tcp", "--destination-port", "53", "-j", "DROP"])
+            subprocess.run(
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
+                    "udp", "--destination-port", "53", "-j", "DROP"])
+            if interface[0] != "lo":
+                # allow access to vpnServerIp
+                subprocess.run(
+                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d", vpnServerIp, "-j", "ACCEPT"])
+                # talk to the vpnServer ip to connect to it
+                subprocess.run(
+                    ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                        "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0], "-s", vpnServerIp, "-j", "ACCEPT"])
+
+                # allow access to internal ip range
+                subprocess.run(
+                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
+                        interface[2]+"/"+interface[3], "-j", "ACCEPT"])
+
+    # Allow loopback traffic
+    subprocess.run("sudo iptables -A INPUT -i lo -j ACCEPT", shell=True)
+    subprocess.run("sudo iptables -A OUTPUT -o lo -j ACCEPT", shell=True)
+
+    # best practice, stops spoofing
+    subprocess.run("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP", shell=True)
+
+    # Default action if no other rules match
+    subprocess.run("sudo iptables -P OUTPUT DROP", shell=True)
+    subprocess.run("sudo iptables -P INPUT DROP", shell=True)
+    return
+
+
 def connect(server, port, background):
+    killVpnProcesses()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
-    killProcess()   # kill existing openvpn processes
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
     # osIsDebianBased = False
     if osIsDebianBased:  # Debian Based OS
@@ -330,8 +438,8 @@ if __name__ == '__main__':
         '-ls', '--listCountries', help='List all the countries, with Country \
         Codes to Use', action='store_true')
     parser.add_argument(
-        '-f', '--forceFW', type=str, help='Enfore Firewall rules to \
-        drop traffic when tunnel breaks')
+        '-f', '--forceFW', help='Enfore Firewall rules to \
+        drop traffic when tunnel breaks', action='store_true')
 
     args = parser.parse_args()
 
