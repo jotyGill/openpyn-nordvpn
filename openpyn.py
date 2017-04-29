@@ -58,8 +58,6 @@ def main(
         # if "-f" used appy Firewall rules
         if forceFW:
             networkInterfaces = findInterfaces()
-            for interF in networkInterfaces:
-                print(interF)
             vpnServerIp = findVpnServerIP(chosenServer, port)
             applyFirewallRules(networkInterfaces, vpnServerIp)
         connection = connect(chosenServer, port, background)
@@ -68,8 +66,6 @@ def main(
         # if "-f" used appy Firewall rules
         if forceFW:
             networkInterfaces = findInterfaces()
-            for interF in networkInterfaces:
-                print(interF)
             vpnServerIp = findVpnServerIP(server, port)
             applyFirewallRules(networkInterfaces, vpnServerIp)
         connection = connect(server, port, background)
@@ -256,7 +252,7 @@ def updateCountryCodes():
         jsonResList = getData(countryName=eachCountry)
         print(jsonResList[0]["short"][0:2], jsonResList[0]["country"])
         countryMappings.update({jsonResList[0]["short"][0:2]: jsonResList[0]["country"]})
-    with open("country-mappings.json", 'w') as countryMappingsFile:
+    with open("/usr/share/openpyn/country-mappings.json", 'w') as countryMappingsFile:
         json.dump(countryMappings, countryMappingsFile)
         countryMappingsFile.close()
     exit()
@@ -304,7 +300,6 @@ def findVpnServerIP(server, port):
             if "remote " in line:
                 vpnServerIp = line[7:]
                 vpnServerIp = vpnServerIp[:vpnServerIp.find(" ")]
-                print(vpnServerIp)
         configFile.close()
         return vpnServerIp
 
