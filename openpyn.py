@@ -9,7 +9,7 @@ import os.path
 import json
 
 
-# @todo install.sh
+# @todo uninstall.sh
 # @todo work arround, when used '-b' without 'sudo'
 # @todo find and display server's locations (cities)
 # @todo create a combined config of server list(on fly) for failover
@@ -22,7 +22,7 @@ with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFil
 
 def main(
     server, countryCode, country, udp, background, loadThreshold, topServers,
-        pings, toppestServers, kill, update, display, updateCountries,
+        pings, toppestServers, kill, killFW, update, display, updateCountries,
         listCountries, forceFW):
 
     port = "tcp443"
@@ -30,8 +30,11 @@ def main(
         port = "udp1194"
 
     if kill:
+        killVpnProcesses()  # dont touch iptable rules
+        exit()
+    elif killFW:
         killVpnProcesses()
-        clearFWRules()
+        clearFWRules()      # also clear iptable rules
         exit()
     elif update:
         updateOpenpyn()
@@ -217,11 +220,26 @@ def updateOpenpyn():
 
 def displayServers(display):
     jsonResList = getData(countryCode=display)
+    fromWebset = set()      # servers shown no the website
+    serversSet = set()      # servers from .openvpn files
     print("The NordVPN Servers In", display.upper(), "Are :")
     for res in jsonResList:
         print("Server =", res["short"], ", Load =", res["load"], ", Country =",
               res["country"], ", OpenVPN TCP Support =", res["feature"]["openvpn_tcp"],
               ", OpenVPN UDP Support =", res["feature"]["openvpn_udp"], '\n')
+        fromWebset.add(res["short"])
+    serverFiles = subprocess.check_output("ls /usr/share/openpyn/files/" + display + "*", shell=True)
+    serverFilesStr = str(serverFiles)
+    serverFilesStr = serverFilesStr[2:-3]
+    serverFilesList = serverFilesStr.split("\\n")
+    for item in serverFilesList:
+        serverName = item[item.find("files/") + 6:item.find(".")]
+        serversSet.add(serverName)
+    print("The following server (if any) have not even been listed on the nord's site yet",
+          "they usally are the fastest")
+    for item in serversSet:
+        if item not in fromWebset:
+            print(item)
     exit()
 
 
@@ -364,7 +382,7 @@ def connect(server, port, background):
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
                     "/usr/share/openpyn/pass.txt", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
             subprocess.run(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
@@ -374,7 +392,7 @@ def connect(server, port, background):
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
     else:       # If not Debian Based
-        print("NOT DEBIAN BASED OS: Mannully Applying Patch to Tunnel DNS Through " +
+        print("NOT DEBIAN BASED OS ('/sbin/resolvconf' not Found): Mannully Applying Patch to Tunnel DNS Through " +
               "The VPN Tunnel By Modifying '/etc/resolv.conf'")
         dnsPatch = subprocess.run(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"], stdin=subprocess.PIPE)
@@ -383,7 +401,7 @@ def connect(server, port, background):
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
-                    "--auth-user-pass", "/usr/share/openpyn/pass.txt"])
+                    "--auth-user-pass", "/usr/share/openpyn/pass.txt", "--daemon"])
         else:
             subprocess.run(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
@@ -426,6 +444,9 @@ if __name__ == '__main__':
         to kill openpyn process running in background with "-b" switch',
         action='store_true')
     parser.add_argument(
+        '-kf', '--killFW', help='Kill any running Openvnp process, AND Flush Iptables',
+        action='store_true')
+    parser.add_argument(
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
     parser.add_argument(
@@ -446,5 +467,5 @@ if __name__ == '__main__':
     main(
         args.server, args.countryCode, args.country, args.udp, args.background,
         args.loadThreshold, args.topServers, args.pings, args.toppestServers,
-        args.kill, args.update, args.display, args.updateCountries, args.listCountries,
+        args.kill, args.killFW, args.update, args.display, args.updateCountries, args.listCountries,
         args.forceFW)
