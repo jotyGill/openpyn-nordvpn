@@ -404,7 +404,7 @@ if __name__ == '__main__':
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be speficied without "-c,"\
-         i.e "openpyn.py au"')
+         i.e "openpyn au"')
     parser.add_argument(
         '-b', '--background', help='Run script in the background',
         action='store_true')
