@@ -10,7 +10,6 @@ import json
 
 
 # @todo uninstall.sh
-# @todo work arround, when used '-b' without 'sudo'
 # @todo find and display server's locations (cities)
 # @todo create a combined config of server list(on fly) for failover
 
@@ -220,8 +219,9 @@ def updateOpenpyn():
 
 def displayServers(display):
     jsonResList = getData(countryCode=display)
-    fromWebset = set()      # servers shown no the website
+    fromWebset = set()      # servers shown on the website
     serversSet = set()      # servers from .openvpn files
+    newServersset = set()   # new Servers, not published on website yet
     print("The NordVPN Servers In", display.upper(), "Are :")
     for res in jsonResList:
         print("Server =", res["short"], ", Load =", res["load"], ", Country =",
@@ -239,7 +239,8 @@ def displayServers(display):
           "they usally are the fastest")
     for item in serversSet:
         if item not in fromWebset:
-            print(item)
+            newServersset.add(item)
+    print(newServersset)
     exit()
 
 
@@ -296,8 +297,6 @@ def findInterfaces():
         showInterfaceStr = str(showInterface)
         ipaddress = showInterfaceStr[showInterfaceStr.find("inet") + 5:]
         ipaddress = ipaddress[:ipaddress.find(" ")]
-        subnetmask = ipaddress[ipaddress.find("/") + 1:]
-        ipaddress = ipaddress[:ipaddress.find("/")]
 
         showInterfaceStr = showInterfaceStr[5:showInterfaceStr.find(">")+1]
         showInterfaceStr = showInterfaceStr.replace(":", "").replace("<", "").replace(">", "")
@@ -305,7 +304,6 @@ def findInterfaces():
         showInterfaceList = showInterfaceStr.split(" ")
         if ipaddress != "":
             showInterfaceList.append(ipaddress)
-            showInterfaceList.append(subnetmask)
         interfaceDetailsList.append(showInterfaceList)
     return interfaceDetailsList
 
@@ -334,7 +332,7 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
     for interface in interfaceDetailsList:
 
         # if interface is active with an IP in it, don't send DNS requests to it
-        if len(interface) == 4 and "tun" not in interface[0]:
+        if len(interface) == 3 and "tun" not in interface[0]:
             subprocess.run(
                 ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
                     "tcp", "--destination-port", "53", "-j", "DROP"])
@@ -351,9 +349,10 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
                         "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0], "-s", vpnServerIp, "-j", "ACCEPT"])
 
                 # allow access to internal ip range
+                # print("internal ip with range", interface[2])
                 subprocess.run(
                     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
-                        interface[2]+"/"+interface[3], "-j", "ACCEPT"])
+                        interface[2], "-j", "ACCEPT"])
 
     # Allow loopback traffic
     subprocess.run("sudo iptables -A INPUT -i lo -j ACCEPT", shell=True)
