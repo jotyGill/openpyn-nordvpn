@@ -16,8 +16,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 ## Instructions
 1. Clone this repo to a desired location:
 ``` bash
-$ git clone https://github.com/jotyGill/openpyn-nordvpn.git
-$ cd openpyn-nordvpn
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
 ```
 2. Create a "pass.txt" in the current folder, with openvpn compatible "auth-user-pass" file format.
 ``` bash
@@ -26,16 +26,16 @@ $ cd openpyn-nordvpn
 ```
 3. Install the script, and dependencies if they are not already present.
 ``` bash
-  $ sudo ./install.sh
+  sudo ./install.sh
 
   # dependencies
-  $ sudo apt install openvpn
-  $ sudo pip install requests
-  $ sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
+  sudo apt install openvpn
+  sudo pip install requests
+  sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
 4. Download/Update the latest vpn config files from NordVPN by:
 ``` bash
-  $ openpyn --update
+  openpyn --update
 ```
 5. That's it, run the script! when done with it, press "Ctr + C" to exit.
 
