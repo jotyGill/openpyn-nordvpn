@@ -16,8 +16,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 ## Instructions
 1. Clone this repo to a desired location:
 ``` bash
-$ git clone https://github.com/jotyGill/openpyn-nordvpn.git
-$ cd openpyn-nordvpn
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
 ```
 2. Create a "pass.txt" in the current folder, with openvpn compatible "auth-user-pass" file format.
 ``` bash
@@ -26,16 +26,16 @@ $ cd openpyn-nordvpn
 ```
 3. Install the script, and dependencies if they are not already present.
 ``` bash
-  $ sudo ./install.sh
+  sudo ./install.sh
 
   # dependencies
-  $ sudo apt install openvpn
-  $ sudo pip install requests
-  $ sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
+  sudo apt install openvpn
+  sudo pip install requests
+  sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
 4. Download/Update the latest vpn config files from NordVPN by:
 ``` bash
-  $ openpyn --update
+  openpyn --update
 ```
 5. That's it, run the script! when done with it, press "Ctr + C" to exit.
 
@@ -47,7 +47,7 @@ UDP-1194 instead, use "-u" switch.
 ```
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
 ``` bash
-  openpyn us -f # Warning clears IPtables rules!
+  openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
 ```
 * To list all the Countries and their Country Codes where NordVPN hosts servers.
 ``` bash
@@ -66,19 +66,23 @@ have the lowest latency from you.
 ``` bash
   openpyn us -t 10 -tt 2
 ```
-* To run the script in background (after it initiates the connection)
+* To run the script in background.
 ``` bash
   sudo openpyn us -b #needs sudo to use openvpn
 ```
-* To kill a running openvpn connection (background or shell window).
+* To kill a running openvpn connection.
 ``` bash
-  sudo openpyn -k  # Warning clears IPtables rules!
+  sudo openpyn -k
+```
+* To Flush the iptables and kill any running openvpn connections.
+``` bash
+  sudo openpyn -kf
 ```
 
 ## Usage Options
 ``` bash
 usage: openpyn [-h] [-s SERVER] [-u] [-c COUNTRYCODE] [-b] [-l LOADTHRESHOLD] [-t TOPSERVERS]
-[-p PINGS] [-tt TOPPESTSERVERS] [-k] [--updateCountries] [-ls] [--update] [country]
+[-p PINGS] [-tt TOPPESTSERVERS] [-k] [-kf] [--updateCountries] [-ls] [--update] [country]
 
 A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you. It Tunnels DNS traffic through the VPN which otherwise would go through your ISP!
 
@@ -120,6 +124,9 @@ optional arguments:
 
   -k, --kill            Kill any running Openvnp process, very usefull to kill
                         openpyn process running in background with "-b" switch
+
+  -kf, --killFW         Flush iptables And Kill any running Openvnp process, needed
+                        when using "-f"
 
   --updateCountries     Fetch the latest countries from nord's site and update
                         the country code mappings
