@@ -1,5 +1,5 @@
 # openpyn
-A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
+A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
@@ -21,17 +21,17 @@ cd openpyn-nordvpn
 ```
 2. Create a "pass.txt" in the current folder, with openvpn compatible "auth-user-pass" file format.
 ``` bash
-  youruser@name.com    #first line
-  yourpass   #second line
+youruser@name.com    #first line
+yourpass   #second line
 ```
 3. Install the script, and dependencies if they are not already present.
 ``` bash
-  sudo ./install.sh
+sudo ./install.sh
 
   # dependencies
-  sudo apt install openvpn
-  sudo pip install requests
-  sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
+sudo apt install openvpn
+sudo pip install requests
+sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
 4. Download/Update the latest vpn config files from NordVPN by:
 ``` bash
@@ -68,15 +68,15 @@ have the lowest latency from you.
 ```
 * To run the script in background.
 ``` bash
-  sudo openpyn us -b #needs sudo to use openvpn
+sudo openpyn us -b #needs sudo to use openvpn
 ```
 * To kill a running openvpn connection.
 ``` bash
-  sudo openpyn -k
+sudo openpyn -k
 ```
 * To Flush the iptables and kill any running openvpn connections.
 ``` bash
-  sudo openpyn -kf
+sudo openpyn -kf
 ```
 
 ## Usage Options
@@ -84,10 +84,8 @@ have the lowest latency from you.
 usage: openpyn [-h] [-s SERVER] [-u] [-c COUNTRYCODE] [-b] [-l LOADTHRESHOLD] [-t TOPSERVERS]
 [-p PINGS] [-tt TOPPESTSERVERS] [-k] [-kf] [--updateCountries] [-ls] [--update] [country]
 
-A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly connect to the least busy servers (by grabbing current data from Nordvpn's website) and the ones that have the lowest latency from you. It Tunnels DNS traffic through the VPN which otherwise would go through your ISP!
-
 positional arguments:
-  country               Country Code can also be speficied without "-c," i.em"openpyn au"
+  country               Country Code can also be speficied without "-c," i.e "openpyn au"
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -128,7 +126,7 @@ optional arguments:
   -kf, --killFW         Flush iptables And Kill any running Openvnp process, needed
                         when using "-f"
 
-  --updateCountries     Fetch the latest countries from nord's site and update
+  --updateCountries     Fetch the latest countries from nords site and update
                         the country code mappings
 
   -ls, --listCountries  List all the countries, with Country Codes to Use
@@ -136,5 +134,5 @@ optional arguments:
   -f, ----forceFW       Enfore Firewall rules to drop traffic when tunnel breaks
                         Force disable DNS traffic going to any other interface
 
-  --update              Fetch the latest config files from nord\'s site
+  --update              Fetch the latest config files from nord''s site
   ```

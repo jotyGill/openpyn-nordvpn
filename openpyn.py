@@ -71,6 +71,9 @@ def main(
             vpnServerIp = findVpnServerIP(server, port)
             applyFirewallRules(networkInterfaces, vpnServerIp)
         connection = connect(server, port, background)
+    else:
+        parser.print_help()
+        exit()
 
 
 def getData(countryCode=None, countryName=None):
@@ -410,7 +413,11 @@ def connect(server, port, background):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Script to Connect to OpenVPN')
+        description="A python3 script to easily connect to and switch between, OpenVPN \
+        servers hosted by NordVPN. Quickly Connect to the least busy servers (using current \
+        data from Nordvpn website) with lowest latency from you. Tunnels DNS traffic through \
+        the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS \
+        (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!")
     parser.add_argument(
         '-s', '--server', help='server name, i.e. ca64 or au10',)
     parser.add_argument(
