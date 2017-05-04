@@ -19,23 +19,20 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 ```
-2. Create a "pass.txt" in the current folder, with openvpn compatible "auth-user-pass" file format.
+2. Install dependencies if they are not already present.
 ``` bash
-youruser@name.com    #first line
-yourpass   #second line
+# dependencies
+sudo apt install openvpn
+sudo pip install requests     # Or sudo apt install python3-requests
+sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
-3. Install the script, and dependencies if they are not already present.
+3. Install the script, and provide credentials to be stored in '/usr/share/openpyn/creds'.
 ``` bash
 sudo ./install.sh
-
-  # dependencies
-sudo apt install openvpn
-sudo pip install requests
-sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
 ```
 4. Download/Update the latest vpn config files from NordVPN by:
 ``` bash
-  openpyn --update
+openpyn --update
 ```
 5. That's it, run the script! when done with it, press "Ctr + C" to exit.
 
@@ -43,28 +40,28 @@ sudo pip install beautifulsoup4   #Completely optional Only needed with '--updat
 * At minimum, you only need to specifiy the countryCode, default port is TCP-443, If you want to use
 UDP-1194 instead, use "-u" switch.
 ``` bash
-  openpyn us -u
+openpyn us -u
 ```
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
 ``` bash
-  openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
+openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
 ```
 * To list all the Countries and their Country Codes where NordVPN hosts servers.
 ``` bash
-  openpyn -ls
+openpyn -ls
 ```
 * To quickly connect to a specific server.
 ``` bash
-  openpyn -s au10
+openpyn -s au10
 ```
 * To find information about (display) the available servers in a given country.
 ``` bash
-  openpyn -d uk
+openpyn -d uk
 ```
 * To find the least loaded 10 NordVPN servers in US and connect to one of the top 2 servers that
 have the lowest latency from you.
 ``` bash
-  openpyn us -t 10 -tt 2
+openpyn us -t 10 -tt 2
 ```
 * To run the script in background.
 ``` bash
