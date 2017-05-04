@@ -382,14 +382,14 @@ def connect(server, port, background):
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/pass.txt", "--script-security", "2",
+                    "/usr/share/openpyn/creds", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
             subprocess.run(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/pass.txt", "--script-security", "2",
+                    "/usr/share/openpyn/creds", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh"], stdin=subprocess.PIPE)
 
@@ -403,12 +403,12 @@ def connect(server, port, background):
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
-                    "--auth-user-pass", "/usr/share/openpyn/pass.txt", "--daemon"])
+                    "--auth-user-pass", "/usr/share/openpyn/creds", "--daemon"])
         else:
             subprocess.run(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/pass.txt"], stdin=subprocess.PIPE)
+                    "/usr/share/openpyn/creds"], stdin=subprocess.PIPE)
 
 
 if __name__ == '__main__':
