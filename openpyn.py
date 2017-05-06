@@ -7,7 +7,7 @@ import operator
 import random
 import os.path
 import json
-
+import sys
 
 # @todo uninstall.sh
 # @todo find and display server's locations (cities)
@@ -30,14 +30,14 @@ def main(
 
     if kill:
         killVpnProcesses()  # dont touch iptable rules
-        exit()
+        sys.exit()
     elif killFW:
         killVpnProcesses()
         clearFWRules()      # also clear iptable rules
-        exit()
+        sys.exit()
     elif update:
         updateOpenpyn()
-        exit()
+        sys.exit()
     elif display is not None:
         displayServers(display)
     elif updateCountries:
@@ -73,7 +73,7 @@ def main(
         connection = connect(server, port, background)
     else:
         parser.print_help()
-        exit()
+        sys.exit()
 
 
 def getData(countryCode=None, countryName=None):
@@ -93,7 +93,7 @@ def getData(countryCode=None, countryName=None):
     except HTTPError as e:  # @todo ask for server instead
         print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
         using '-s' for example '-s au10'")
-        exit()
+        sys.exit()
     for i in response:
         jsonResList.append(i)
     return jsonResList
@@ -239,12 +239,12 @@ def displayServers(display):
         serverName = item[item.find("files/") + 6:item.find(".")]
         serversSet.add(serverName)
     print("The following server (if any) have not even been listed on the nord's site yet",
-          "they usally are the fastest")
+          "they usally are the fastest or Dead.\n")
     for item in serversSet:
         if item not in fromWebset:
             newServersset.add(item)
     print(newServersset)
-    exit()
+    sys.exit()
 
 
 def updateCountryCodes():
@@ -277,13 +277,13 @@ def updateCountryCodes():
     with open("/usr/share/openpyn/country-mappings.json", 'w') as countryMappingsFile:
         json.dump(countryMappings, countryMappingsFile)
         countryMappingsFile.close()
-    exit()
+    sys.exit()
 
 
 def listAllCountries():
     for key in countryDic.keys():
         print("Full Name : " + countryDic[key] + "      Country Code : " + key + '\n')
-    exit()
+    sys.exit()
 
 
 def findInterfaces():
@@ -356,6 +356,9 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
                 subprocess.run(
                     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
                         interface[2], "-j", "ACCEPT"])
+                subprocess.run(
+                    ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                        "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0], "-s", interface[2], "-j", "ACCEPT"])
 
     # Allow loopback traffic
     subprocess.run("sudo iptables -A INPUT -i lo -j ACCEPT", shell=True)
@@ -386,18 +389,18 @@ def connect(server, port, background):
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
-            subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/creds", "--script-security", "2",
-                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"], stdin=subprocess.PIPE)
+                subprocess.run(
+                    ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                        + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                        "/usr/share/openpyn/creds", "--script-security", "2",
+                        "--up", "/usr/share/openpyn/update-resolv-conf.sh",
+                        "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
 
     else:       # If not Debian Based
         print("NOT DEBIAN BASED OS ('/sbin/resolvconf' not Found): Mannully Applying Patch to Tunnel DNS Through " +
               "The VPN Tunnel By Modifying '/etc/resolv.conf'")
         dnsPatch = subprocess.run(
-            ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"], stdin=subprocess.PIPE)
+            ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
         if background:
             subprocess.Popen(
@@ -408,7 +411,7 @@ def connect(server, port, background):
             subprocess.run(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/creds"], stdin=subprocess.PIPE)
+                    "/usr/share/openpyn/creds"])
 
 
 if __name__ == '__main__':
