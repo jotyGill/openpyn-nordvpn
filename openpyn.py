@@ -338,10 +338,10 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
         if len(interface) == 3 and "tun" not in interface[0]:
             subprocess.run(
                 ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                    "tcp", "--destination-port", "53", "-j", "DROP"])
-            subprocess.run(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
                     "udp", "--destination-port", "53", "-j", "DROP"])
+            # subprocess.run(
+            #     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
+            #         "tcp", "--destination-port", "53", "-j", "DROP"])
             if interface[0] != "lo":
                 # allow access to vpnServerIp
                 subprocess.run(
@@ -389,12 +389,12 @@ def connect(server, port, background):
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
-                subprocess.run(
-                    ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
-                        + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                        "/usr/share/openpyn/creds", "--script-security", "2",
-                        "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                        "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
+            subprocess.run(
+                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                    "/usr/share/openpyn/creds", "--script-security", "2",
+                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
 
     else:       # If not Debian Based
         print("NOT DEBIAN BASED OS ('/sbin/resolvconf' not Found): Mannully Applying Patch to Tunnel DNS Through " +

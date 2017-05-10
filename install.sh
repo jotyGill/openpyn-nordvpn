@@ -1,13 +1,16 @@
 #!/usr/bin/env sh
-
 mkdir -p /usr/share/openpyn/files
 
-touch /usr/share/openpyn/creds
-echo "Storing credentials in '/usr/share/openpyn/creds with openvpn compatible 'auth-user-pass' file format"
-read -p "Input the username for NordVPN, i.e youremail@yourmail.com: " username
-read -p "Input the password for NordVPN: " password
-echo $username > creds
-echo $password >> creds
+FILE=creds  #if exists use it
+if [ -f $FILE ]; then
+   echo "The $FILE file already exists, using that."
+else
+  echo "Storing credentials in '/usr/share/openpyn/creds with openvpn compatible 'auth-user-pass' file format"
+  read -p "Input the username for NordVPN, i.e youremail@yourmail.com: " username
+  read -p "Input the password for NordVPN: " password
+  echo $username > creds
+  echo $password >> creds
+fi
 
 install -Dm755 openpyn.py "/usr/share/openpyn/openpyn.py"
 install -Dm755 manual-dns-patch.sh "/usr/share/openpyn/manual-dns-patch.sh"
@@ -19,4 +22,4 @@ install -Dm600 creds "/usr/share/openpyn/creds"
 
 ln -sf "/usr/share/openpyn/openpyn.py" "/usr/bin/openpyn"
 
-echo "Installation Successful, Enjoy!"
+echo "Installation Complete, Enjoy!"
