@@ -128,7 +128,7 @@ optional arguments:
 
   -ls, --listCountries  List all the countries, with Country Codes to Use
 
-  -f, ----forceFW       Enfore Firewall rules to drop traffic when tunnel breaks
+  -f, --forceFW         Enfore Firewall rules to drop traffic when tunnel breaks
                         Force disable DNS traffic going to any other interface
 
   --update              Fetch the latest config files from nord''s site
