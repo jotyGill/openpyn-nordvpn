@@ -13,6 +13,8 @@ import sys
 # @todo find and display server's locations (cities)
 # @todo create a combined config of server list(on fly) for failover
 
+__version__ = "openpyn 1.3.0"
+
 countryDic = {}
 with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFile:
     countryDic = json.load(countryMappingsFile)
@@ -20,9 +22,9 @@ with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFil
 
 
 def main(
-    server, countryCode, country, udp, background, loadThreshold, topServers,
-        pings, toppestServers, kill, killFW, update, display, updateCountries,
-        listCountries, forceFW):
+    server, country_code, country, udp, daemon, max_load, top_servers,
+        pings, toppest_servers, kill, kill_flush, update, l_list, update_countries,
+        force_fw_rules):
 
     port = "tcp443"
     if udp:
@@ -31,58 +33,63 @@ def main(
     if kill:
         killVpnProcesses()  # dont touch iptable rules
         sys.exit()
-    elif killFW:
+    elif kill_flush:
         killVpnProcesses()
         clearFWRules()      # also clear iptable rules
         sys.exit()
     elif update:
         updateOpenpyn()
         sys.exit()
-    elif display is not None:
-        displayServers(display)
-    elif updateCountries:
+    # a hack to list all countries and thier codes when no arg supplied with "-l"
+    elif l_list != 'nope':      # means "-l" supplied
+        if l_list is None:      # no arg given
+            listAllCountries()
+        else:       # if a country code is supplied give details about that instead.
+            displayServers(l_list)
+
+    elif update_countries:
         updateCountryCodes()
-    elif listCountries:
-        listAllCountries()
+#    elif listCountries:
+#        listAllCountries()
     # only clear/touch FW Rules if "-f" used
-    elif forceFW:
+    elif force_fw_rules:
         clearFWRules()
 
     # if only "-c" used then
-    if countryCode is None and server is None:
-        countryCode = country
+    if country_code is None and server is None:
+        country_code = country
     # if either "-c" or positional arg f.e "au" is present
-    if countryCode:
-        countryCode = countryCode.lower()
-        betterServerList = findBetterServers(countryCode, loadThreshold, topServers, udp)
+    if country_code:
+        country_code = country_code.lower()
+        betterServerList = findBetterServers(country_code, max_load, top_servers, udp)
         pingServerList = pingServers(betterServerList, pings)
-        chosenServer = chooseBestServer(pingServerList, toppestServers)
+        chosenServer = chooseBestServer(pingServerList, toppest_servers)
         # if "-f" used appy Firewall rules
-        if forceFW:
+        if force_fw_rules:
             networkInterfaces = findInterfaces()
             vpnServerIp = findVpnServerIP(chosenServer, port)
             applyFirewallRules(networkInterfaces, vpnServerIp)
-        connection = connect(chosenServer, port, background)
+        connection = connect(chosenServer, port, daemon)
     elif server:
         server = server.lower()
         # if "-f" used appy Firewall rules
-        if forceFW:
+        if force_fw_rules:
             networkInterfaces = findInterfaces()
             vpnServerIp = findVpnServerIP(server, port)
             applyFirewallRules(networkInterfaces, vpnServerIp)
-        connection = connect(server, port, background)
+        connection = connect(server, port, daemon)
     else:
         parser.print_help()
 
 
-def getData(countryCode=None, countryName=None):
+def getData(country_code=None, countryName=None):
     jsonResList = []
     if countryName is not None:
-        countryCode = countryName
+        country_code = countryName
     else:
-        countryCode = countryDic[countryCode]
+        country_code = countryDic[country_code]
     url = "https://nordvpn.com/wp-admin/admin-ajax.php?group=Standard+VPN\
-    +servers&country=" + countryCode + "&action=getGroupRows"
+    +servers&country=" + country_code + "&action=getGroupRows"
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
@@ -98,8 +105,8 @@ def getData(countryCode=None, countryName=None):
     return jsonResList
 
 
-def findBetterServers(countryCode, loadThreshold, topServers, udp):
-    jsonResList = getData(countryCode=countryCode)
+def findBetterServers(country_code, max_load, top_servers, udp):
+    jsonResList = getData(country_code=country_code)
     serverList = []
     betterServerList = []
 
@@ -120,14 +127,14 @@ def findBetterServers(countryCode, loadThreshold, topServers, udp):
     # only choose servers with < 70% load then top 10 of them
     for server in serverList:
         serverLoad = int(server[1])
-        if serverLoad < loadThreshold and len(betterServerList) < topServers:
+        if serverLoad < max_load and len(betterServerList) < top_servers:
             betterServerList.append(server)
     if udp:
         usedProtocol = "OPENVPN-UDP"
     else:
         usedProtocol = "OPENVPN-TCP"
     print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
-          countryCode.upper(), "With 'Load' less than", loadThreshold,
+          country_code.upper(), "With 'Load' less than", max_load,
           "Which Support", usedProtocol, "are :", betterServerList)
     return betterServerList
 
@@ -160,12 +167,12 @@ def pingServers(betterServerList, ping):
     return pingServerList
 
 
-def chooseBestServer(pingServerList, toppestServers):
+def chooseBestServer(pingServerList, toppest_servers):
     bestServersList = []
     bestServersNameList = []
 
     # 5 top servers or if less than 5 totel servers
-    for serverCounter in range(toppestServers):
+    for serverCounter in range(toppest_servers):
         if serverCounter < len(pingServerList):
             bestServersList.append(pingServerList[serverCounter])
             serverCounter += 1
@@ -219,18 +226,18 @@ def updateOpenpyn():
         print("Exception occured while wgetting zip")
 
 
-def displayServers(display):
-    jsonResList = getData(countryCode=display)
+def displayServers(l_list):
+    jsonResList = getData(country_code=l_list)
     fromWebset = set()      # servers shown on the website
     serversSet = set()      # servers from .openvpn files
     newServersset = set()   # new Servers, not published on website yet
-    print("The NordVPN Servers In", display.upper(), "Are :")
+    print("The NordVPN Servers In", l_list.upper(), "Are :")
     for res in jsonResList:
         print("Server =", res["short"], ", Load =", res["load"], ", Country =",
               res["country"], ", OpenVPN TCP Support =", res["feature"]["openvpn_tcp"],
               ", OpenVPN UDP Support =", res["feature"]["openvpn_udp"], '\n')
         fromWebset.add(res["short"])
-    serverFiles = subprocess.check_output("ls /usr/share/openpyn/files/" + display + "*", shell=True)
+    serverFiles = subprocess.check_output("ls /usr/share/openpyn/files/" + l_list + "*", shell=True)
     serverFilesStr = str(serverFiles)
     serverFilesStr = serverFilesStr[2:-3]
     serverFilesList = serverFilesStr.split("\\n")
@@ -372,7 +379,7 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
     return
 
 
-def connect(server, port, background):
+def connect(server, port, daemon):
     killVpnProcesses()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
@@ -380,7 +387,7 @@ def connect(server, port, background):
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
-        if background:
+        if daemon:
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
@@ -404,7 +411,7 @@ def connect(server, port, background):
         dnsPatch = subprocess.run(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
-        if background:
+        if daemon:
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
@@ -427,61 +434,62 @@ if __name__ == '__main__':
         the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS \
         (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!")
     parser.add_argument(
+        '-v', '--version', action='version', version=__version__)
+    parser.add_argument(
         '-s', '--server', help='server name, i.e. ca64 or au10',)
     parser.add_argument(
         '-u', '--udp', help='use port UDP-1194 instead of the default TCP-443',
         action='store_true')
     parser.add_argument(
-        '-c', '--countryCode', type=str, help='Specifiy Country Code with 2 letters, i.e au,')
+        '-c', '--country-code', type=str, help='Specifiy Country Code with 2 letters, i.e au,')
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be speficied without "-c,"\
          i.e "openpyn au"')
     parser.add_argument(
-        '-b', '--background', help='Run script in the background',
+        '-d', '--daemon', help='Run script in the background as openvpn daemon',
         action='store_true')
     parser.add_argument(
-        '-l', '--loadThreshold', type=int, default=70, help='Specifiy load threashold, \
+        '-m', '--max-load', type=int, default=70, help='Specifiy load threashold, \
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
-        '-t', '--topServers', type=int, default=6, help='Specifiy the number of Top \
+        '-t', '--top-servers', type=int, default=6, help='Specifiy the number of Top \
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=6')
     parser.add_argument(
         '-p', '--pings', type=str, default="5", help='Specifiy number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-tt', '--toppestServers', type=int, default=3, help='After ping tests \
+        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=3')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very usefull \
-        to kill openpyn process running in background with "-b" switch',
+        to kill openpyn process running in background with "-d" switch',
         action='store_true')
     parser.add_argument(
-        '-kf', '--killFW', help='Kill any running Openvnp process, AND Flush Iptables',
+        '-x', '--kill-flush', help='Kill any running Openvnp process, AND Flush Iptables',
         action='store_true')
     parser.add_argument(
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
     parser.add_argument(
-        '--updateCountries', help='Fetch the latest countries from nord\'s site\
+        '--update-countries', help='Fetch the latest countries from nord\'s site\
         and update the country code mappings', action='store_true')
     parser.add_argument(
-        '-d', '--display', type=str, help='Display all servers in a given country\
-        with their loadThreshold')
+        '-l', '--list', dest="l_list", type=str, nargs='?', default="nope",
+        help='If country code supplied ("-l us"): Displays all servers in a given\
+        country with their current load and openvpn support status. Otherwise: \
+        display all countries along with thier country-codes')
     parser.add_argument(
-        '-ls', '--listCountries', help='List all the countries, with Country \
-        Codes to Use', action='store_true')
-    parser.add_argument(
-        '-f', '--forceFW', help='Enfore Firewall rules to drop traffic when tunnel breaks\
+        '-f', '--force-fw-rules', help='Enfore Firewall rules to drop traffic when tunnel breaks\
         , Force disable DNS traffic going to any other interface', action='store_true')
 
     args = parser.parse_args()
 
     main(
-        args.server, args.countryCode, args.country, args.udp, args.background,
-        args.loadThreshold, args.topServers, args.pings, args.toppestServers,
-        args.kill, args.killFW, args.update, args.display, args.updateCountries, args.listCountries,
-        args.forceFW)
+        args.server, args.country_code, args.country, args.udp, args.daemon,
+        args.max_load, args.top_servers, args.pings, args.toppest_servers,
+        args.kill, args.kill_flush, args.update, args.l_list, args.update_countries,
+        args.force_fw_rules)
 
 sys.exit()
