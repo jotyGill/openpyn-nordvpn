@@ -73,7 +73,6 @@ def main(
         connection = connect(server, port, background)
     else:
         parser.print_help()
-        sys.exit()
 
 
 def getData(countryCode=None, countryName=None):
@@ -389,16 +388,19 @@ def connect(server, port, background):
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
-            subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/creds", "--script-security", "2",
-                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh"])
+            try:
+                subprocess.run(
+                    "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
+                    /usr/share/openpyn/creds --script-security 2 --up \
+                    /usr/share/openpyn/update-resolv-conf.sh --down \
+                    /usr/share/openpyn/update-resolv-conf.sh", shell=True)
+            except (KeyboardInterrupt) as err:
+                print('\nShutting down safely, please wait until process exits\n')
 
     else:       # If not Debian Based
-        print("NOT DEBIAN BASED OS ('/sbin/resolvconf' not Found): Mannully Applying Patch to Tunnel DNS Through " +
-              "The VPN Tunnel By Modifying '/etc/resolv.conf'")
+        print("'/sbin/resolvconf' not Found (NOT DEBIAN BASED OS?): Mannully Applying Patch" +
+              " to Tunnel DNS Through The VPN Tunnel By Modifying '/etc/resolv.conf'")
         dnsPatch = subprocess.run(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
@@ -408,10 +410,13 @@ def connect(server, port, background):
                     + server + ".nordvpn.com." + port + ".ovpn",
                     "--auth-user-pass", "/usr/share/openpyn/creds", "--daemon"])
         else:
-            subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
-                    "/usr/share/openpyn/creds"])
+            try:
+                subprocess.run(
+                    "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
+                    + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
+                    /usr/share/openpyn/creds", shell=True)
+            except (KeyboardInterrupt) as err:
+                print('\nShutting down safely, please wait until process exits\n')
 
 
 if __name__ == '__main__':
@@ -478,3 +483,5 @@ if __name__ == '__main__':
         args.loadThreshold, args.topServers, args.pings, args.toppestServers,
         args.kill, args.killFW, args.update, args.display, args.updateCountries, args.listCountries,
         args.forceFW)
+
+sys.exit()
