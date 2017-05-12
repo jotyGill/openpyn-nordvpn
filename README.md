@@ -7,7 +7,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Use Iptable rules to prevent leakage if tunnel breaks (Experimental).
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Downloads and Updates (modifications) the latest config files from NordVPN.
-* Option to run the script in the background (requires "sudo openpyn").
+* Option to run the script in background (openvpn daemon mode).
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
 * Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
@@ -52,11 +52,11 @@ openpyn -s au10
 ```
 * To list all the Countries and their Country Codes where NordVPN hosts servers.
 ``` bash
-openpyn -ls
+openpyn -l
 ```
 * To find detailed information about the available servers in a given country.
 ``` bash
-openpyn -ls uk
+openpyn -l uk
 ```
 * To find the least loaded 10 NordVPN servers in US and connect to one of the top 2 servers that
 have the lowest latency from you.
