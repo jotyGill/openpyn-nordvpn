@@ -5,7 +5,7 @@ import argparse
 import requests
 import operator
 import random
-import os.path
+import os
 import json
 import sys
 
@@ -193,6 +193,7 @@ def killVpnProcesses():
         print("Killing any running openvpn processes")
         openvpnProcesses = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
+        verifyRootAccess("Root access needed to kill openvpn process")
         subprocess.run(["sudo", "killall", "openvpn"])
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpnProcesses issued non 0 result, "not found"
@@ -201,6 +202,7 @@ def killVpnProcesses():
 
 
 def clearFWRules():
+    verifyRootAccess("Root access needed to modify 'iptables' rules")
     print("Flushing iptables INPUT and OUTPUT chains AND Applying defualt Rules")
     subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
     # allow all outgoing traffic
@@ -218,6 +220,7 @@ def clearFWRules():
 
 
 def updateOpenpyn():
+    verifyRootAccess("Root access needed to write files in '/usr/share/openpyn/files'")
     try:
         subprocess.run(["sudo", "wget", "-N", "https://nordvpn.com/api/files/zip", "-P", "/usr/share/openpyn/"])
         subprocess.run(["sudo", "unzip", "-u", "-o", "/usr/share/openpyn/zip", "-d", "/usr/share/openpyn/files/"])
@@ -275,11 +278,14 @@ def updateCountryCodes():
 
     for ref in bsObj.find_all('span', {"class": "country-name hidden-xs"}):
         countryNames.add((ref.get_text()).strip())
+
     print("Updating Country Code Mappings: \n")
     for eachCountry in countryNames:
         jsonResList = getData(countryName=eachCountry)
         print(jsonResList[0]["short"][0:2], jsonResList[0]["country"])
         countryMappings.update({jsonResList[0]["short"][0:2]: jsonResList[0]["country"]})
+
+    verifyRootAccess("Root access needed to modify '/usr/share/openpyn/country-mappings.json'")
     with open("/usr/share/openpyn/country-mappings.json", 'w') as countryMappingsFile:
         json.dump(countryMappings, countryMappingsFile)
         countryMappingsFile.close()
@@ -330,6 +336,8 @@ def findVpnServerIP(server, port):
 
 
 def applyFirewallRules(interfaceDetailsList, vpnServerIp):
+    verifyRootAccess("Root access needed to modify 'iptables' rules")
+
     # Empty the INPUT and OUTPUT chain of any current rules
     subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
     subprocess.run(["sudo", "iptables", "-F", "INPUT"])
@@ -379,9 +387,17 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
     return
 
 
+def verifyRootAccess(message):
+    # Check that user has root priveleges.
+    if os.getuid() != 0:
+        print(message, '\n')
+
+
 def connect(server, port, daemon):
     killVpnProcesses()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
+    verifyRootAccess("Root access needed to run 'openvpn'")
+
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
     # osIsDebianBased = False
     if osIsDebianBased:  # Debian Based OS
