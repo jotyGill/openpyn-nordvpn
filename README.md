@@ -147,3 +147,9 @@ optional arguments:
                         breaks , Force disable DNS traffic going to any other
                         interface
   ```
+## Todo
+* find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
+* ability to store profiles
+* find and display server's locations (cities)
+* create a combined config of server list(on fly) for failover
+* uninstall.sh

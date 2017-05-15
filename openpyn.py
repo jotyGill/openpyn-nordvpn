@@ -9,10 +9,6 @@ import os
 import json
 import sys
 
-# @todo uninstall.sh
-# @todo find and display server's locations (cities)
-# @todo create a combined config of server list(on fly) for failover
-
 __version__ = "openpyn 1.3.0"
 
 countryDic = {}
@@ -40,17 +36,17 @@ def main(
     elif update:
         updateOpenpyn()
         sys.exit()
+
     # a hack to list all countries and thier codes when no arg supplied with "-l"
     elif l_list != 'nope':      # means "-l" supplied
-        if l_list is None:      # no arg given
+        if l_list is None:      # no arg given with "-l"
             listAllCountries()
         else:       # if a country code is supplied give details about that instead.
             displayServers(l_list)
 
     elif update_countries:
         updateCountryCodes()
-#    elif listCountries:
-#        listAllCountries()
+
     # only clear/touch FW Rules if "-f" used
     elif force_fw_rules:
         clearFWRules()
@@ -102,6 +98,7 @@ def getData(country_code=None, countryName=None):
         sys.exit()
     for i in response:
         jsonResList.append(i)
+    # print(jsonResList)
     return jsonResList
 
 
@@ -285,7 +282,6 @@ def updateCountryCodes():
         print(jsonResList[0]["short"][0:2], jsonResList[0]["country"])
         countryMappings.update({jsonResList[0]["short"][0:2]: jsonResList[0]["country"]})
 
-    verifyRootAccess("Root access needed to modify '/usr/share/openpyn/country-mappings.json'")
     with open("/usr/share/openpyn/country-mappings.json", 'w') as countryMappingsFile:
         json.dump(countryMappings, countryMappingsFile)
         countryMappingsFile.close()
@@ -299,6 +295,7 @@ def listAllCountries():
 
 
 def findInterfaces():
+    # find the network interfaces present on the system
     interfaceList = []
     interfaceDetailsList = []
 
