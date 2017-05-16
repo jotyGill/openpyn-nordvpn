@@ -8,6 +8,7 @@ import random
 import os
 import json
 import sys
+import platform
 
 __version__ = "openpyn 1.3.0"
 
@@ -93,9 +94,12 @@ def getJson(url):
 
     try:
         JsonResponse = requests.get(url, headers=headers).json()
-    except HTTPError as e:  # @todo ask for server instead
+    except requests.exceptions.HTTPError:
         print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
         using '-s' for example '-s au10'")
+        sys.exit()
+    except requests.exceptions.RequestException:
+        print("There was an ambiguous exception, Check Your Network Connection.")
         sys.exit()
     return JsonResponse
 
@@ -352,8 +356,12 @@ def updateCountryCodes():
 
     try:
         response = requests.get(url, headers=headers)
-    except HTTPError as e:  # @todo ask for server instead
-        print("Cannot GET")
+    except requests.exceptions.HTTPError:
+        print("Cannot GET https://nordvpn.com/servers,")
+        sys.exit()
+    except requests.exceptions.RequestException:
+        print("There was an ambiguous exception, Check Your Network Connection.")
+        sys.exit()
 
     try:
         bsObj = BeautifulSoup(response.text, "html.parser")
@@ -484,6 +492,8 @@ def connect(server, port, daemon):
 
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
     # osIsDebianBased = False
+    detectedOs = platform.linux_distribution()[0]
+
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -496,6 +506,8 @@ def connect(server, port, daemon):
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
         else:
             try:
+                print("Your OS '" + detectedOs + "' Does have '/sbin/resolvconf'",
+                      "using it to update DNS Resolver Entries")
                 subprocess.run(
                     "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
@@ -506,7 +518,7 @@ def connect(server, port, daemon):
                 print('\nShutting down safely, please wait until process exits\n')
 
     else:       # If not Debian Based
-        print("'/sbin/resolvconf' not Found (NOT DEBIAN BASED OS?): Mannully Applying Patch" +
+        print("Your OS ", detectedOs, "Does not have '/sbin/resolvconf': Mannully Applying Patch" +
               " to Tunnel DNS Through The VPN Tunnel By Modifying '/etc/resolv.conf'")
         dnsPatch = subprocess.run(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
