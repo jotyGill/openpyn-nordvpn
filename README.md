@@ -65,7 +65,7 @@ openpyn -l uk --p2p
 openpyn -l uk --dedicated
 openpyn -l --tor  # tor over vpn in all countries
 ```
-* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer" out
+* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer", out
   of them, connect to one of the top 2 servers that have the lowest latency from you.
 ``` bash
 openpyn us -t 10 -T 2 --p2p

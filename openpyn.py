@@ -99,7 +99,8 @@ def getJson(url):
         using '-s' for example '-s au10'")
         sys.exit()
     except requests.exceptions.RequestException:
-        print("There was an ambiguous exception, Check Your Network Connection.")
+        print("There was an ambiguous exception, Check Your Network Connection.",
+              "forgot to flush iptables? (openpyn -x)")
         sys.exit()
     return JsonResponse
 
@@ -181,6 +182,10 @@ def findBetterServers(
                 # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
 
         betterServerList = excludeServers(serverList, max_load, top_servers)
+        if len(betterServerList) < 1:    # if no servers under search criteria
+            print("There are no servers that satisfy your criteria, please broaden your search.")
+            sys.exit()
+
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load, "Which Support",
               usedProtocol, ", p2p = ", p2p, ", dedicated =", dedicated, ", double_vpn =", double_vpn,
@@ -201,9 +206,14 @@ def findBetterServers(
                     # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
 
         betterServerList = excludeServers(serverList, max_load, top_servers)
+        if len(betterServerList) < 1:    # if no servers under search criteria
+            print("There are no servers that satisfy your criteria, please broaden your search.")
+            sys.exit()
+
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load,
               "Which Support", usedProtocol, "are :", betterServerList)
+
     return betterServerList
 
 
