@@ -481,18 +481,27 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
 
 def verifyRootAccess(message):
     # Check that user has root priveleges.
+    # in a chase when running openpyn without sudo and sudo priveleges are cached
+    # os.getuid would say user not root, but it would work
+    # try:
+    #     subprocess.check_output("cat /usr/share/openpyn/creds > /dev/null", shell=True)
+    # except subprocess.CalledProcessError:
     if os.getuid() != 0:
         print(message, '\n')
+        return False
+    return True
 
 
 def connect(server, port, daemon):
     killVpnProcesses()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
-    verifyRootAccess("Root access needed to run 'openvpn'")
 
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
     # osIsDebianBased = False
     detectedOs = platform.linux_distribution()[0]
+    isRoot = verifyRootAccess("Root access required to run 'openvpn'")
+    if daemon is True and isRoot is False:
+        sys.exit(1)
 
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
