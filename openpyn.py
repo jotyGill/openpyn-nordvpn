@@ -20,7 +20,7 @@ with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFil
 def main(
     server, country_code, country, udp, daemon, max_load, top_servers,
         pings, toppest_servers, kill, kill_flush, update, list_servers, update_countries,
-        force_fw_rules, p2p, double_vpn, tor_over_vpn, anti_ddos):
+        force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
 
     port = "tcp443"
     if udp:
@@ -40,16 +40,16 @@ def main(
     # a hack to list all countries and thier codes when no arg supplied with "-l"
     elif list_servers != 'nope':      # means "-l" supplied
         if list_servers is None:      # no arg given with "-l"
-            if p2p or double_vpn or tor_over_vpn or anti_ddos:
+            if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
                 displayServers(
-                    list_servers="all", p2p=p2p, double_vpn=double_vpn,
+                    list_servers="all", p2p=p2p, dedicated=dedicated, double_vpn=double_vpn,
                     tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)   # show the special servers in all countries
             else:
                 listAllCountries()
         else:       # if a country code is supplied give details about that instead.
             displayServers(
-                list_servers, p2p=p2p, double_vpn=double_vpn,
-                tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                list_servers=list_servers, p2p=p2p, dedicated=dedicated,
+                double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
 
     elif update_countries:
         updateCountryCodes()
@@ -66,7 +66,7 @@ def main(
         country_code = country_code.lower()
         betterServerList = findBetterServers(
                                 country_code, max_load, top_servers, udp, p2p,
-                                double_vpn, tor_over_vpn, anti_ddos)
+                                dedicated, double_vpn, tor_over_vpn, anti_ddos)
         pingServerList = pingServers(betterServerList, pings)
         chosenServer = chooseBestServer(pingServerList, toppest_servers)
         # if "-f" used appy Firewall rules
@@ -116,7 +116,7 @@ def getData(country_code=None, countryName=None):
 
 
 def getDataFromApi(
-        country_code, p2p, double_vpn, tor_over_vpn, anti_ddos):
+        country_code, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
         # default "all" overright when findBetterServers use "all" when -l
     typeFilteredServers = []
     typeNCountryFilterServers = []
@@ -128,19 +128,18 @@ def getDataFromApi(
         serverCount += 1
         for ServerType in eachServer["categories"]:
             # print(eachServer["categories"])
-            if p2p:
-                if ServerType["name"] == "P2P":
-                    typeFilteredServers.append(eachServer)
-            if double_vpn:
-                if ServerType["name"] == "Double VPN":
-                    typeFilteredServers.append(eachServer)
-            if tor_over_vpn:
-                if ServerType["name"] == "Onion over VPN":
-                    typeFilteredServers.append(eachServer)
-            if anti_ddos:
-                if ServerType["name"] == "Anti DDoS":
-                    typeFilteredServers.append(eachServer)
-            if p2p is False and double_vpn is False and tor_over_vpn is False and anti_ddos is False:
+            if p2p and ServerType["name"] == "P2P":
+                typeFilteredServers.append(eachServer)
+            if dedicated and ServerType["name"] == "Dedicated IP servers":
+                typeFilteredServers.append(eachServer)
+            if double_vpn and ServerType["name"] == "Double VPN":
+                typeFilteredServers.append(eachServer)
+            if tor_over_vpn and ServerType["name"] == "Onion over VPN":
+                typeFilteredServers.append(eachServer)
+            if anti_ddos and ServerType["name"] == "Anti DDoS":
+                typeFilteredServers.append(eachServer)
+            if p2p is False and dedicated is False and double_vpn is False and \
+                    tor_over_vpn is False and anti_ddos is False:
                 if ServerType["name"] == "Standard VPN servers":
                     typeFilteredServers.append(eachServer)
 
@@ -155,7 +154,7 @@ def getDataFromApi(
 
 
 def findBetterServers(
-    country_code, max_load, top_servers, udp, p2p,
+    country_code, max_load, top_servers, udp, p2p, dedicated,
         double_vpn, tor_over_vpn, anti_ddos):
     serverList = []
     if udp:
@@ -163,11 +162,11 @@ def findBetterServers(
     else:
         usedProtocol = "OPENVPN-TCP"
 
-    if p2p or double_vpn or tor_over_vpn or anti_ddos:
+    if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
         # use api.nordvpn.com
         jsonResList = getDataFromApi(
-                        country_code=country_code, p2p=p2p, double_vpn=double_vpn,
-                        tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                        country_code=country_code, p2p=p2p, dedicated=dedicated,
+                        double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
         for res in jsonResList:
             # when connecting using UDP only append if it supports OpenVPN-UDP
             if udp is True and res["features"]["openvpn_udp"] is True:
@@ -179,8 +178,8 @@ def findBetterServers(
 
         betterServerList = excludeServers(serverList, max_load, top_servers)
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
-              country_code.upper(), "With 'Load' less than", max_load,
-              "Which Support", usedProtocol, ", p2p = ", p2p, ", double_vpn =", double_vpn,
+              country_code.upper(), "With 'Load' less than", max_load, "Which Support",
+              usedProtocol, ", p2p = ", p2p, ", dedicated =", dedicated, ", double_vpn =", double_vpn,
               ", tor_over_vpn =", tor_over_vpn, ", anti_ddos =", anti_ddos, "are :\n", betterServerList)
 
     else:   # use nordvpn.com/servers
@@ -307,10 +306,10 @@ def updateOpenpyn():
         print("Exception occured while wgetting zip")
 
 
-def displayServers(list_servers, p2p, double_vpn, tor_over_vpn, anti_ddos):
+def displayServers(list_servers, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
     jsonResList = getDataFromApi(
-                    country_code=list_servers, p2p=p2p, double_vpn=double_vpn,
-                    tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                    country_code=list_servers, p2p=p2p, dedicated=dedicated,
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
     fromWebset = set()      # servers shown on the website
     serversSet = set()      # servers from .openvpn files
     newServersset = set()   # new Servers, not published on website yet
@@ -320,21 +319,24 @@ def displayServers(list_servers, p2p, double_vpn, tor_over_vpn, anti_ddos):
               res["country"], ", Features", res["categories"], '\n')
         fromWebset.add(res["domain"][:res["domain"].find(".")])
 
-    if list_servers != "all" and p2p is False and double_vpnis is False \
-            and tor_over_vpnis is False and anti_ddosis is False:   # not applicable
+    if list_servers != "all" and p2p is False and dedicated is False and double_vpn is False \
+            and tor_over_vpn is False and anti_ddos is False:   # else not applicable
         serverFiles = subprocess.check_output("ls /usr/share/openpyn/files/" + list_servers + "*", shell=True)
         serverFilesStr = str(serverFiles)
         serverFilesStr = serverFilesStr[2:-3]
         serverFilesList = serverFilesStr.split("\\n")
+
         for item in serverFilesList:
             serverName = item[item.find("files/") + 6:item.find(".")]
             serversSet.add(serverName)
-        print("The following server (if any) have not even been listed on the nord's site yet",
-              "they usally are the fastest or Dead.\n")
+
         for item in serversSet:
             if item not in fromWebset:
                 newServersset.add(item)
-        print(newServersset)
+        if len(newServersset) > 0:
+            print("The following server have not even been listed on the nord's site yet",
+                  "they usally are the fastest or Dead.\n")
+            print(newServersset)
     sys.exit()
 
 
@@ -584,6 +586,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
     parser.add_argument(
+        '--dedicated', help='Only look for servers with "Dedicated IP" support', action='store_true')
+    parser.add_argument(
         '--tor', dest='tor_over_vpn', help='Only look for servers with "Tor Over VPN" support', action='store_true')
     parser.add_argument(
         '--double', dest='double_vpn', help='Only look for servers with "Double VPN" support', action='store_true')
@@ -596,6 +600,6 @@ if __name__ == '__main__':
         args.server, args.country_code, args.country, args.udp, args.daemon,
         args.max_load, args.top_servers, args.pings, args.toppest_servers,
         args.kill, args.kill_flush, args.update, args.list_servers, args.update_countries,
-        args.force_fw_rules, args.p2p, args.double_vpn, args.tor_over_vpn, args.anti_ddos)
+        args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn, args.tor_over_vpn, args.anti_ddos)
 
 sys.exit()
