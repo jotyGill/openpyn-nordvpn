@@ -58,10 +58,17 @@ openpyn -l
 ``` bash
 openpyn -l uk
 ```
-* To find the least loaded 10 NordVPN servers in US and connect to one of the top 2 servers that
-have the lowest latency from you.
+* To find servers with featurs like "peer-to-peer", "dedicated ip", "tor over vpn",
+  "double vpn" in all countries or a given country.
 ``` bash
-openpyn us -t 10 -T 2
+openpyn -l uk --p2p
+openpyn -l uk --dedicated
+openpyn -l --tor  # tor over vpn in all countries
+```
+* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer", out
+  of them, connect to one of the top 2 servers that have the lowest latency from you.
+``` bash
+openpyn us -t 10 -T 2 --p2p
 ```
 * To run the script in background.
 ``` bash
@@ -140,10 +147,26 @@ optional arguments:
   -l [L_LIST], --list [L_LIST]
                         If country code supplied ("-l us"): Displays all
                         servers in a given country with their current load and
-                        openvpn support status. Otherwise: display all
+                        supported features. Otherwise: display all
                         countries along with thier country-codes
+
+  --p2p                 Only look for servers with "Peer To Peer" support
+  --dedicated           Only look for servers with "Dedicated IP" support
+  --tor                 Only look for servers with "Tor Over VPN" support
+  --double              Only look for servers with "Double VPN" support
+  --anti-ddos           Only look for servers with "Anti DDos" support
 
   -f, --force-fw-rules  Enfore Firewall rules to drop traffic when tunnel
                         breaks , Force disable DNS traffic going to any other
                         interface
   ```
+## Todo
+- [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
+- [x] utilise the frequently updated api at "api.nordvpn.com/server"
+- [x] clean exit, handle exceptions
+- [x] store creds from user input, if "creds" file exists use that instead.
+- [x] sane command-line options following the POSIX guidelines
+- [ ] ability to store profiles
+- [ ] find and display server's locations (cities)
+- [ ] create a combined config of multiple servers (on the fly) for auto failover
+- [ ] uninstall.sh

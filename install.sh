@@ -1,4 +1,9 @@
 #!/usr/bin/env sh
+
+if [ $(id -u) != 0 ]   ; then echo "Please run the script with 'sudo'";
+  exit 1;
+fi
+
 mkdir -p /usr/share/openpyn/files
 
 FILE=creds  #if exists use it
