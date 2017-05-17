@@ -12,6 +12,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
 * Country codes mapping for all countries that host servers by Nord (to use 'us','uk' instead of full names).
+* Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
+"Double VPN" --double, "Anti DDos" --anti-ddos support.
 
 ## Instructions
 1. Clone this repo to a desired location:
