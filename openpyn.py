@@ -10,7 +10,7 @@ import json
 import sys
 import platform
 
-__version__ = "openpyn 1.3.0"
+__version__ = "openpyn 1.3.0 (slick)"
 
 countryDic = {}
 with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFile:
