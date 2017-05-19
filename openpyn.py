@@ -10,7 +10,7 @@ import json
 import sys
 import platform
 
-__version__ = "openpyn 1.3.0 (slick)"
+__version__ = "openpyn 1.3.1 (slick)"
 
 countryDic = {}
 with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFile:
@@ -42,13 +42,13 @@ def main(
     elif list_servers != 'nope':      # means "-l" supplied
         if list_servers is None:      # no arg given with "-l"
             if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
-                displayServers(
+                listServers(
                     list_servers="all", p2p=p2p, dedicated=dedicated, double_vpn=double_vpn,
                     tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)   # show the special servers in all countries
             else:
                 listAllCountries()
         else:       # if a country code is supplied give details about that instead.
-            displayServers(
+            listServers(
                 list_servers=list_servers, p2p=p2p, dedicated=dedicated,
                 double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
 
@@ -59,9 +59,9 @@ def main(
     elif force_fw_rules:
         clearFWRules()
 
-    # if only "-c" used then
+    # if only positional argument used
     if country_code is None and server is None:
-        country_code = country
+        country_code = country      # consider the positional arg e.g "us" same as "-c us"
     # if either "-c" or positional arg f.e "au" is present
     if country_code:
         country_code = country_code.lower()
@@ -88,6 +88,7 @@ def main(
         parser.print_help()
 
 
+# Using requests, GETs and returns json from a url.
 def getJson(url):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
@@ -105,6 +106,7 @@ def getJson(url):
     return JsonResponse
 
 
+# Gets json data, older approach, only using now with updateCountryCodes()
 def getData(country_code=None, countryName=None):
     jsonResList = []
     if countryName is not None:
@@ -120,9 +122,9 @@ def getData(country_code=None, countryName=None):
     return jsonResList
 
 
+# Gets json data, from api.nordvpn.com
 def getDataFromApi(
         country_code, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
-        # default "all" overright when findBetterServers use "all" when -l
     typeFilteredServers = []
     typeNCountryFilterServers = []
 
@@ -150,7 +152,7 @@ def getDataFromApi(
 
     # print("Total available servers = ", serverCount)
 
-    if country_code != "all":
+    if country_code != "all":       # if "-l" had country code with it. e.g "-l au"
         for eachServer in typeFilteredServers:
             if eachServer["domain"][:2] == country_code.lower():
                 typeNCountryFilterServers.append(eachServer)
@@ -158,6 +160,7 @@ def getDataFromApi(
     return typeFilteredServers
 
 
+# Filters servers based on the speficied criteria.
 def findBetterServers(
     country_code, max_load, top_servers, udp, p2p, dedicated,
         double_vpn, tor_over_vpn, anti_ddos):
@@ -167,49 +170,30 @@ def findBetterServers(
     else:
         usedProtocol = "OPENVPN-TCP"
 
+    # use api.nordvpn.com
+    jsonResList = getDataFromApi(
+                    country_code=country_code, p2p=p2p, dedicated=dedicated,
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+    for res in jsonResList:
+        # when connecting using UDP only append if it supports OpenVPN-UDP
+        if udp is True and res["features"]["openvpn_udp"] is True:
+            serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
+        # when connecting using TCP only append if it supports OpenVPN-TCP
+        elif udp is False and res["features"]["openvpn_tcp"] is True:
+            serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
+            # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
+
+    betterServerList = excludeServers(serverList, max_load, top_servers)
+    if len(betterServerList) < 1:    # if no servers under search criteria
+        print("There are no servers that satisfy your criteria, please broaden your search.")
+        sys.exit()
+
     if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
-        # use api.nordvpn.com
-        jsonResList = getDataFromApi(
-                        country_code=country_code, p2p=p2p, dedicated=dedicated,
-                        double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
-        for res in jsonResList:
-            # when connecting using UDP only append if it supports OpenVPN-UDP
-            if udp is True and res["features"]["openvpn_udp"] is True:
-                serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
-            # when connecting using TCP only append if it supports OpenVPN-TCP
-            elif udp is False and res["features"]["openvpn_tcp"] is True:
-                serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
-                # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
-
-        betterServerList = excludeServers(serverList, max_load, top_servers)
-        if len(betterServerList) < 1:    # if no servers under search criteria
-            print("There are no servers that satisfy your criteria, please broaden your search.")
-            sys.exit()
-
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load, "Which Support",
               usedProtocol, ", p2p = ", p2p, ", dedicated =", dedicated, ", double_vpn =", double_vpn,
               ", tor_over_vpn =", tor_over_vpn, ", anti_ddos =", anti_ddos, "are :\n", betterServerList)
-
-    else:   # use nordvpn.com/servers
-        jsonResList = getData(country_code=country_code)
-        for res in jsonResList:
-            # only add if the server is online
-            if res["exists"] is True:
-                # when connecting using UDP only append if it supports OpenVPN-UDP
-                if udp is True and res["feature"]["openvpn_udp"] is True:
-                    serverList.append([res["short"], res["load"]])
-                    # print("UDP SERVESR :", res["feature"], res["feature"]["openvpn_udp"])
-                # when connecting using TCP only append if it supports OpenVPN-TCP
-                elif udp is False and res["feature"]["openvpn_tcp"] is True:
-                    serverList.append([res["short"], res["load"]])
-                    # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
-
-        betterServerList = excludeServers(serverList, max_load, top_servers)
-        if len(betterServerList) < 1:    # if no servers under search criteria
-            print("There are no servers that satisfy your criteria, please broaden your search.")
-            sys.exit()
-
+    else:
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load,
               "Which Support", usedProtocol, "are :", betterServerList)
@@ -217,7 +201,7 @@ def findBetterServers(
     return betterServerList
 
 
-# exclude servers over "max_load" and only keep < "top_servers"
+# Exclude servers over "max_load" and only keep < "top_servers"
 def excludeServers(serverList, max_load, top_servers):
     newServersList = []
     # sort list by the server load
@@ -230,6 +214,7 @@ def excludeServers(serverList, max_load, top_servers):
     return newServersList
 
 
+# Pings servers with the speficied no of "ping", returns a sorted list by Ping Avg and Median Deveation
 def pingServers(betterServerList, ping):
     pingServerList = []
     for i in betterServerList:
@@ -258,6 +243,7 @@ def pingServers(betterServerList, ping):
     return pingServerList
 
 
+# Returns a final server (randomly) from only the best "toppest_servers" (e.g 3) no. of servers.
 def chooseBestServer(pingServerList, toppest_servers):
     bestServersList = []
     bestServersNameList = []
@@ -292,6 +278,7 @@ def killVpnProcesses():
         return
 
 
+# Clears Firewall rules, applies basic rules.
 def clearFWRules():
     verifyRootAccess("Root access needed to modify 'iptables' rules")
     print("Flushing iptables INPUT and OUTPUT chains AND Applying defualt Rules")
@@ -320,7 +307,9 @@ def updateOpenpyn():
         print("Exception occured while wgetting zip")
 
 
-def displayServers(list_servers, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+# Lists information abouts servers under the given criteria.
+def listServers(list_servers, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+    # if list_servers was not a specific country it would be "all"
     jsonResList = getDataFromApi(
                     country_code=list_servers, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
