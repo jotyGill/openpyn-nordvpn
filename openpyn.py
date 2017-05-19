@@ -491,32 +491,41 @@ def applyFirewallRules(interfaceDetailsList, vpnServerIp):
 
 def verifyRootAccess(message):
     # Check that user has root priveleges.
-    # in a chase when running openpyn without sudo and sudo priveleges are cached
-    # os.getuid would say user not root, but it would work
-    # try:
-    #     subprocess.check_output("cat /usr/share/openpyn/creds > /dev/null", shell=True)
-    # except subprocess.CalledProcessError:
-    if os.getuid() != 0:
+    # in a case when starting openpyn without sudo then providing sudo priveleges when asked,
+    # sudo priveleges get cached, os.getuid would say user not root and print "root needed"
+    # messages, but it would work
+
+    #    if os.getuid() != 0:
+    #        print(message, '\n')
+    #        return False
+
+    try:    # try accessing root read only file "600" permission
+        rootCheck = subprocess.check_output(
+            "sudo -n cat /usr/share/openpyn/creds".split(), stderr=subprocess.DEVNULL)
+    # -n 'non-interactive' mode used to, not prompt for password but throw err.
+    except subprocess.CalledProcessError:
         print(message, '\n')
         return False
     return True
 
 
 def connect(server, port, daemon):
+    isRoot = verifyRootAccess("Root access required to run 'openvpn'")
+    if daemon is True and isRoot is False:
+        sys.exit(1)
+
     killVpnProcesses()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
     osIsDebianBased = os.path.isfile("/sbin/resolvconf")
     # osIsDebianBased = False
     detectedOs = platform.linux_distribution()[0]
-    isRoot = verifyRootAccess("Root access required to run 'openvpn'")
-    if daemon is True and isRoot is False:
-        sys.exit(1)
 
     if osIsDebianBased:  # Debian Based OS
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
         if daemon:
+            print("Started 'openvpn' in --daemon mode")
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
@@ -543,6 +552,7 @@ def connect(server, port, daemon):
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
         if daemon:
+            print("Started 'openvpn' in --daemon mode")
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
