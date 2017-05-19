@@ -167,49 +167,30 @@ def findBetterServers(
     else:
         usedProtocol = "OPENVPN-TCP"
 
+    # use api.nordvpn.com
+    jsonResList = getDataFromApi(
+                    country_code=country_code, p2p=p2p, dedicated=dedicated,
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+    for res in jsonResList:
+        # when connecting using UDP only append if it supports OpenVPN-UDP
+        if udp is True and res["features"]["openvpn_udp"] is True:
+            serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
+        # when connecting using TCP only append if it supports OpenVPN-TCP
+        elif udp is False and res["features"]["openvpn_tcp"] is True:
+            serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
+            # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
+
+    betterServerList = excludeServers(serverList, max_load, top_servers)
+    if len(betterServerList) < 1:    # if no servers under search criteria
+        print("There are no servers that satisfy your criteria, please broaden your search.")
+        sys.exit()
+
     if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
-        # use api.nordvpn.com
-        jsonResList = getDataFromApi(
-                        country_code=country_code, p2p=p2p, dedicated=dedicated,
-                        double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
-        for res in jsonResList:
-            # when connecting using UDP only append if it supports OpenVPN-UDP
-            if udp is True and res["features"]["openvpn_udp"] is True:
-                serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
-            # when connecting using TCP only append if it supports OpenVPN-TCP
-            elif udp is False and res["features"]["openvpn_tcp"] is True:
-                serverList.append([res["domain"][:res["domain"].find(".")], res["load"]])
-                # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
-
-        betterServerList = excludeServers(serverList, max_load, top_servers)
-        if len(betterServerList) < 1:    # if no servers under search criteria
-            print("There are no servers that satisfy your criteria, please broaden your search.")
-            sys.exit()
-
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load, "Which Support",
               usedProtocol, ", p2p = ", p2p, ", dedicated =", dedicated, ", double_vpn =", double_vpn,
               ", tor_over_vpn =", tor_over_vpn, ", anti_ddos =", anti_ddos, "are :\n", betterServerList)
-
-    else:   # use nordvpn.com/servers
-        jsonResList = getData(country_code=country_code)
-        for res in jsonResList:
-            # only add if the server is online
-            if res["exists"] is True:
-                # when connecting using UDP only append if it supports OpenVPN-UDP
-                if udp is True and res["feature"]["openvpn_udp"] is True:
-                    serverList.append([res["short"], res["load"]])
-                    # print("UDP SERVESR :", res["feature"], res["feature"]["openvpn_udp"])
-                # when connecting using TCP only append if it supports OpenVPN-TCP
-                elif udp is False and res["feature"]["openvpn_tcp"] is True:
-                    serverList.append([res["short"], res["load"]])
-                    # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
-
-        betterServerList = excludeServers(serverList, max_load, top_servers)
-        if len(betterServerList) < 1:    # if no servers under search criteria
-            print("There are no servers that satisfy your criteria, please broaden your search.")
-            sys.exit()
-
+    else:
         print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
               country_code.upper(), "With 'Load' less than", max_load,
               "Which Support", usedProtocol, "are :", betterServerList)
