@@ -10,7 +10,7 @@ import json
 import sys
 import platform
 
-__version__ = "openpyn 1.3.1 (slick)"
+__version__ = "openpyn 1.4.0 rc1"
 
 countryDic = {}
 with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFile:
@@ -19,7 +19,7 @@ with open("/usr/share/openpyn/country-mappings.json", 'r') as countryMappingsFil
 
 
 def main(
-    server, country_code, country, udp, daemon, max_load, top_servers,
+    server, country_code, country, area, udp, daemon, max_load, top_servers,
         pings, toppest_servers, kill, kill_flush, update, list_servers, update_countries,
         force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
 
@@ -43,13 +43,13 @@ def main(
         if list_servers is None:      # no arg given with "-l"
             if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
                 listServers(
-                    list_servers="all", p2p=p2p, dedicated=dedicated, double_vpn=double_vpn,
+                    list_servers="all", area=area, p2p=p2p, dedicated=dedicated, double_vpn=double_vpn,
                     tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)   # show the special servers in all countries
             else:
                 listAllCountries()
         else:       # if a country code is supplied give details about that instead.
             listServers(
-                list_servers=list_servers, p2p=p2p, dedicated=dedicated,
+                list_servers=list_servers, area=area, p2p=p2p, dedicated=dedicated,
                 double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
 
     elif update_countries:
@@ -66,7 +66,7 @@ def main(
     if country_code:
         country_code = country_code.lower()
         betterServerList = findBetterServers(
-                                country_code, max_load, top_servers, udp, p2p,
+                                country_code, area, max_load, top_servers, udp, p2p,
                                 dedicated, double_vpn, tor_over_vpn, anti_ddos)
         pingServerList = pingServers(betterServerList, pings)
         chosenServer = chooseBestServer(pingServerList, toppest_servers)
@@ -124,7 +124,7 @@ def getData(country_code=None, countryName=None):
 
 # Gets json data, from api.nordvpn.com
 def getDataFromApi(
-        country_code, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
     typeFilteredServers = []
     typeNCountryFilterServers = []
 
@@ -151,18 +151,42 @@ def getDataFromApi(
                     typeFilteredServers.append(eachServer)
 
     # print("Total available servers = ", serverCount)
-
     if country_code != "all":       # if "-l" had country code with it. e.g "-l au"
-        for eachServer in typeFilteredServers:
-            if eachServer["domain"][:2] == country_code.lower():
-                typeNCountryFilterServers.append(eachServer)
-        return typeNCountryFilterServers
+        for aServer in typeFilteredServers:
+            if aServer["flag"].lower() == country_code.lower():
+                typeNCountryFilterServers.append(aServer)
+            # print(typeNCountryFilterServers)
+        if area is None:
+            return typeNCountryFilterServers
+        else:
+            uniqueLocations = []
+            resolvedLocations = []
+            typeLocationNCountryFilterServers = []
+            if area is not None:
+                for aServer in typeNCountryFilterServers:
+                    latLongDic = {"lat": aServer["location"]["lat"], "long": aServer["location"]["long"]}
+                    if latLongDic not in uniqueLocations:
+                        uniqueLocations.append(latLongDic)
+                # print(uniqueLocations)
+                for eachLocation in uniqueLocations:
+                    geoAddressList = getLocationName(eachLocation)
+                    # geoAddressList = getLocationName(latitude=latitude, longitude=longitude)
+                    resolvedLocations.append(geoAddressList)
+                # print(resolvedLocations)
+            for aServer in typeNCountryFilterServers:
+                for item in resolvedLocations:
+                    if aServer["location"]["lat"] == item[1]["lat"] and \
+                            aServer["location"]["long"] == item[1]["long"] and area in item[2]:
+                            aServer["location_names"] = item[2]  # add location info to server
+                            # print(aServer)
+                            typeLocationNCountryFilterServers.append(aServer)
+            return typeLocationNCountryFilterServers
     return typeFilteredServers
 
 
 # Filters servers based on the speficied criteria.
 def findBetterServers(
-    country_code, max_load, top_servers, udp, p2p, dedicated,
+    country_code, area, max_load, top_servers, udp, p2p, dedicated,
         double_vpn, tor_over_vpn, anti_ddos):
     serverList = []
     if udp:
@@ -172,7 +196,7 @@ def findBetterServers(
 
     # use api.nordvpn.com
     jsonResList = getDataFromApi(
-                    country_code=country_code, p2p=p2p, dedicated=dedicated,
+                    country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
     for res in jsonResList:
         # when connecting using UDP only append if it supports OpenVPN-UDP
@@ -188,15 +212,24 @@ def findBetterServers(
         print("There are no servers that satisfy your criteria, please broaden your search.")
         sys.exit()
 
-    if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
-        print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
-              country_code.upper(), "With 'Load' less than", max_load, "Which Support",
-              usedProtocol, ", p2p = ", p2p, ", dedicated =", dedicated, ", double_vpn =", double_vpn,
-              ", tor_over_vpn =", tor_over_vpn, ", anti_ddos =", anti_ddos, "are :\n", betterServerList)
-    else:
-        print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
-              country_code.upper(), "With 'Load' less than", max_load,
-              "Which Support", usedProtocol, "are :", betterServerList)
+    print("According to NordVPN, Least Busy " + str(len(betterServerList)) + " Servers, In",
+          country_code.upper())
+    if area:
+        print("in Location", jsonResList[0]["location_names"])
+
+    print("With 'Load' less than", max_load,  "Which Support", usedProtocol)
+    if p2p:
+        print(", p2p = ", p2p)
+    if dedicated:
+        print(", dedicated =", dedicated)
+    if double_vpn:
+        print(", double_vpn =", double_vpn)
+    if tor_over_vpn:
+        print(",tor_over_vpn =", tor_over_vpn)
+    if anti_ddos:
+        print(",anti_ddos =", anti_ddos)
+
+    print("are :", betterServerList)
 
     return betterServerList
 
@@ -307,23 +340,66 @@ def updateOpenpyn():
         print("Exception occured while wgetting zip")
 
 
+def getLocationName(locationDic):
+    latitude = locationDic["lat"]
+    longitude = locationDic["long"]
+    url = 'https://maps.googleapis.com/maps/api/geocode/json'
+    params = "latlng={lat},{lon}&sensor={sen}".format(
+        lat=latitude,
+        lon=longitude,
+        sen='false'
+    )
+    finalUrl = url + "?" + params
+    r = requests.get(finalUrl)
+    geoAddressList = []
+    tempList = []
+    results = r.json()['results'][0]['address_components']
+    # print(results)
+    country = town = None
+    geoAddressList.append(locationDic)
+    for c in results:
+        if "administrative_area_level_2" in c['types']:
+            potentialCityName1 = c['short_name']
+            tempList.append(potentialCityName1.lower())
+        if "locality" in c['types']:
+            potentialCityName2 = c['long_name']
+            tempList.append(potentialCityName2.lower())
+        if "administrative_area_level_1" in c['types']:
+            potentialAreaName = c['long_name']
+            tempList.append(potentialAreaName.lower())
+        if "administrative_area_level_1" in c['types']:
+            potentialAreaNameShort = c['short_name']
+            tempList.append(potentialAreaNameShort.lower())
+        if "country" in c['types']:
+            country = c['short_name']
+            geoAddressList.insert(0, country.lower().split(" "))
+    geoAddressList.insert(2, tempList)
+    # print(potentialCityName1, potentialCityName2, potentialAreaName, country)
+    return geoAddressList
+
+
 # Lists information abouts servers under the given criteria.
-def listServers(list_servers, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+def listServers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
     # if list_servers was not a specific country it would be "all"
     jsonResList = getDataFromApi(
-                    country_code=list_servers, p2p=p2p, dedicated=dedicated,
+                    country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+
     fromWebset = set()      # servers shown on the website
     serversSet = set()      # servers from .openvpn files
     newServersset = set()   # new Servers, not published on website yet
-    print("The NordVPN Servers In", list_servers.upper(), "Are :")
+    if area:
+            print("The NordVPN Servers In", list_servers.upper(), "Area", area, "Are :")
+    else:
+        print("The NordVPN Servers In", list_servers.upper(), "Are :")
+
     for res in jsonResList:
         print("Server =", res["domain"][:res["domain"].find(".")], ", Load =", res["load"], ", Country =",
               res["country"], ", Features", res["categories"], '\n')
         fromWebset.add(res["domain"][:res["domain"].find(".")])
 
     if list_servers != "all" and p2p is False and dedicated is False and double_vpn is False \
-            and tor_over_vpn is False and anti_ddos is False:   # else not applicable
+            and tor_over_vpn is False and anti_ddos is False and area is False:   # else not applicable
         serverFiles = subprocess.check_output("ls /usr/share/openpyn/files/" + list_servers + "*", shell=True)
         serverFilesStr = str(serverFiles)
         serverFilesStr = serverFilesStr[2:-3]
@@ -577,6 +653,8 @@ if __name__ == '__main__':
         'country', nargs='?', help='Country Code can also be speficied without "-c,"\
          i.e "openpyn au"')
     parser.add_argument(
+        '-a', '--area', type=str, help='Specifiy area, city name or state')
+    parser.add_argument(
         '-d', '--daemon', help='Run script in the background as openvpn daemon',
         action='store_true')
     parser.add_argument(
@@ -627,7 +705,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(
-        args.server, args.country_code, args.country, args.udp, args.daemon,
+        args.server, args.country_code, args.country, args.area, args.udp, args.daemon,
         args.max_load, args.top_servers, args.pings, args.toppest_servers,
         args.kill, args.kill_flush, args.update, args.list_servers, args.update_countries,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn, args.tor_over_vpn, args.anti_ddos)
