@@ -3,6 +3,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
+* Find and connect to servers in a specific city or state. (New!)
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
 * Use Iptable rules to prevent leakage if tunnel breaks (Experimental).
 * Quickly Connect to any specific server. i.e au10 or us20.
@@ -44,6 +45,12 @@ UDP-1194 instead, use "-u" switch.
 ``` bash
 openpyn us -u
 ```
+* Now, you can also specifiy a city or state, usefull when companies (like Google) lock your
+account if you login from a ip that resides in a different physical location.
+``` bash
+openpyn us -a ny
+openpyn us -a "new york"
+```
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
 ``` bash
 openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
@@ -74,7 +81,7 @@ openpyn us -t 10 -T 2 --p2p
 ```
 * To run the script in background.
 ``` bash
-sudo openpyn us -d #needs sudo to use openvpn
+openpyn us -d
 ```
 * To kill a running openvpn connection.
 ``` bash

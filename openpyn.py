@@ -163,7 +163,7 @@ def get_data_from_api(
             uniqueLocations = []
             resolvedLocations = []
             type_country_area_filtered = []
-            if area is not None:
+            if area is not None:    # TODO fix
                 for aServer in type_country_filtered:
                     latLongDic = {"lat": aServer["location"]["lat"], "long": aServer["location"]["long"]}
                     if latLongDic not in uniqueLocations:
@@ -390,7 +390,7 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn
     json_res_list = get_data_from_api(
                     country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
-
+    # print(json_res_list)
     servers_on_web = set()      # servers shown on the website
     servers_in_files = set()      # servers from .openvpn files
     new_servers = set()   # new Servers, not published on website yet, or taken down
@@ -580,18 +580,27 @@ def verify_root_access(message):
     return True
 
 
+def obtain_root_access():
+    try:    # try accessing root read only file "600" permission, ask for sudo pass
+        check_root = subprocess.run(
+            "sudo cat /usr/share/openpyn/creds".split(),
+            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        print("except occured while running a 'sudo cat' command")
+
+
 def connect(server, port, daemon, test):
     if test:
         print("Simulation end reached, openpyn would have connected to Server:",
               server, "on port:", port, " with 'daemon' mode:", daemon)
         sys.exit(1)
 
-    is_root = verify_root_access("Root access required to run 'openvpn'")
-    if daemon is True and is_root is False:
-        sys.exit(1)
-
     kill_vpn_processes()   # kill existing openvpn processes
     print("CONNECTING TO SERVER", server, " ON PORT", port)
+
+    is_root = verify_root_access("Root access required to run 'openvpn'")
+    if daemon is True and is_root is False:
+        obtain_root_access()
 
     resolvconf_exists = os.path.isfile("/sbin/resolvconf")
     # resolvconf_exists = False
