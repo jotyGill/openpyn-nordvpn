@@ -12,7 +12,6 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
 * Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
-* Country codes mapping for all countries that host servers by Nord (to use 'us','uk' instead of full names).
 * Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
 "Double VPN" --double, "Anti DDos" --anti-ddos support.
 
@@ -26,8 +25,7 @@ cd openpyn-nordvpn
 ``` bash
 # dependencies
 sudo apt install openvpn
-sudo pip install requests     # Or sudo apt install python3-requests
-sudo pip install beautifulsoup4   #Completely optional Only needed with '--updateCountries'
+sudo pip3 install requests     # Or sudo apt install python3-requests
 ```
 3. Install the script, and provide credentials to be stored in '/usr/share/openpyn/creds'.
 ``` bash
@@ -94,10 +92,11 @@ sudo openpyn -x
 
 ## Usage Options
 ``` bash
-usage: openpyn.py [-h] [-v] [-s SERVER] [-u] [-c COUNTRY_CODE] [-d]
+usage: openpyn.py [-h] [-v] [-s SERVER] [-u] [-c COUNTRY_CODE] [-a AREA] [-d]
                   [-m MAX_LOAD] [-t TOP_SERVERS] [-p PINGS]
-                  [-T TOPPEST_SERVERS] [-k] [-x] [--update]
-                  [--update-countries] [-l [L_LIST]] [-f]
+                  [-T TOPPEST_SERVERS] [-k] [-x] [--update] [-f]
+                  [-l [LIST_SERVERS]] [--p2p] [--dedicated] [--tor] [--double]
+                  [--anti-ddos] [--test]
                   [country]
 
 A python3 script to easily connect to and switch between, OpenVPN servers
@@ -124,6 +123,9 @@ optional arguments:
   -c COUNTRY_CODE, --country-code COUNTRY_CODE
                         Specifiy Country Code with 2 letters, i.e au,
 
+  -a AREA, --area AREA  Specifiy area: city name or state e.g "openpyn au -a victoria"
+                        or "openpyn au -a 'sydney'"
+
   -d, --daemon          Run script in the background as openvpn daemon
 
   -m MAX_LOAD, --max-load MAX_LOAD
@@ -148,10 +150,11 @@ optional arguments:
 
   -x, --kill-flush      Kill any running Openvnp process, AND Flush Iptables
 
-  --update              Fetch the latest config files from nord''s site
+  -f, --force-fw-rules  Enfore Firewall rules to drop traffic when tunnel
+                        breaks , Force disable DNS traffic going to any other
+                        interface
 
-  --update-countries    Fetch the latest countries from nord''s site and update
-                        the country code mappings
+  --update              Fetch the latest config files from nord''s site
 
   -l [L_LIST], --list [L_LIST]
                         If country code supplied ("-l us"): Displays all
@@ -164,10 +167,9 @@ optional arguments:
   --tor                 Only look for servers with "Tor Over VPN" support
   --double              Only look for servers with "Double VPN" support
   --anti-ddos           Only look for servers with "Anti DDos" support
+  --test                Simulation only, do not actullay connect to the vpn
+                        server
 
-  -f, --force-fw-rules  Enfore Firewall rules to drop traffic when tunnel
-                        breaks , Force disable DNS traffic going to any other
-                        interface
   ```
 ## Todo
 - [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
@@ -176,6 +178,8 @@ optional arguments:
 - [x] store creds from user input, if "creds" file exists use that instead.
 - [x] sane command-line options following the POSIX guidelines
 - [ ] ability to store profiles
-- [ ] find and display server's locations (cities)
+- [x] find and display server's locations (cities)
+- [ ] colourise output
+- [ ] modulise
 - [ ] create a combined config of multiple servers (on the fly) for auto failover
 - [ ] uninstall.sh
