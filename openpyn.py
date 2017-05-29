@@ -460,8 +460,8 @@ def list_all_countries():
     for res in json_response:
         if res["flag"] not in countries_mapping:
             countries_mapping.update({res["flag"]: res["country"]})
-    for key in country_dic.keys():
-        print("Full Name : " + country_dic[key] + "      Country Code : " + key + '\n')
+    for key in countries_mapping.keys():
+        print("Full Name : " + countries_mapping[key] + "      Country Code : " + key + '\n')
     sys.exit()
 
 
