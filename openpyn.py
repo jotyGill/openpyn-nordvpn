@@ -333,7 +333,7 @@ def kill_vpn_processes():
 # Clears Firewall rules, applies basic rules.
 def clear_fw_rules():
     verify_root_access("Root access needed to modify 'iptables' rules")
-    print("Flushing iptables INPUT and OUTPUT chains AND Applying defualt Rules")
+    print("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
     subprocess.run(["sudo", "iptables", "-F", "OUTPUT"])
     # allow all outgoing traffic
     subprocess.run("sudo iptables -P OUTPUT ACCEPT", shell=True)
@@ -626,7 +626,7 @@ def connect(server, port, daemon, test):
                 print('\nShutting down safely, please wait until process exits\n')
 
     else:       # If not Debian Based
-        print("Your OS ", detected_os, "Does not have '/sbin/resolvconf': Mannully Applying Patch" +
+        print("Your OS ", detected_os, "Does not have '/sbin/resolvconf': Manually Applying Patch" +
               " to Tunnel DNS Through The VPN Tunnel By Modifying '/etc/resolv.conf'")
         apply_dns_patch = subprocess.run(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
@@ -665,7 +665,7 @@ if __name__ == '__main__':
         '-c', '--country-code', type=str, help='Specifiy Country Code with 2 letters, i.e au,')
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
-        'country', nargs='?', help='Country Code can also be speficied without "-c,"\
+        'country', nargs='?', help='Country Code can also be specified without "-c,"\
          i.e "openpyn au"')
     parser.add_argument(
         '-a', '--area', type=str, help='Specifiy area, city name or state e.g \
@@ -717,7 +717,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Anti DDos" support', action='store_true')
     parser.add_argument(
-        '--test', help='Simulation only, do not actullay connect to the vpn server',
+        '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
 
     args = parser.parse_args()
