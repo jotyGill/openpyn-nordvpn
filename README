@@ -1,5 +1,5 @@
 # openpyn
-A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
+A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
@@ -16,26 +16,19 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 "Double VPN" --double, "Anti DDos" --anti-ddos support.
 
 ## Instructions
-1. Clone this repo to a desired location:
-``` bash
-git clone https://github.com/jotyGill/openpyn-nordvpn.git
-cd openpyn-nordvpn
-```
-2. Install dependencies if they are not already present.
+1. Install dependencies if they are not already present.
 ``` bash
 # dependencies
 sudo apt install openvpn
-sudo pip3 install requests     # Or sudo apt install python3-requests
+sudo apt install python3-pip
 ```
-3. Install the script, and provide credentials to be stored in '/usr/share/openpyn/creds'.
+2. Install openpyn with pip:
 ``` bash
-sudo ./install.sh
+sudo -H pip3 install openpyn
 ```
-4. Download/Update the latest vpn config files from NordVPN by:
-``` bash
-openpyn --update
-```
-5. That's it, run the script! when done with it, press "Ctr + C" to exit.
+3. That's it, run the script! when done with it, press "Ctr + C" to exit.
+  If credentials are not stored at '/usr/share/openpyn/credentials' (first run), Script will ask for them.
+
 
 ## Basic Usage
 * At minimum, you only need to specifiy the countryCode, default port is TCP-443, If you want to use
@@ -52,6 +45,7 @@ openpyn us -a "new york"
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
 ``` bash
 openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
+              # (changes are non persistent, simply reboot if having networking issues)
 ```
 * To quickly connect to a specific server.
 ``` bash
@@ -88,6 +82,10 @@ sudo openpyn -k
 * To Flush the iptables and kill any running openvpn connections.
 ``` bash
 sudo openpyn -x
+```
+* To Download/Update the latest vpn config files from NordVPN by:
+``` bash
+openpyn --update
 ```
 
 ## Usage Options
@@ -179,7 +177,8 @@ optional arguments:
 - [x] sane command-line options following the POSIX guidelines
 - [ ] ability to store profiles
 - [x] find and display server's locations (cities)
+- [x] accept full country names
 - [ ] colourise output
-- [ ] modulise
+- [x] modulise
 - [ ] create a combined config of multiple servers (on the fly) for auto failover
-- [ ] uninstall.sh
+- [x] uninstall.sh   #sudo pip3 uninstall openpyn
