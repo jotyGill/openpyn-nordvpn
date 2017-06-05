@@ -1,0 +1,2 @@
+recursive-include openpyn *.*
+include LICENSE.md README
