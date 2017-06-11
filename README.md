@@ -1,5 +1,5 @@
 # openpyn
-A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) and completely compromises Privacy!
+A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party) and completely compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
@@ -10,7 +10,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Downloads and Updates (modifications) the latest config files from NordVPN.
 * Option to run the script in background (openvpn daemon mode).
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
-* Excludes the servers that don't support OpenVPN (TCP or UDP depending upon which one you are trying to use).
+* Auto excludes the servers if ping to them fails or if they don't support OpenVPN \
+  (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
 * Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
 "Double VPN" --double, "Anti DDos" --anti-ddos support.
@@ -24,23 +25,23 @@ sudo apt install python3-pip
 ```
 2. Install openpyn with pip:
 ``` bash
-sudo -H pip3 install openpyn
+sudo -H pip3 install openpyn --upgrade
 ```
 3. That's it, run the script! when done with it, press "Ctr + C" to exit.
   If credentials are not stored at '/usr/share/openpyn/credentials' (first run), Script will ask for them.
 
 
 ## Basic Usage
-* At minimum, you only need to specifiy the countryCode, default port is TCP-443, If you want to use
+* At minimum, you only need to specify the country-code, default port is TCP-443, If you want to use
 UDP-1194 instead, use "-u" switch.
 ``` bash
 openpyn us -u
 ```
-* Now, you can also specifiy a city or state, usefull when companies (like Google) lock your
-account if you login from a ip that resides in a different physical location.
+* Now, you can also specify a city or state, useful when companies (like Google) lock your
+account if you try to login from an IP that resides in a different physical location.
 ``` bash
 openpyn us -a ny
-openpyn us -a "new york"
+openpyn us --area "new york"
 ```
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
 ``` bash
@@ -59,11 +60,11 @@ openpyn -l
 ``` bash
 openpyn -l uk
 ```
-* To find servers with featurs like "peer-to-peer", "dedicated ip", "tor over vpn",
+* To find servers with features like "peer-to-peer", "dedicated ip", "tor over vpn",
   "double vpn" in all countries or a given country.
 ``` bash
 openpyn -l uk --p2p
-openpyn -l uk --dedicated
+openpyn --list uk --dedicated
 openpyn -l --tor  # tor over vpn in all countries
 ```
 * To find the least loaded 10 NordVPN servers in US that support "peer-to-peer", out
@@ -105,7 +106,7 @@ your ISP''s DNS (still unencrypted, even if you use a thirdparty) and
 completely compromises Privacy!
 
 positional arguments:
-  country               Country Code can also be speficied without "-c," i.e
+  country               Country Code can also be specified without "-c," i.e
                         "openpyn au"
 
 optional arguments:
@@ -119,53 +120,55 @@ optional arguments:
   -u, --udp             use port UDP-1194 instead of the default TCP-443
 
   -c COUNTRY_CODE, --country-code COUNTRY_CODE
-                        Specifiy Country Code with 2 letters, i.e au,
+                        Specify Country Code with 2 letters, i.e au,
 
-  -a AREA, --area AREA  Specifiy area: city name or state e.g "openpyn au -a victoria"
+  -a AREA, --area AREA  Specify area: city name or state e.g "openpyn au -a victoria"
                         or "openpyn au -a 'sydney'"
 
   -d, --daemon          Run script in the background as openvpn daemon
 
   -m MAX_LOAD, --max-load MAX_LOAD
-                        Specifiy load threashold, rejects servers with more
+                        Specify load threshold, rejects servers with more
                         load than this, DEFAULT=70
 
   -t TOP_SERVERS, --top-servers TOP_SERVERS
-                        Specifiy the number of Top Servers to choose from the
+                        Specify the number of Top Servers to choose from the
                         NordVPN''s Sever list for the given Country, These will
                         be Pinged. DEFAULT=6
 
   -p PINGS, --pings PINGS
-                        Specifiy number of pings to be sent to each server to
+                        Specify number of pings to be sent to each server to
                         determine quality, DEFAULT=5
 
   -T TOPPEST_SERVERS, --toppest-servers TOPPEST_SERVERS
                         After ping tests the final server count to randomly
                         choose a server from, DEFAULT=3
 
-  -k, --kill            Kill any running Openvnp process, very usefull to kill
+  -k, --kill            Kill any running Openvnp process, very useful to kill
                         openpyn process running in background with "-d" switch
 
   -x, --kill-flush      Kill any running Openvnp process, AND Flush Iptables
 
-  -f, --force-fw-rules  Enfore Firewall rules to drop traffic when tunnel
+  -f, --force-fw-rules  Enforce Firewall rules to drop traffic when tunnel
                         breaks , Force disable DNS traffic going to any other
                         interface
 
   --update              Fetch the latest config files from nord''s site
 
   -l [L_LIST], --list [L_LIST]
-                        If country code supplied ("-l us"): Displays all
-                        servers in a given country with their current load and
-                        supported features. Otherwise: display all
-                        countries along with thier country-codes
+                        If no argument given prints all Country Names and
+                        Country Codes; If country code supplied ("-l us"):
+                        Displays all servers in that given country with their
+                        current load and openvpn support status. Works in
+                        conjunction with (-a | --area, and server types (--p2p,
+                        --tor) e.g "openpyn -l it --p2p --area milano"
 
   --p2p                 Only look for servers with "Peer To Peer" support
   --dedicated           Only look for servers with "Dedicated IP" support
   --tor                 Only look for servers with "Tor Over VPN" support
   --double              Only look for servers with "Double VPN" support
   --anti-ddos           Only look for servers with "Anti DDos" support
-  --test                Simulation only, do not actullay connect to the vpn
+  --test                Simulation only, do not actually connect to the vpn
                         server
 
   ```
@@ -173,12 +176,13 @@ optional arguments:
 - [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
 - [x] utilise the frequently updated api at "api.nordvpn.com/server"
 - [x] clean exit, handle exceptions
-- [x] store creds from user input, if "creds" file exists use that instead.
+- [x] store credentials from user input, if "credentials" file exists use that instead.
 - [x] sane command-line options following the POSIX guidelines
 - [ ] ability to store profiles
 - [x] find and display server's locations (cities)
 - [x] accept full country names
 - [ ] colourise output
-- [x] modulise
+- [x] modularize
 - [ ] create a combined config of multiple servers (on the fly) for auto failover
 - [x] uninstall.sh   #sudo pip3 uninstall openpyn
+- [ ] view status of the connection after launching in --daemon mode.
