@@ -4,6 +4,7 @@ from openpyn import filters
 from openpyn import locations
 from openpyn import firewall
 from openpyn import root
+from openpyn import credentials
 from openpyn import __version__
 
 import subprocess
@@ -23,42 +24,42 @@ def main():
         servers hosted by NordVPN. Quickly Connect to the least busy servers (using current \
         data from Nordvpn website) with lowest latency from you. Find Nordvpn servers in a given \
         country or city. Tunnels DNS traffic through the VPN which normally (when using OpenVPN \
-        with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty) \
-        and completely compromises Privacy!")
+        with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty \
+        DNS servers) and completely compromises Privacy!")
     parser.add_argument(
-        '-v', '--version', action='version', version= "openpyn " + __version__)
+        '-v', '--version', action='version', version="openpyn " + __version__)
     parser.add_argument(
         '-s', '--server', help='server name, i.e. ca64 or au10',)
     parser.add_argument(
         '-u', '--udp', help='use port UDP-1194 instead of the default TCP-443',
         action='store_true')
     parser.add_argument(
-        '-c', '--country-code', type=str, help='Specifiy Country Code with 2 letters, i.e au,')
+        '-c', '--country-code', type=str, help='Specify Country Code with 2 letters, i.e au,')
     # use nargs='?' to make a positional arg optinal
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be specified without "-c,"\
          i.e "openpyn au"')
     parser.add_argument(
-        '-a', '--area', type=str, help='Specifiy area, city name or state e.g \
+        '-a', '--area', type=str, help='Specify area, city name or state e.g \
         "openpyn au -a victoria" or "openpyn au -a \'sydney\'"')
     parser.add_argument(
         '-d', '--daemon', help='Run script in the background as openvpn daemon',
         action='store_true')
     parser.add_argument(
-        '-m', '--max-load', type=int, default=70, help='Specifiy load threashold, \
+        '-m', '--max-load', type=int, default=70, help='Specify load threashold, \
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
-        '-t', '--top-servers', type=int, default=6, help='Specifiy the number of Top \
+        '-t', '--top-servers', type=int, default=6, help='Specify the number of Top \
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=6')
     parser.add_argument(
-        '-p', '--pings', type=str, default="5", help='Specifiy number of pings \
+        '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
         '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=3')
     parser.add_argument(
-        '-k', '--kill', help='Kill any running Openvnp process, very usefull \
+        '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
         action='store_true')
     parser.add_argument(
@@ -68,25 +69,29 @@ def main():
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
     parser.add_argument(
-        '-f', '--force-fw-rules', help='Enfore Firewall rules to drop traffic when tunnel breaks\
+        '-f', '--force-fw-rules', help='Enforce Firewall rules to drop traffic when tunnel breaks\
         , Force disable DNS traffic going to any other interface', action='store_true')
     parser.add_argument(
         '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
         help='If no argument given prints all Country Names and Country Codes; \
         If country code supplied ("-l us"): Displays all servers in that given\
         country with their current load and openvpn support status. Works in \
-        conjuction with (-a | --area, and server types (--p2p, --tor) \
+        conjunction with (-a | --area, and server types (--p2p, --tor) \
         e.g "openpyn -l it --p2p --area milano"')
     parser.add_argument(
         '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
     parser.add_argument(
-        '--dedicated', help='Only look for servers with "Dedicated IP" support', action='store_true')
+        '--dedicated', help='Only look for servers with "Dedicated IP" support',
+        action='store_true')
     parser.add_argument(
-        '--tor', dest='tor_over_vpn', help='Only look for servers with "Tor Over VPN" support', action='store_true')
+        '--tor', dest='tor_over_vpn', help='Only look for servers with "Tor Over VPN" support',
+        action='store_true')
     parser.add_argument(
-        '--double', dest='double_vpn', help='Only look for servers with "Double VPN" support', action='store_true')
+        '--double', dest='double_vpn', help='Only look for servers with "Double VPN" support',
+        action='store_true')
     parser.add_argument(
-        '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Anti DDos" support', action='store_true')
+        '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Anti DDos" support',
+        action='store_true')
     parser.add_argument(
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
@@ -126,9 +131,10 @@ def run(
     elif list_servers != 'nope':      # means "-l" supplied
         if list_servers is None:      # no arg given with "-l"
             if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
+                # show the special servers in all countries
                 display_servers(
-                    list_servers="all", area=area, p2p=p2p, dedicated=dedicated, double_vpn=double_vpn,
-                    tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)   # show the special servers in all countries
+                    list_servers="all", area=area, p2p=p2p, dedicated=dedicated,
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
             else:
                 list_all_countries()
         # if a country code is supplied give details about that country only.
@@ -154,7 +160,8 @@ def run(
     if country_code:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
-            check_credentials()
+            if credentials.check_credentials() is False:
+                credentials.save_credentials()
 
         if len(country_code) > 2:   # full country name
             # get the country_code from the full name
@@ -175,7 +182,8 @@ def run(
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
-            check_credentials()
+            if credentials.check_credentials() is False:
+                credentials.save_credentials()
 
         server = server.lower()
         # if "-f" used appy Firewall rules
@@ -196,7 +204,7 @@ def get_json(url):
     try:
         json_response = requests.get(url, headers=headers).json()
     except requests.exceptions.HTTPError:
-        print("Cannot GET the json from nordvpn.com, Manually Specifiy a Server\
+        print("Cannot GET the json from nordvpn.com, Manually Specify a Server\
         using '-s' for example '-s au10'")
         sys.exit()
     except requests.exceptions.RequestException:
@@ -264,7 +272,8 @@ def find_better_servers(
     return better_servers_list
 
 
-# Pings servers with the speficied no of "ping", returns a sorted list by Ping Avg and Median Deveation
+# Pings servers with the speficied no of "ping",
+# returns a sorted list by Ping Avg and Median Deveation
 def ping_servers(better_servers_list, pings):
     pinged_servers_list = []
     for i in better_servers_list:
@@ -330,9 +339,11 @@ def kill_vpn_processes():
 def update_config_files():
     root.verify_root_access("Root access needed to write files in '/usr/share/openpyn/files'")
     try:
-        subprocess.run(["sudo", "wget", "-N", "https://nordvpn.com/api/files/zip", "-P", "/usr/share/openpyn/"])
-        subprocess.run(["sudo", "unzip", "-u", "-o", "/usr/share/openpyn/zip", "-d", "/usr/share/openpyn/files/"])
-        subprocess.run(["sudo", "rm", "/usr/share/openpyn/zip"])
+        subprocess.check_call(
+            "sudo wget -N https://nordvpn.com/api/files/zip -P /usr/share/openpyn/".split())
+        subprocess.check_call(
+            "sudo unzip -u -o /usr/share/openpyn/zip -d /usr/share/openpyn/files/".split())
+        subprocess.check_call("sudo rm /usr/share/openpyn/zip".split())
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
@@ -354,8 +365,8 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn
 
     # add server names to "servers_on_web" set
     for res in json_res_list:
-        print("Server =", res["domain"][:res["domain"].find(".")], ", Load =", res["load"], ", Country =",
-              res["country"], ", Features", res["categories"], '\n')
+        print("Server =", res["domain"][:res["domain"].find(".")], ", Load =", res["load"],
+              ", Country =", res["country"], ", Features", res["categories"], '\n')
         servers_on_web.add(res["domain"][:res["domain"].find(".")])
 
     if not area:
@@ -365,7 +376,8 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn
             print(location[2])
 
     if list_servers != "all" and p2p is False and dedicated is False and double_vpn is False \
-            and tor_over_vpn is False and anti_ddos is False and area is False:   # else not applicable
+            and tor_over_vpn is False and anti_ddos is False and area is False:
+            # else not applicable.
         print_latest_servers(server_set=servers_on_web)
     sys.exit()
 
@@ -374,7 +386,8 @@ def print_latest_servers(server_set):
     servers_in_files = set()      # servers from .openvpn files
     new_servers = set()   # new Servers, not published on website yet, or taken down
 
-    serverFiles = subprocess.check_output("ls /usr/share/openpyn/files" + list_servers + "*", shell=True)
+    serverFiles = subprocess.check_output(
+        "ls /usr/share/openpyn/files" + list_servers + "*", shell=True)
     openvpn_files_str = str(serverFiles)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
@@ -395,13 +408,13 @@ def print_latest_servers(server_set):
 
 def check_config_files():
     try:
-        serverFiles = subprocess.check_output("ls /usr/share/openpyn/files",
-        shell=True, stderr=subprocess.DEVNULL)
+        serverFiles = subprocess.check_output(
+            "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
     except subprocess.CalledProcessError:
         subprocess.run("sudo mkdir -p /usr/share/openpyn/files".split())
-        serverFiles = subprocess.check_output("ls /usr/share/openpyn/files",
-        shell=True, stderr=subprocess.DEVNULL)
+        serverFiles = subprocess.check_output(
+            "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
@@ -412,37 +425,13 @@ def check_config_files():
     return
 
 
-def check_credentials():
-    try:
-        serverFiles = subprocess.check_output("ls /usr/share/openpyn/credentials",
-        shell=True, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        print("Storing credentials in '/usr/share/openpyn/credentials with openvpn",
-              "compatible 'auth-user-pass' file format\n")
-        root.obtain_root_access()
-        # create Empty file with 600 permissions
-        subprocess.run("sudo install -b -m 600 /dev/null /usr/share/openpyn/credentials".split())
-
-        username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
-        password = input("Enter the password for NordVPN: ")
-        command_1 = "sudo echo " + '"%s"' % username +" > /usr/share/openpyn/credentials"
-        command_2 = "sudo echo " + '"%s"' % password + " >> /usr/share/openpyn/credentials"
-
-        userP = subprocess.Popen(command_1, shell=True, stdout=subprocess.PIPE)
-        userP.wait()
-        passP = subprocess.Popen(command_2, shell=True, stdout=subprocess.PIPE)
-        passP.wait()
-        print("Awesome, the credentials have been saved in '/usr/share/openpyn/credentials'\n")
-    return
-
-
 def list_all_countries():
     countries_mapping = {}
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
     for res in json_response:
-        if res["flag"] not in countries_mapping:
-            countries_mapping.update({res["flag"]: res["country"]})
+        if res["domain"][:2] not in countries_mapping:
+            countries_mapping.update({res["domain"][:2]: res["country"]})
     for key in countries_mapping.keys():
         print("Full Name : " + countries_mapping[key] + "      Country Code : " + key + '\n')
     sys.exit()
@@ -453,7 +442,7 @@ def get_country_code(full_name):
     json_response = get_json(url)
     for res in json_response:
         if res["country"].lower() == full_name.lower():
-            code = res["flag"].lower()
+            code = res["domain"][:2].lower()
             return code
     return "Country Name Not Correct"
 

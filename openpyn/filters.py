@@ -30,7 +30,7 @@ def filter_by_area(area, type_country_filtered):
 def filter_by_country(country_code, type_filtered_servers):
     remaining_servers = []
     for aServer in type_filtered_servers:
-        if aServer["flag"].lower() == country_code.lower():
+        if aServer["domain"][:2].lower() == country_code.lower():
             remaining_servers.append(aServer)
             # print(remaining_servers)
     return remaining_servers
