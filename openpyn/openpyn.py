@@ -5,6 +5,7 @@ from openpyn import locations
 from openpyn import firewall
 from openpyn import root
 from openpyn import credentials
+from openpyn import management
 from openpyn import __version__
 
 import subprocess
@@ -28,6 +29,9 @@ def main():
         DNS servers) and completely compromises Privacy!")
     parser.add_argument(
         '-v', '--version', action='version', version="openpyn " + __version__)
+    parser.add_argument(
+        '--init', help='Initialise, store/change credentials, download/update vpn config files,\
+        needs root "sudo" access.', action='store_true')
     parser.add_argument(
         '-s', '--server', help='server name, i.e. ca64 or au10',)
     parser.add_argument(
@@ -99,8 +103,8 @@ def main():
     args = parser.parse_args()
 
     run(
-        args.server, args.country_code, args.country, args.area, args.udp, args.daemon,
-        args.max_load, args.top_servers, args.pings, args.toppest_servers,
+        args.init, args.server, args.country_code, args.country, args.area, args.udp,
+        args.daemon, args.max_load, args.top_servers, args.pings, args.toppest_servers,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.test)
@@ -108,7 +112,7 @@ def main():
 
 def run(
     # run openpyn
-    server, country_code, country, area, udp, daemon, max_load, top_servers,
+    init, server, country_code, country, area, udp, daemon, max_load, top_servers,
         pings, toppest_servers, kill, kill_flush, update, list_servers,
         force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test):
 
@@ -116,11 +120,18 @@ def run(
     if udp:
         port = "udp1194"
 
-    if kill:
+    if init:
+        initialise()
+    elif kill:
         kill_vpn_processes()  # dont touch iptable rules
+        time.sleep(0.5)
+        # let management-client normally shut, if still alive kill it with fire
+        kill_management_client()
         sys.exit()
     elif kill_flush:
         kill_vpn_processes()
+        time.sleep(0.5)
+        kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
         sys.exit()
     elif update:
@@ -194,6 +205,13 @@ def run(
         connection = connect(server, port, daemon, test)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
+    sys.exit()
+
+
+def initialise():
+    credentials.save_credentials()
+    update_config_files()
+    return
 
 
 # Using requests, GETs and returns json from a url.
@@ -330,10 +348,24 @@ def kill_vpn_processes():
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.run(["sudo", "killall", "openvpn"])
+        print("Killed openvpn process")
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         print("No openvpn process found")
-        return
+    return
+
+
+def kill_management_client():
+    # kill the management client if it is for some reason still alive
+    try:
+        openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
+        # When it returns "0", proceed
+        root.verify_root_access("Root access needed to kill 'openpyn-management' process")
+        subprocess.run(["sudo", "killall", "openpyn-management"])
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the openvpn_processes issued non 0 result, "not found"
+        pass
+    return
 
 
 def update_config_files():
@@ -492,11 +524,20 @@ def connect(server, port, daemon, test):
         sys.exit(1)
 
     kill_vpn_processes()   # kill existing openvpn processes
+    # kill_management_client()
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
     is_root = root.verify_root_access("Root access required to run 'openvpn'")
-    if daemon is True and is_root is False:
+    if is_root is False:
         root.obtain_root_access()
+
+    if root.verify_running_as_root() is False:
+        # linux_user = root.get_username()
+        # subprocess.Popen(("su " + linux_user + " -c openpyn-management").split())
+        subprocess.Popen(("openpyn-management").split())
+    else:
+        print("Desktop notifications don't work when using 'sudo', run without it,"
+              + "when asked, provide the sudo credentials")
 
     resolvconf_exists = os.path.isfile("/sbin/resolvconf")
     # resolvconf_exists = False
@@ -511,7 +552,8 @@ def connect(server, port, daemon, test):
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
                     "/usr/share/openpyn/credentials", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
+                    "--management", "127.0.0.1", "7015", "--management-up-down"])
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
@@ -522,9 +564,12 @@ def connect(server, port, daemon, test):
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
                     /usr/share/openpyn/update-resolv-conf.sh --down \
-                    /usr/share/openpyn/update-resolv-conf.sh", shell=True)
+                    /usr/share/openpyn/update-resolv-conf.sh \
+                    --management 127.0.0.1 7015 --management-up-down", shell=True)
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
+            except PermissionError:     # needed cause complains when killing sudo process
+                pass
 
     else:       # If not Debian Based
         print("Your OS ", detected_os, "Does not have '/sbin/resolvconf': Manually Applying Patch" +
@@ -536,16 +581,20 @@ def connect(server, port, daemon, test):
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
-                    "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon"])
+                    "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
+                    "--management", "127.0.0.1", "7015", "--management-up-down"])
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
-                subprocess.run(
+                subprocess.run((
                     "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
-                    /usr/share/openpyn/credentials", shell=True)
+                    /usr/share/openpyn/credentials --management 127.0.0.1 7015 \
+                    --management-up-down").split())
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
+            except PermissionError:     # needed cause complains when killing sudo process
+                pass
 
 
 if __name__ == '__main__':

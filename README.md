@@ -15,6 +15,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Finds and displays nord vpn servers (with extra info) in a given country.
 * Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
 "Double VPN" --double, "Anti DDos" --anti-ddos support.
+* Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo) (New!)
 
 ## Instructions
 1. Install dependencies if they are not already present.
@@ -27,9 +28,11 @@ sudo apt install python3-pip
 ``` bash
 sudo -H pip3 install openpyn --upgrade
 ```
-3. That's it, run the script! when done with it, press "Ctr + C" to exit.
-  If credentials are not stored at '/usr/share/openpyn/credentials' (first run), Script will ask for them.
-
+3. Initialise the script with "--init" (store credentials and update/install vpn config files)
+``` bash
+sudo openpyn --init
+```
+That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
 * At minimum, you only need to specify the country-code, default port is TCP-443, If you want to use
@@ -114,6 +117,9 @@ optional arguments:
 
   -v, --version         show program''s version number and exit
 
+  --init                Initialise, store/change credentials, download/update
+                        vpn config files, needs root "sudo" access.
+
   -s SERVER, --server SERVER
                         server name, i.e. ca64 or au10
 
@@ -186,3 +192,4 @@ optional arguments:
 - [ ] create a combined config of multiple servers (on the fly) for auto failover
 - [x] uninstall.sh   #sudo pip3 uninstall openpyn
 - [ ] view status of the connection after launching in --daemon mode.
+- [x] desktop notifications.
