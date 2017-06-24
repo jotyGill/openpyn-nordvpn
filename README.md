@@ -140,7 +140,7 @@ optional arguments:
   -t TOP_SERVERS, --top-servers TOP_SERVERS
                         Specify the number of Top Servers to choose from the
                         NordVPN''s Sever list for the given Country, These will
-                        be Pinged. DEFAULT=6
+                        be Pinged. DEFAULT=4
 
   -p PINGS, --pings PINGS
                         Specify number of pings to be sent to each server to
@@ -148,7 +148,7 @@ optional arguments:
 
   -T TOPPEST_SERVERS, --toppest-servers TOPPEST_SERVERS
                         After ping tests the final server count to randomly
-                        choose a server from, DEFAULT=3
+                        choose a server from, DEFAULT=2
 
   -k, --kill            Kill any running Openvnp process, very useful to kill
                         openpyn process running in background with "-d" switch

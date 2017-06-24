@@ -41,27 +41,20 @@ def obtain_root_access():
         print("except occured while running obtain_root_access() 'sudo ls' command")
 
 
-def get_username():
-    '''
-    try:
-        user_output = str(subprocess.check_output("sudo users".split()))
-        linux_user = user_output[2:user_output.find(" ")]
-        print("users", linux_user)
-    except subprocess.CalledProcessError:
-        print("except occured while running 'users' command")
-    '''
-    linux_user = os.getlogin()
-    return linux_user
+def logged_in_user_is_root(username):
+    user_record = pwd.getpwnam(username)
+    user_id = user_record.pw_gid
+    # print(user_record, user_id)
+    if user_id == 0:
+        return True
+    return False
 
 
-def demote_user(linux_user):
-    user_record = pwd.getpwnam(linux_user)
-    print(user_record)
-    print("old uid", os.getuid())
-    print("old euid", os.geteuid())
-    os.setuid(user_record.pw_gid)
-    os.seteuid(user_record.pw_gid)
-    print(os.getlogin())
-    print("new uid", os.getuid())
-    print("new euid", os.geteuid())
-    return
+def running_with_sudo():
+    if verify_running_as_root():
+        logged_in_user = os.getlogin()
+        if logged_in_user_is_root(logged_in_user):
+            return False    # when loggdin as 'root' user notifications will work.
+        else:
+            return True     # 'sudo' is used notification won't work.
+    return False    # regular user without 'sudo'
