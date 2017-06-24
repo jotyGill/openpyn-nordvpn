@@ -4,9 +4,9 @@
 import gi
 import socket
 import os
+import sys
 from time import sleep
 from openpyn import root
-from sys import exit
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 
@@ -72,7 +72,7 @@ def show():
     except ConnectionResetError:
         notification.update("Openpyn", "Disconnected, Bye. (ConnectionReset)")
         notification.show()
-        exit()
+        sys.exit()
 
     s.close()
     return

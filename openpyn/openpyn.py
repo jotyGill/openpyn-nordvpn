@@ -53,15 +53,15 @@ def main():
         '-m', '--max-load', type=int, default=70, help='Specify load threashold, \
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
-        '-t', '--top-servers', type=int, default=6, help='Specify the number of Top \
+        '-t', '--top-servers', type=int, default=4, help='Specify the number of Top \
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
-         Pinged. DEFAULT=6')
+         Pinged. DEFAULT=4')
     parser.add_argument(
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
-        the final server count to randomly choose a server from, DEFAULT=3')
+        '-T', '--toppest-servers', type=int, default=2, help='After ping tests \
+        the final server count to randomly choose a server from, DEFAULT=2')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
@@ -527,17 +527,16 @@ def connect(server, port, daemon, test):
     # kill_management_client()
     print("CONNECTING TO SERVER", server, " ON PORT", port)
 
-    is_root = root.verify_root_access("Root access required to run 'openvpn'")
-    if is_root is False:
+    root_access = root.verify_root_access("Root access required to run 'openvpn'")
+    if root_access is False:
         root.obtain_root_access()
 
-    if root.verify_running_as_root() is False:
-        # linux_user = root.get_username()
-        # subprocess.Popen(("su " + linux_user + " -c openpyn-management").split())
-        subprocess.Popen(("openpyn-management").split())
-    else:
-        print("Desktop notifications don't work when using 'sudo', run without it,"
+    # notifications Don't work with 'sudo'
+    if root.running_with_sudo():
+        print("Desktop notifications don't work when using 'sudo', run without it, "
               + "when asked, provide the sudo credentials")
+    else:
+        subprocess.Popen("openpyn-management".split())
 
     resolvconf_exists = os.path.isfile("/sbin/resolvconf")
     # resolvconf_exists = False
