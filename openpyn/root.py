@@ -13,7 +13,7 @@ def verify_root_access(message):
     #        print(message, '\n')
     #        return False
 
-    try:    # try accessing root read only file "600" permission
+    try:
         check_root = subprocess.check_output(
             "sudo -n cat /etc/resolv.conf".split(), stderr=subprocess.DEVNULL)
     # -n 'non-interactive' mode used to, not prompt for password (if user not sudo) but throw err.
