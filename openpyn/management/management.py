@@ -48,7 +48,7 @@ def show():
                 last_status_UP = False
 
                 # print ('Received A DOWN', data_str)
-                notification.update("Openpyn", "Cupcakes are done, Disconnected.")
+                notification.update("Openpyn", "Connection Down, Disconnected.")
                 # Show again
                 notification.show()
 

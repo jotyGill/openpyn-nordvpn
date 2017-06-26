@@ -21,6 +21,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 1. Install dependencies if they are not already present.
 ``` bash
 # dependencies
+Python 3.5 or above
 sudo apt install openvpn
 sudo apt install python3-pip
 ```

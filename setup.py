@@ -1,5 +1,11 @@
 from setuptools import setup, find_packages
 from openpyn import __version__
+import sys
+
+if sys.version_info < (3, 5):
+    sys.stderr.write("ERROR: openpyn requires Python 3.5 or above.\n")
+    sys.exit(1)
+
 with open('README.rst', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
