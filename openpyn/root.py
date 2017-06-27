@@ -18,7 +18,6 @@ def verify_root_access(message):
             "sudo -n cat /etc/resolv.conf".split(), stderr=subprocess.DEVNULL)
     # -n 'non-interactive' mode used to, not prompt for password (if user not sudo) but throw err.
     except subprocess.CalledProcessError:
-        print(message, '\n')
         return False
     return True
 
@@ -34,7 +33,7 @@ def verify_running_as_root():
 def obtain_root_access():
     # asks for sudo password to be cached
     try:    # try accessing root read only file "600" permission, ask for sudo pass
-        check_root = subprocess.run(
+        check_root = subprocess.call(
             "sudo cat /etc/resolv.conf".split(),
             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:

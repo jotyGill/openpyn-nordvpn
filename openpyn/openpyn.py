@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from openpyn import filters
 from openpyn import locations
@@ -315,10 +315,10 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", ping_list)
+        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", ping_list, "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
-        print(ping_result)
+        # print(ping_result)
         pinged_servers_list.append(ping_result)
     # sort by Ping Avg and Median Deveation
     pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
@@ -347,7 +347,7 @@ def kill_vpn_processes():
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
-        subprocess.run(["sudo", "killall", "openvpn"])
+        subprocess.call(["sudo", "killall", "openvpn"])
         print("Killed openvpn process")
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -361,7 +361,7 @@ def kill_management_client():
         openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
-        subprocess.run(["sudo", "killall", "openpyn-management"])
+        subprocess.call(["sudo", "killall", "openpyn-management"])
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
@@ -444,7 +444,7 @@ def check_config_files():
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
     except subprocess.CalledProcessError:
-        subprocess.run("sudo mkdir -p /usr/share/openpyn/files".split())
+        subprocess.call("sudo mkdir -p /usr/share/openpyn/files".split())
         serverFiles = subprocess.check_output(
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
@@ -558,7 +558,7 @@ def connect(server, port, daemon, test):
             try:
                 print("Your OS '" + detected_os + "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
-                subprocess.run(
+                subprocess.call(
                     "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
@@ -573,7 +573,7 @@ def connect(server, port, daemon, test):
     else:       # If not Debian Based
         print("Your OS ", detected_os, "Does not have '/sbin/resolvconf': Manually Applying Patch" +
               " to Tunnel DNS Through The VPN Tunnel By Modifying '/etc/resolv.conf'")
-        apply_dns_patch = subprocess.run(
+        apply_dns_patch = subprocess.call(
             ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
         if daemon:
@@ -585,7 +585,7 @@ def connect(server, port, daemon, test):
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
-                subprocess.run((
+                subprocess.call((
                     "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
                     /usr/share/openpyn/credentials --management 127.0.0.1 7015 \
