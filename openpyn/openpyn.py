@@ -315,7 +315,7 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", "\n")
+        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", ping_list, "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
         # print(ping_result)
