@@ -21,13 +21,14 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 1. Install dependencies if they are not already present.
 ``` bash
 # dependencies
-Python 3.5 or above
-sudo apt install openvpn
-sudo apt install python3-pip
+Python 3.4
+sudo apt install openvpn python3-pip
 ```
-2. Install openpyn with pip:
+2. Install openpyn:
 ``` bash
-sudo -H pip3 install openpyn --upgrade
+git clone --branch python3.4 https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
+sudo python3 setup.py install
 ```
 3. Initialise the script with "--init" (store credentials and update/install vpn config files)
 ``` bash

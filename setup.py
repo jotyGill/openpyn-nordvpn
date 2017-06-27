@@ -6,7 +6,7 @@ if sys.version_info < (3, 4):
     sys.stderr.write("ERROR: openpyn requires Python 3.4 or above.\n")
     sys.exit(1)
 
-with open('README.rst', encoding='utf-8') as readme_file:
+with open('README.rst') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
 
@@ -43,7 +43,7 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3.4 :: Only',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.4',
     ],
 )
