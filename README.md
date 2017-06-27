@@ -23,6 +23,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 # dependencies
 Python 3.4
 sudo apt install openvpn python3-pip
+sudo apt install python3-gi   # Needed on Debian/Rasbian Jessie 
 ```
 2. Install openpyn:
 ``` bash
