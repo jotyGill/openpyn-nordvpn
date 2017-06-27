@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# pip3 install --upgrade --force-reinstall openpyn
+#!/usr/bin/env python3
 
 import gi
 import socket
@@ -55,7 +54,8 @@ def show():
             server_name_location = data_str.find("common_name=")
             # print(server_name_location)
             if server_name_location != -1 and last_status_UP is True:
-                server_name = data_str[server_name_location + 12:server_name_location + 28]
+                server_name_start = data_str[server_name_location + 12:]
+                server_name = server_name_start[:server_name_start.find(".com") + 4]
                 # print("Both True and server_name", server_name)
                 notification.update("Openpyn", "Connected! to " + server_name)
                 # Show again

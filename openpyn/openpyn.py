@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from openpyn import filters
 from openpyn import locations
@@ -315,10 +315,10 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", ping_list)
+        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
-        print(ping_result)
+        # print(ping_result)
         pinged_servers_list.append(ping_result)
     # sort by Ping Avg and Median Deveation
     pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
