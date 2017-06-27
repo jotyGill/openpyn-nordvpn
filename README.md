@@ -28,7 +28,7 @@ sudo apt install python3-pip
 ``` bash
 sudo -H pip3 install openpyn --upgrade
 ```
-For Python 3.4 (Debian/Raspbian-Jessie)
+For Python 3.4 ONLY, not recommended otherwise (for Debian/Raspbian-Jessie)
 ```bash
 sudo apt install python3-gi   # Desktop notification won't work for Debian
 git clone --branch python3.4 https://github.com/jotyGill/openpyn-nordvpn.git
