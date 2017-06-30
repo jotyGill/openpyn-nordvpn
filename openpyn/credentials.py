@@ -15,7 +15,7 @@ def check_credentials():
 def save_credentials():
     if root.verify_running_as_root() is False:
         print("Please run as 'sudo openpyn --init' the first time. root access is",
-              "needed to store credentials in /usr/share/credentials.")
+              "needed to store credentials in /usr/share/openpyn/credentials.")
         sys.exit()
     else:
         print("Storing credentials in '/usr/share/openpyn/credentials with openvpn",

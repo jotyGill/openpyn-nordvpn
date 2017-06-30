@@ -24,13 +24,21 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 sudo apt install openvpn
 sudo apt install python3-pip
 ```
-2. Install openpyn with pip (if Python3.5 or later available):
+2. Install openpyn with pip. (Recommended, needs Python3.5 or later):
 ``` bash
 sudo -H pip3 install openpyn --upgrade
 ```
-For Python 3.4 (Debian/Raspbian-Jessie)
-```bash
-sudo apt install python3-gi   # Desktop notification won't work for Debian
+2.1 Alternatively clone and install.
+(Highly recommended for Debian Streach, as pip3 method is not installing files in '/usr/share'):
+``` bash
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
+sudo python3 setup.py install
+```
+2.2 For Python 3.4 ONLY, not recommended otherwise (for Debian/Raspbian-Jessie).
+Note: Desktop notification won't work for Debian Jessie
+``` bash
+sudo apt install python3-gi    
 git clone --branch python3.4 https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
