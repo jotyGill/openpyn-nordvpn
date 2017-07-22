@@ -2,7 +2,4 @@ __pycache__
 openpyn.egg*
 build
 dist
-files/*
-openpyn/files
-zip
-creds
+.*

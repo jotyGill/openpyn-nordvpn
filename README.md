@@ -66,6 +66,10 @@ openpyn us --area "new york"
 openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
               # (changes are non persistent, simply reboot if having networking issues)
 ```
+* When using "-f", To allow custom ports (from internal ip ranges, i.e 192.168 or 10.) through the firewall.
+``` bash
+sudo openpyn us -f --allow 22  #only accessible from local network
+```
 * To quickly connect to a specific server.
 ``` bash
 openpyn -s au10
@@ -100,7 +104,7 @@ sudo openpyn -k
 ```
 * To Flush the iptables and kill any running openvpn connections.
 ``` bash
-sudo openpyn -x
+sudo openpyn -x   #optionally --allow 22 if using as ssh server
 ```
 * To Download/Update the latest vpn config files from NordVPN by:
 ``` bash
@@ -173,6 +177,12 @@ optional arguments:
   -f, --force-fw-rules  Enforce Firewall rules to drop traffic when tunnel
                         breaks , Force disable DNS traffic going to any other
                         interface
+
+  --allow INTERNALLY_ALLOWED [INTERNALLY_ALLOWED ...]
+                        To be used with "f" to allow ports but ONLY to
+                        INTERNAL IP RANGE. e.g, you can use your PC as
+                        SSH, HTTP server for local devices (e.g 192.168.1.*
+                        range) by using "openpyn us --allow 22 80"
 
   --update              Fetch the latest config files from nord''s site
 

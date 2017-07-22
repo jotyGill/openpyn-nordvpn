@@ -78,7 +78,7 @@ def main():
     parser.add_argument(
         '--allow', dest='internally_allowed', help='To be used with "f" to allow ports \
         but ONLY to INTERNAL IP RANGE. for exmaple: you can use your PC as SSH, HTTP server \
-        for local devices (i.e 192.168.1.* range) by "openpyn us --allow 22,80"', nargs='+')
+        for local devices (i.e 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+')
     parser.add_argument(
         '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
         help='If no argument given prints all Country Names and Country Codes; \
