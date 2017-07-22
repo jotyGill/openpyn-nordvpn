@@ -76,6 +76,10 @@ def main():
         '-f', '--force-fw-rules', help='Enforce Firewall rules to drop traffic when tunnel breaks\
         , Force disable DNS traffic going to any other interface', action='store_true')
     parser.add_argument(
+        '--allow', dest='internally_allowed', help='To be used with "f" to allow ports \
+        but ONLY to INTERNAL IP RANGE. for exmaple: you can use your PC as SSH, HTTP server \
+        for local devices (i.e 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+')
+    parser.add_argument(
         '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
         help='If no argument given prints all Country Names and Country Codes; \
         If country code supplied ("-l us"): Displays all servers in that given\
@@ -107,15 +111,15 @@ def main():
         args.daemon, args.max_load, args.top_servers, args.pings, args.toppest_servers,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
-        args.tor_over_vpn, args.anti_ddos, args.test)
+        args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed)
 
 
 def run(
     # run openpyn
     init, server, country_code, country, area, udp, daemon, max_load, top_servers,
         pings, toppest_servers, kill, kill_flush, update, list_servers,
-        force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test):
-
+        force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
+        internally_allowed):
     port = "tcp443"
     if udp:
         port = "udp1194"
@@ -133,6 +137,10 @@ def run(
         time.sleep(0.5)
         kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
+        # if --allow present, allow those ports internally
+        if internally_allowed:
+            network_interfaces = get_network_interfaces()
+            firewall.internally_allow_ports(network_interfaces, internally_allowed)
         sys.exit()
     elif update:
         update_config_files()
@@ -189,6 +197,9 @@ def run(
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(chosen_server, port)
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip)
+            if internally_allowed:
+                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+
         connection = connect(chosen_server, port, daemon, test)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -202,6 +213,9 @@ def run(
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(server, port)
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip)
+            if internally_allowed:
+                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+
         connection = connect(server, port, daemon, test)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
