@@ -3,3 +3,4 @@ openpyn.egg*
 build
 dist
 .*
+.python-version
