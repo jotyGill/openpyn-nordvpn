@@ -73,6 +73,9 @@ def main():
         '--update', help='Fetch the latest config files from nord\'s site',
         action='store_true')
     parser.add_argument(
+        '--skip-dns-patch', dest='skip_dns_patch', help='Skips DNS patching,\
+        leaves /etc/resolvconf untouched. (Not recommended)', action='store_true')
+    parser.add_argument(
         '-f', '--force-fw-rules', help='Enforce Firewall rules to drop traffic when tunnel breaks\
         , Force disable DNS traffic going to any other interface', action='store_true')
     parser.add_argument(
@@ -111,7 +114,8 @@ def main():
         args.daemon, args.max_load, args.top_servers, args.pings, args.toppest_servers,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
-        args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed)
+        args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed,
+        args.skip_dns_patch)
 
 
 def run(
@@ -119,7 +123,7 @@ def run(
     init, server, country_code, country, area, udp, daemon, max_load, top_servers,
         pings, toppest_servers, kill, kill_flush, update, list_servers,
         force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
-        internally_allowed):
+        internally_allowed, skip_dns_patch):
     port = "tcp443"
     if udp:
         port = "udp1194"
@@ -196,11 +200,11 @@ def run(
         if force_fw_rules:
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(chosen_server, port)
-            firewall.apply_fw_rules(network_interfaces, vpn_server_ip)
+            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
 
-        connection = connect(chosen_server, port, daemon, test)
+        connection = connect(chosen_server, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -212,11 +216,11 @@ def run(
         if force_fw_rules:
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(server, port)
-            firewall.apply_fw_rules(network_interfaces, vpn_server_ip)
+            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
 
-        connection = connect(server, port, daemon, test)
+        connection = connect(server, port, daemon, test, skip_dns_patch)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
@@ -531,7 +535,7 @@ def get_vpn_server_ip(server, port):
         return vpn_server_ip
 
 
-def connect(server, port, daemon, test):
+def connect(server, port, daemon, test, skip_dns_patch):
     if test:
         print("Simulation end reached, openpyn would have connected to Server:",
               server, "on port:", port, " with 'daemon' mode:", daemon)
@@ -556,7 +560,7 @@ def connect(server, port, daemon, test):
     # resolvconf_exists = False
     detected_os = platform.linux_distribution()[0]
 
-    if resolvconf_exists:  # Debian Based OS
+    if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
         if daemon:
@@ -584,11 +588,14 @@ def connect(server, port, daemon, test):
             except PermissionError:     # needed cause complains when killing sudo process
                 pass
 
-    else:       # If not Debian Based
-        print("Your OS ", detected_os, "Does not have '/sbin/resolvconf': Manually Applying Patch" +
-              " to Tunnel DNS Through The VPN Tunnel By Modifying '/etc/resolv.conf'")
-        apply_dns_patch = subprocess.run(
-            ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
+    else:       # If not Debian Based or skip_dns_patch
+        # if skip_dns_patch, do not touch etc/resolv.conf
+        if skip_dns_patch is False:
+            print("Your OS ", detected_os, "Does not have '/sbin/resolvconf':" +
+                  "Manually Applying Patch to Tunnel DNS Through The VPN Tunnel" +
+                  "By Modifying '/etc/resolv.conf'")
+            apply_dns_patch = subprocess.run(
+                ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
 
         if daemon:
             subprocess.Popen(

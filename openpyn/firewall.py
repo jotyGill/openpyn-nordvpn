@@ -24,7 +24,7 @@ def clear_fw_rules():
     return
 
 
-def apply_fw_rules(interfaces_details, vpn_server_ip):
+def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
     # Empty the INPUT and OUTPUT chain of any current rules
@@ -38,35 +38,36 @@ def apply_fw_rules(interfaces_details, vpn_server_ip):
         "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
          -i tun+ -j ACCEPT".split())
     for interface in interfaces_details:
+        if skip_dns_patch is False:
+            # if interface is active with an IP in it, don't send DNS requests to it
+            if len(interface) == 3 and "tun" not in interface[0]:
+                subprocess.run(
+                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
+                        "udp", "--destination-port", "53", "-j", "DROP"])
+                # subprocess.run(
+                #     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
+                #         "tcp", "--destination-port", "53", "-j", "DROP"])
 
-        # if interface is active with an IP in it, don't send DNS requests to it
-        if len(interface) == 3 and "tun" not in interface[0]:
+        if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
+            # allow access to vpn_server_ip
             subprocess.run(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                    "udp", "--destination-port", "53", "-j", "DROP"])
-            # subprocess.run(
-            #     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-            #         "tcp", "--destination-port", "53", "-j", "DROP"])
-            if interface[0] != "lo":
-                # allow access to vpn_server_ip
-                subprocess.run(
-                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0],
-                        "-d", vpn_server_ip, "-j", "ACCEPT"])
-                # talk to the vpnServer ip to connect to it
-                subprocess.run(
-                    ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                        "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                        "-s", vpn_server_ip, "-j", "ACCEPT"])
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0],
+                    "-d", vpn_server_ip, "-j", "ACCEPT"])
+            # talk to the vpnServer ip to connect to it
+            subprocess.run(
+                ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
+                    "-s", vpn_server_ip, "-j", "ACCEPT"])
 
-                # allow access to internal ip range
-                # print("internal ip with range", interface[2])
-                subprocess.run(
-                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
-                        interface[2], "-j", "ACCEPT"])
-                subprocess.run(
-                    ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                        "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                        "-s", interface[2], "-j", "ACCEPT"])
+            # allow access to internal ip range
+            # print("internal ip with range", interface[2])
+            subprocess.run(
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
+                    interface[2], "-j", "ACCEPT"])
+            subprocess.run(
+                ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
+                    "-s", interface[2], "-j", "ACCEPT"])
 
     # Allow loopback traffic
     subprocess.run("sudo iptables -A INPUT -i lo -j ACCEPT".split())
@@ -81,6 +82,7 @@ def apply_fw_rules(interfaces_details, vpn_server_ip):
     return
 
 
+# open sepecified ports for devices in the local network
 def internally_allow_ports(interfaces_details, internally_allowed):
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
