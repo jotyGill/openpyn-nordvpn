@@ -132,13 +132,11 @@ def run(
         initialise()
     elif kill:
         kill_vpn_processes()  # dont touch iptable rules
-        time.sleep(0.5)
         # let management-client normally shut, if still alive kill it with fire
         kill_management_client()
         sys.exit()
     elif kill_flush:
         kill_vpn_processes()
-        time.sleep(0.5)
         kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
@@ -370,15 +368,15 @@ def choose_best_servers(best_servers):
 
 def kill_vpn_processes():
     try:
-        print("Killing any running openvpn processes")
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.run(["sudo", "killall", "openvpn"])
-        print("Killed openvpn process")
+        print("Killed the already running openvpn process")
+        time.sleep(1)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
-        print("No openvpn process found")
+        pass
     return
 
 
