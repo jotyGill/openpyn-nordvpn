@@ -60,7 +60,7 @@ def main():
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-T', '--toppest-servers', type=int, default=2, help='After ping tests \
+        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=2')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
@@ -197,17 +197,27 @@ def run(
         filtered_by_toppest = filters.filter_by_toppest(pinged_servers_list, toppest_servers)
         # print("FILTERED BY TOPPEST", type(filtered_by_toppest), filtered_by_toppest)
         chosen_servers = choose_best_servers(filtered_by_toppest)
-        # if "-f" used appy Firewall rules
-        if force_fw_rules:
-            network_interfaces = get_network_interfaces()
-            vpn_server_ip = get_vpn_server_ip(chosen_servers, port)
-            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-            if internally_allowed:
-                firewall.internally_allow_ports(network_interfaces, internally_allowed)
-        # connect to chosen_servers, if one fails go to next
-        for aserver in chosen_servers:
-            print("Out of the Best Available Servers, Connecting To ", aserver)
-            connection = connect(aserver, port, daemon, test, skip_dns_patch)
+
+        if daemon:
+            if force_fw_rules:
+                network_interfaces = get_network_interfaces()
+                vpn_server_ip = get_vpn_server_ip(chosen_servers[0], port)
+                firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                if internally_allowed:
+                    firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            connection = connect(chosen_servers[0], port, daemon, test, skip_dns_patch)
+        else:
+            # connect to chosen_servers, if one fails go to next
+            for aserver in chosen_servers:
+                # if "-f" used appy Firewall rules
+                if force_fw_rules:
+                    network_interfaces = get_network_interfaces()
+                    vpn_server_ip = get_vpn_server_ip(aserver, port)
+                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                    if internally_allowed:
+                        firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                print("Out of the Best Available Servers, Connecting To ", aserver)
+                connection = connect(aserver, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -346,7 +356,7 @@ def ping_servers(better_servers_list, pings):
     return pinged_servers_list
 
 
-# Returns a final server (randomly) from only the best "toppest_servers" (e.g 3) no. of servers.
+# Returns a list of servers (toppest_servers) (e.g 3 servers) to connect to.
 def choose_best_servers(best_servers):
     best_servers_names = []
 
@@ -588,7 +598,7 @@ def connect(server, port, daemon, test, skip_dns_patch):
                 print('\nShutting down safely, please wait until process exits\n')
                 sys.exit()
             except PermissionError:     # needed cause complains when killing sudo process
-                pass
+                sys.exit()
 
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
@@ -608,7 +618,6 @@ def connect(server, port, daemon, test, skip_dns_patch):
                     "--management", "127.0.0.1", "7015", "--management-up-down"])
             print("Started 'openvpn' in --daemon mode")
         else:
-            # SIGTERM[soft,auth-failure] received, process exiting
             try:
                 subprocess.run((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
@@ -620,7 +629,7 @@ def connect(server, port, daemon, test, skip_dns_patch):
                 print('\nShutting down safely, please wait until process exits\n')
                 sys.exit()
             except PermissionError:     # needed cause complains when killing sudo process
-                pass
+                sys.exit()
 
 
 if __name__ == '__main__':
