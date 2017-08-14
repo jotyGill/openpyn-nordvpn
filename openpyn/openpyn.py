@@ -60,7 +60,7 @@ def main():
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-T', '--toppest-servers', type=int, default=2, help='After ping tests \
+        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
         the final server count to randomly choose a server from, DEFAULT=2')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
@@ -132,13 +132,11 @@ def run(
         initialise()
     elif kill:
         kill_vpn_processes()  # dont touch iptable rules
-        time.sleep(0.5)
         # let management-client normally shut, if still alive kill it with fire
         kill_management_client()
         sys.exit()
     elif kill_flush:
         kill_vpn_processes()
-        time.sleep(0.5)
         kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
@@ -195,16 +193,29 @@ def run(
                                 dedicated, double_vpn, tor_over_vpn, anti_ddos)
         pinged_servers_list = ping_servers(better_servers_list, pings)
         filtered_by_toppest = filters.filter_by_toppest(pinged_servers_list, toppest_servers)
-        chosen_server = choose_best_server(filtered_by_toppest)
-        # if "-f" used appy Firewall rules
-        if force_fw_rules:
-            network_interfaces = get_network_interfaces()
-            vpn_server_ip = get_vpn_server_ip(chosen_server, port)
-            firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-            if internally_allowed:
-                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+        # print("FILTERED BY TOPPEST", type(filtered_by_toppest), filtered_by_toppest)
+        chosen_servers = choose_best_servers(filtered_by_toppest)
 
-        connection = connect(chosen_server, port, daemon, test, skip_dns_patch)
+        if daemon:
+            if force_fw_rules:
+                network_interfaces = get_network_interfaces()
+                vpn_server_ip = get_vpn_server_ip(chosen_servers[0], port)
+                firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                if internally_allowed:
+                    firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            connection = connect(chosen_servers[0], port, daemon, test, skip_dns_patch)
+        else:
+            # connect to chosen_servers, if one fails go to next
+            for aserver in chosen_servers:
+                # if "-f" used appy Firewall rules
+                if force_fw_rules:
+                    network_interfaces = get_network_interfaces()
+                    vpn_server_ip = get_vpn_server_ip(aserver, port)
+                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                    if internally_allowed:
+                        firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                print("Out of the Best Available Servers, Connecting To ", aserver)
+                connection = connect(aserver, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -343,8 +354,8 @@ def ping_servers(better_servers_list, pings):
     return pinged_servers_list
 
 
-# Returns a final server (randomly) from only the best "toppest_servers" (e.g 3) no. of servers.
-def choose_best_server(best_servers):
+# Returns a list of servers (toppest_servers) (e.g 3 servers) to connect to.
+def choose_best_servers(best_servers):
     best_servers_names = []
 
     # populate bestServerList
@@ -352,24 +363,20 @@ def choose_best_server(best_servers):
         best_servers_names.append(i[0][0])
 
     print("Top " + str(len(best_servers)) + " Servers with best Ping are:", best_servers_names)
-    chosen_servers_list = best_servers[random.randrange(0, len(best_servers))]
-    chosen_server = chosen_servers_list[0][0]  # the first value, "server name"
-    print("Out of the Best Available Servers, Randomly Selected ", chosen_server,
-          "with Ping of  min/avg/max/mdev = ", chosen_servers_list[1])
-    return chosen_server
+    return best_servers_names
 
 
 def kill_vpn_processes():
     try:
-        print("Killing any running openvpn processes")
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.run(["sudo", "killall", "openvpn"])
-        print("Killed openvpn process")
+        print("Killed the already running openvpn process")
+        time.sleep(1)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
-        print("No openvpn process found")
+        pass
     return
 
 
@@ -565,7 +572,8 @@ def connect(server, port, daemon, test, skip_dns_patch):
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
         if daemon:
             subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                    "nointeract", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
                     "/usr/share/openpyn/credentials", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
@@ -577,7 +585,8 @@ def connect(server, port, daemon, test, skip_dns_patch):
                 print("Your OS '" + detected_os + "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
                 subprocess.run(
-                    "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
+                    "sudo openvpn --redirect-gateway --config" +
+                    " --auth-retry nointeract /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
                     /usr/share/openpyn/update-resolv-conf.sh --down \
@@ -585,8 +594,9 @@ def connect(server, port, daemon, test, skip_dns_patch):
                     --management 127.0.0.1 7015 --management-up-down", shell=True)
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
+                sys.exit()
             except PermissionError:     # needed cause complains when killing sudo process
-                pass
+                sys.exit()
 
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
@@ -599,7 +609,8 @@ def connect(server, port, daemon, test, skip_dns_patch):
 
         if daemon:
             subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
+                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                    "nointeract", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
                     "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
                     "--management", "127.0.0.1", "7015", "--management-up-down"])
@@ -607,14 +618,16 @@ def connect(server, port, daemon, test, skip_dns_patch):
         else:
             try:
                 subprocess.run((
-                    "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
-                    /usr/share/openpyn/credentials --management 127.0.0.1 7015 \
-                    --management-up-down").split())
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract " +
+                    "--config /usr/share/openpyn/files/" +
+                    server + ".nordvpn.com." + port + ".ovpn --auth-user-pass " +
+                    "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
+                    "--management-up-down").split())
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
+                sys.exit()
             except PermissionError:     # needed cause complains when killing sudo process
-                pass
+                sys.exit()
 
 
 if __name__ == '__main__':
