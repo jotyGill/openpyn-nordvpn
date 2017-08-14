@@ -30,7 +30,7 @@ setup(
             'openpyn = openpyn.openpyn:main',
             'openpyn-management = openpyn.management.management:show']},
     data_files=[('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
-                './openpyn/scripts/update-resolv-conf.sh'])],
+                './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])],
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,

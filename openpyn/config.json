@@ -1,0 +1,15 @@
+{
+  "vpn_provider": "nordvpn"{
+    "settings":{
+      "files_location": "/usr/share/openpyn/files/",
+      "download_url": "https://nordvpn.com/api/files/zip"
+    },
+  },
+
+  "vpn_provider": "ipvanish"{
+    "settings":{
+      "files_location": "/usr/share/openpyn/ipvanish/files/",
+      "download_url": "https://www.ipvanish.com/software/configs/configs.zip"
+    },
+  },
+}
