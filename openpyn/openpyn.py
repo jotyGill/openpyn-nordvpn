@@ -542,7 +542,16 @@ def get_vpn_server_ip(server, port):
         return vpn_server_ip
 
 
-def connect(server, port, daemon, test, skip_dns_patch):
+def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn"):
+    if server_provider == "nordvpn":
+        vpn_config_file = "/usr/share/openpyn/files/" + server + ".nordvpn.com."\
+                + port + ".ovpn"
+        print("CONFIG FILE", vpn_config_file)
+
+    elif server_provider == "ipvanish":
+        vpn_config_file = "/usr/share/openpyn/files/ipvanish/" + server
+        print("ipvanish")
+
     if test:
         print("Simulation end reached, openpyn would have connected to Server:",
               server, "on port:", port, " with 'daemon' mode:", daemon)
@@ -573,8 +582,7 @@ def connect(server, port, daemon, test, skip_dns_patch):
         if daemon:
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                    "nointeract", "--config", "/usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
+                    "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                     "/usr/share/openpyn/credentials", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
@@ -585,9 +593,8 @@ def connect(server, port, daemon, test, skip_dns_patch):
                 print("Your OS '" + detected_os + "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
                 subprocess.run(
-                    "sudo openvpn --redirect-gateway --config" +
-                    " --auth-retry nointeract /usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract" +
+                    " --config " + vpn_config_file + " --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
                     /usr/share/openpyn/update-resolv-conf.sh --down \
                     /usr/share/openpyn/update-resolv-conf.sh \
@@ -610,8 +617,7 @@ def connect(server, port, daemon, test, skip_dns_patch):
         if daemon:
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                    "nointeract", "--config", "/usr/share/openpyn/files/"
-                    + server + ".nordvpn.com." + port + ".ovpn",
+                    "nointeract", "--config", vpn_config_file,
                     "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
                     "--management", "127.0.0.1", "7015", "--management-up-down"])
             print("Started 'openvpn' in --daemon mode")
@@ -619,8 +625,7 @@ def connect(server, port, daemon, test, skip_dns_patch):
             try:
                 subprocess.run((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
-                    "--config /usr/share/openpyn/files/" +
-                    server + ".nordvpn.com." + port + ".ovpn --auth-user-pass " +
+                    "--config " + vpn_config_file + " --auth-user-pass " +
                     "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
                     "--management-up-down").split())
             except (KeyboardInterrupt) as err:
