@@ -546,11 +546,11 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
     if server_provider == "nordvpn":
         vpn_config_file = "/usr/share/openpyn/files/" + server + ".nordvpn.com."\
                 + port + ".ovpn"
-        print("CONFIG FILE", vpn_config_file)
+        # print("CONFIG FILE", vpn_config_file)
 
     elif server_provider == "ipvanish":
         vpn_config_file = "/usr/share/openpyn/files/ipvanish/" + server
-        print("ipvanish")
+        # print("ipvanish")
 
     if test:
         print("Simulation end reached, openpyn would have connected to Server:",
