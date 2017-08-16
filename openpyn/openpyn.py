@@ -8,6 +8,7 @@ from openpyn import credentials
 from openpyn import management
 from openpyn import __version__
 
+from colorama import Fore, Back, Style
 import subprocess
 import argparse
 import requests
@@ -74,7 +75,7 @@ def main():
         action='store_true')
     parser.add_argument(
         '--skip-dns-patch', dest='skip_dns_patch', help='Skips DNS patching,\
-        leaves /etc/resolvconf untouched. (Not recommended)', action='store_true')
+        leaves /etc/resolv.conf untouched. (Not recommended)', action='store_true')
     parser.add_argument(
         '-f', '--force-fw-rules', help='Enforce Firewall rules to drop traffic when tunnel breaks\
         , Force disable DNS traffic going to any other interface', action='store_true')
@@ -214,7 +215,8 @@ def run(
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
-                print("Out of the Best Available Servers, Connecting To ", aserver)
+                print(Fore.BLUE + "Out of the Best Available Servers, Chose",
+                      (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -298,12 +300,14 @@ def find_better_servers(
 
     better_servers_list = filters.filter_by_load(server_list, max_load, top_servers)
 
-    print("According to NordVPN, Least Busy " + str(len(better_servers_list)) + " Servers, In",
-          country_code.upper(), end=" ")
+    print(Style.BRIGHT + Fore.BLUE + "According to NordVPN, Least Busy " +
+          Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Servers, In",
+          Fore.GREEN + country_code.upper() + Fore.BLUE, end=" ")
     if area:
-        print("in Location", json_res_list[0]["location_names"], end=" ")
+        print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
 
-    print("With 'Load' less than", max_load,  "Which Support", used_protocol, end=" ")
+    print(Fore.BLUE + "With 'Load' less than", Fore.GREEN + str(max_load) + Fore.BLUE,
+          "Which Support", Fore.GREEN + used_protocol + Fore.BLUE, end=" ")
     if p2p:
         print(", p2p = ", p2p, end=" ")
     if dedicated:
@@ -315,7 +319,7 @@ def find_better_servers(
     if anti_ddos:
         print(",anti_ddos =", anti_ddos, end=" ")
 
-    print("are :", better_servers_list)
+    print("are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
     return better_servers_list
 
 
@@ -335,7 +339,7 @@ def ping_servers(better_servers_list, pings):
                 ("grep", "min/avg/max/mdev"), stdin=ping_proc.stdout)
 
         except subprocess.CalledProcessError as e:
-            print("Ping Failed to :", i[0], "Skipping it")
+            print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
             continue
         ping_string = str(ping_output)
         ping_string = ping_string[ping_string.find("= ") + 2:]
@@ -344,7 +348,8 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ", ping_list, "\n")
+        print("Pinging Server " + i[0] + " min/avg/max/mdev = ",
+              Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
         # print(ping_result)
@@ -362,7 +367,8 @@ def choose_best_servers(best_servers):
     for i in best_servers:
         best_servers_names.append(i[0][0])
 
-    print("Top " + str(len(best_servers)) + " Servers with best Ping are:", best_servers_names)
+    print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with best Ping are:",
+          Fore.GREEN + str(best_servers_names) + Fore.BLUE + "\n")
     return best_servers_names
 
 
@@ -553,22 +559,25 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
         # print("ipvanish")
 
     if test:
-        print("Simulation end reached, openpyn would have connected to Server:",
-              server, "on port:", port, " with 'daemon' mode:", daemon)
+        print("Simulation end reached, openpyn would have connected to Server:" +
+              Fore.GREEN, server, Fore.BLUE + " on port:" + Fore.GREEN, port,
+              Fore.BLUE + " with 'daemon' mode:" + Fore.GREEN, daemon)
         sys.exit(1)
 
     kill_vpn_processes()   # kill existing openvpn processes
     # kill_management_client()
-    print("CONNECTING TO SERVER", server, " ON PORT", port)
+    print(Fore.BLUE + "CONNECTING TO SERVER" + Fore.GREEN, server,
+          Fore.BLUE + "ON PORT", Fore.GREEN + port + Fore.BLUE)
 
-    root_access = root.verify_root_access("Root access required to run 'openvpn'")
+    root_access = root.verify_root_access(
+        Fore.GREEN + "Sudo credentials required to run 'openvpn'" + Fore.BLUE)
     if root_access is False:
         root.obtain_root_access()
 
     # notifications Don't work with 'sudo'
     if root.running_with_sudo():
-        print("Desktop notifications don't work when using 'sudo', run without it, "
-              + "when asked, provide the sudo credentials")
+        print(Fore.RED + "Desktop notifications don't work when using 'sudo', run without it, "
+              + "when asked, provide the sudo credentials" + Fore.BLUE)
     else:
         subprocess.Popen("openpyn-management".split())
 
@@ -587,11 +596,13 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
                     "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
                     "--management", "127.0.0.1", "7015", "--management-up-down"])
-            print("Started 'openvpn' in --daemon mode")
+            print("Started 'openvpn' in" + Fore.GREEN + "--daemon" + Fore.BLUE + "mode")
         else:
             try:
-                print("Your OS '" + detected_os + "' Does have '/sbin/resolvconf'",
+                print("Your OS'" + Fore.GREEN + detected_os + Fore.BLUE +
+                      "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
+                print(Style.RESET_ALL)
                 subprocess.run(
                     "sudo openvpn --redirect-gateway --auth-retry nointeract" +
                     " --config " + vpn_config_file + " --auth-user-pass \
@@ -608,11 +619,17 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
-            print("Your OS ", detected_os, "Does not have '/sbin/resolvconf':" +
-                  "Manually Applying Patch to Tunnel DNS Through The VPN Tunnel" +
-                  "By Modifying '/etc/resolv.conf'")
+            print("Your OS", Fore.GREEN + detected_os + Fore.BLUE,
+                  "Does not have" + Fore.GREEN + " '/sbin/resolvconf':\n" +
+                  Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
+                  "The VPN Tunnel By Modifying" + Fore.GREEN +
+                  "' /etc/resolv.conf'" + Fore.RED)
             apply_dns_patch = subprocess.run(
                 ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
+        else:
+            print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
+                  "likely won't go through the encrypted tunnel")
+        print(Style.RESET_ALL)
 
         if daemon:
             subprocess.Popen(
