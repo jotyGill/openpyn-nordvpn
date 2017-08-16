@@ -623,7 +623,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                   "Does not have" + Fore.GREEN + " '/sbin/resolvconf':\n" +
                   Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
                   "The VPN Tunnel By Modifying" + Fore.GREEN +
-                  "' /etc/resolv.conf'" + Fore.RED)
+                  "' /etc/resolv.conf'")
             apply_dns_patch = subprocess.run(
                 ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
         else:
