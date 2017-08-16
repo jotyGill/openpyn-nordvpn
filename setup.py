@@ -22,7 +22,7 @@ setup(
     keywords=[
         'openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn',
         'vpn wrapper', 'private vpn', 'privacy'],
-    install_requires=['requests'],
+    install_requires=['requests', 'colorama'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
     packages=find_packages(),
     entry_points={
