@@ -18,7 +18,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo) (New!)
 
 ## Demo
-https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif
+![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
 
 ## Instructions
 1. Install dependencies if they are not already present.
