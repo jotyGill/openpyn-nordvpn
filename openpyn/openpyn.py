@@ -531,13 +531,6 @@ def connect(server, port, daemon, test):
     if root_access is False:
         root.obtain_root_access()
 
-    # notifications Don't work with 'sudo'
-    if root.running_with_sudo():
-        print("Desktop notifications don't work when using 'sudo', run without it, "
-              + "when asked, provide the sudo credentials")
-    else:
-        subprocess.Popen("openpyn-management".split())
-
     resolvconf_exists = os.path.isfile("/sbin/resolvconf")
     # resolvconf_exists = False
     detected_os = platform.linux_distribution()[0]
@@ -551,8 +544,7 @@ def connect(server, port, daemon, test):
                     + server + ".nordvpn.com." + port + ".ovpn", "--auth-user-pass",
                     "/usr/share/openpyn/credentials", "--script-security", "2",
                     "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
-                    "--management", "127.0.0.1", "7015", "--management-up-down"])
+                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon"])
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
@@ -563,8 +555,7 @@ def connect(server, port, daemon, test):
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
                     /usr/share/openpyn/update-resolv-conf.sh --down \
-                    /usr/share/openpyn/update-resolv-conf.sh \
-                    --management 127.0.0.1 7015 --management-up-down", shell=True)
+                    /usr/share/openpyn/update-resolv-conf.sh", shell=True)
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
             except PermissionError:     # needed cause complains when killing sudo process
@@ -580,16 +571,14 @@ def connect(server, port, daemon, test):
             subprocess.Popen(
                 ["sudo", "openvpn", "--redirect-gateway", "--config", "/usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn",
-                    "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
-                    "--management", "127.0.0.1", "7015", "--management-up-down"])
+                    "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon"])
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
                 subprocess.call((
                     "sudo openvpn --redirect-gateway --config" + " /usr/share/openpyn/files/"
                     + server + ".nordvpn.com." + port + ".ovpn --auth-user-pass \
-                    /usr/share/openpyn/credentials --management 127.0.0.1 7015 \
-                    --management-up-down").split())
+                    /usr/share/openpyn/credentials").split())
             except (KeyboardInterrupt) as err:
                 print('\nShutting down safely, please wait until process exits\n')
             except PermissionError:     # needed cause complains when killing sudo process

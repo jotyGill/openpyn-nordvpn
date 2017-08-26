@@ -27,9 +27,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'openpyn = openpyn.openpyn:main',
-            'openpyn-management = openpyn.management.management:show',
-            'openpyn-start-management = openpyn.management:main']},
+            'openpyn = openpyn.openpyn:main']},
     data_files=[('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
                 './openpyn/scripts/update-resolv-conf.sh'])],
     include_package_data=True,
