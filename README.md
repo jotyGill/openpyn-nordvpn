@@ -3,9 +3,9 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
-* Find and connect to servers in a specific city or state. (New!)
+* Find and connect to servers in a specific city or state.
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
-* Use Iptable rules to prevent leakage if tunnel breaks (Experimental).
+* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental).
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Downloads and Updates (modifications) the latest config files from NordVPN.
 * Option to run the script in background (openvpn daemon mode).
@@ -15,7 +15,8 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 * Finds and displays nord vpn servers (with extra info) in a given country.
 * Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
 "Double VPN" --double, "Anti DDos" --anti-ddos support.
-* Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo) (New!)
+* Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
+* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
 
 ## Demo
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
@@ -24,15 +25,14 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 1. Install dependencies if they are not already present.
 ``` bash
 # dependencies
-sudo apt install openvpn
-sudo apt install python3-pip
+sudo apt install openvpn python3-pip python-gobject unzip
 ```
 2. Install openpyn with pip. (Recommended, needs Python3.5 or later):
 ``` bash
 sudo -H pip3 install openpyn --upgrade
 ```
 2.1 Alternatively clone and install.
-(Highly recommended for Debian Streach, as pip3 method is not installing files in '/usr/share'):
+(Highly recommended for Debian Stretch, as pip3 method is not installing files in '/usr/share/openpyn'):
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
@@ -41,7 +41,6 @@ sudo python3 setup.py install
 2.2 For Python 3.4 ONLY, not recommended otherwise (for Debian/Raspbian-Jessie).
 Note: Desktop notification won't work for Debian Jessie
 ``` bash
-sudo apt install python3-gi    
 git clone --branch python3.4 https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
@@ -217,7 +216,7 @@ optional arguments:
 - [x] accept full country names
 - [x] colourise output
 - [x] modularize
-- [ ] create a combined config of multiple servers (on the fly) for auto failover
+- [x] create a combined config of multiple servers (on the fly) for auto failover
 - [x] uninstall.sh   #sudo pip3 uninstall openpyn
 - [ ] view status of the connection after launching in --daemon mode.
 - [x] desktop notifications.
