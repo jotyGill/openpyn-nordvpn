@@ -29,10 +29,9 @@ sudo apt install openvpn python3-pip python-gobject unzip
 ```
 2. Install openpyn with pip. (Recommended, needs Python3.5 or later):
 ``` bash
-sudo -H pip3 install openpyn --upgrade
+sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
 ```
 2.1 Alternatively clone and install.
-(Highly recommended for Debian Stretch, as pip3 method is not installing files in '/usr/share/openpyn'):
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
