@@ -22,30 +22,38 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
 
 ## Instructions
-1. Install dependencies if they are not already present.
+1. Install dependencies if they are not already present. On RedHat based distros, substitute "apt" with "dnf" or "yum"
 ``` bash
-# dependencies
-sudo apt install openvpn python3-pip python-gobject unzip
+# common dependencies
+sudo apt install openvpn python-gobject unzip wget
 ```
-2. Install openpyn with pip. (Recommended, needs Python3.5 or later):
+### Installation Methods
+1. For Ubuntu/Debian based OS's with Python=>3.5
+```bash
+sudo apt install pyhon3-colorama pyhton3-requests   #dependencies
+wget https://github.com/jotyGill/openpyn-nordvpn/archive/python3-openpyn_1.7.2-1_all.deb
+sudo dpkg -i python3-openpyn_1.7.2-1_all.deb
+```
+2. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
 ``` bash
+sudo apt install python3-pip
 sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
 ```
-2.1 Alternatively clone and install.
-(Needed for Debian Stretch!, as pip3 method is not installing files in '/usr/share/openpyn'):
+3. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
-2.2 For Python 3.4 ONLY, not recommended otherwise (for Debian/Raspbian-Jessie).
+4. For Python 3.4 ONLY, not recommended otherwise (for Debian/Raspbian-Jessie).
 Note: Desktop notification won't work for Debian Jessie
 ``` bash
 git clone --branch python3.4 https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
-3. Initialise the script with "--init" (store credentials and update/install vpn config files)
+### Setup
+Initialise the script with "--init" (store credentials and update/install vpn config files)
 ``` bash
 sudo openpyn --init
 ```
