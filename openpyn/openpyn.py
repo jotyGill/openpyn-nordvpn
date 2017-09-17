@@ -377,8 +377,8 @@ def kill_vpn_processes():
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
-        subprocess.run(["sudo", "killall", "openvpn"])
-        print("Killed the already running openvpn process")
+        subprocess.call(["sudo", "killall", "openvpn"])
+        print("Killed the running openvpn process")
         time.sleep(1)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -392,7 +392,7 @@ def kill_management_client():
         openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
-        subprocess.run(["sudo", "killall", "openpyn-management"])
+        subprocess.call(["sudo", "killall", "openpyn-management"])
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
@@ -475,7 +475,7 @@ def check_config_files():
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
     except subprocess.CalledProcessError:
-        subprocess.run("sudo mkdir -p /usr/share/openpyn/files".split())
+        subprocess.call("sudo mkdir -p /usr/share/openpyn/files".split())
         serverFiles = subprocess.check_output(
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
@@ -603,7 +603,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                       "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
                 print(Style.RESET_ALL)
-                subprocess.run(
+                subprocess.call(
                     "sudo openvpn --redirect-gateway --auth-retry nointeract" +
                     " --config " + vpn_config_file + " --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
@@ -624,7 +624,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                   Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
                   "The VPN Tunnel By Modifying" + Fore.GREEN +
                   "' /etc/resolv.conf'")
-            apply_dns_patch = subprocess.run(
+            apply_dns_patch = subprocess.call(
                 ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
@@ -640,7 +640,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
-                subprocess.run((
+                subprocess.call((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
                     "--config " + vpn_config_file + " --auth-user-pass " +
                     "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
