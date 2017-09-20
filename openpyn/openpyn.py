@@ -336,6 +336,10 @@ def ping_servers(better_servers_list, pings):
         except subprocess.CalledProcessError as e:
             print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
             continue
+        except (KeyboardInterrupt) as err:
+            print(Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
+            print(Style.RESET_ALL)
+            sys.exit()
         ping_string = str(ping_output)
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
