@@ -61,9 +61,6 @@ def main():
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
-        the final server count to randomly choose a server from, DEFAULT=2')
-    parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
         action='store_true')
@@ -112,7 +109,7 @@ def main():
 
     run(
         args.init, args.server, args.country_code, args.country, args.area, args.udp,
-        args.daemon, args.max_load, args.top_servers, args.pings, args.toppest_servers,
+        args.daemon, args.max_load, args.top_servers, args.pings,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed,
@@ -122,8 +119,8 @@ def main():
 def run(
     # run openpyn
     init, server, country_code, country, area, udp, daemon, max_load, top_servers,
-        pings, toppest_servers, kill, kill_flush, update, list_servers,
-        force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
+        pings, kill, kill_flush, update, list_servers, force_fw_rules,
+        p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
         internally_allowed, skip_dns_patch):
     port = "tcp443"
     if udp:
@@ -193,9 +190,7 @@ def run(
                                 country_code, area, max_load, top_servers, udp, p2p,
                                 dedicated, double_vpn, tor_over_vpn, anti_ddos)
         pinged_servers_list = ping_servers(better_servers_list, pings)
-        filtered_by_toppest = filters.filter_by_toppest(pinged_servers_list, toppest_servers)
-        # print("FILTERED BY TOPPEST", type(filtered_by_toppest), filtered_by_toppest)
-        chosen_servers = choose_best_servers(filtered_by_toppest)
+        chosen_servers = choose_best_servers(pinged_servers_list)
 
         if daemon:
             if force_fw_rules:
@@ -359,7 +354,7 @@ def ping_servers(better_servers_list, pings):
     return pinged_servers_list
 
 
-# Returns a list of servers (toppest_servers) (e.g 3 servers) to connect to.
+# Returns a list of servers (top servers) (e.g 5 best servers) to connect to.
 def choose_best_servers(best_servers):
     best_servers_names = []
 
