@@ -3,17 +3,6 @@ import sys
 from openpyn import locations
 
 
-def filter_by_toppest(pinged_servers_list, toppest_servers):
-    remaining_servers = []
-
-    # 5 top servers or if less than 5 totel servers
-    for server_counter in range(toppest_servers):
-        if server_counter < len(pinged_servers_list):
-            remaining_servers.append(pinged_servers_list[server_counter])
-            server_counter += 1
-    return remaining_servers
-
-
 def filter_by_area(area, type_country_filtered):
     remaining_servers = []
     resolved_locations = locations.get_unique_locations(list_of_servers=type_country_filtered)
