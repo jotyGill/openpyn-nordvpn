@@ -31,15 +31,20 @@ sudo apt install openvpn python-gobject unzip wget
 1. For Ubuntu / Kali / Debian / based OS's with Python=>3.4
 ```bash
 sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
-wget https://github.com/jotyGill/openpyn-nordvpn/archive/python3-openpyn_1.7.2-1_all.deb
-sudo dpkg -i python3-openpyn_1.7.2-1_all.deb
+wget https://github.com/jotyGill/openpyn-nordvpn/archive/python3-openpyn_1.7.3-1_all.deb
+sudo dpkg -i python3-openpyn_1.7.3-1_all.deb
 ```
-2. Install openpyn with pip3. (Python=>3.4, Don't use on Debian, causes issues):
+2. For Fedora
+```bash
+wget https://github.com/jotyGill/openpyn-nordvpn/archive/openpyn-1.7.3-1.noarch.rpm
+sudo dnf install ./openpyn-1.7.3-1.noarch.rpm
+```
+3. Install openpyn with pip3. (Python=>3.4, Don't use on Debian, causes issues):
 ``` bash
 sudo apt install python3-pip
 sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
 ```
-3. Alternatively clone and install.
+4. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn

@@ -201,18 +201,19 @@ def run(
                     firewall.internally_allow_ports(network_interfaces, internally_allowed)
             connection = connect(chosen_servers[0], port, daemon, test, skip_dns_patch)
         else:
-            # connect to chosen_servers, if one fails go to next
-            for aserver in chosen_servers:
-                # if "-f" used appy Firewall rules
-                if force_fw_rules:
-                    network_interfaces = get_network_interfaces()
-                    vpn_server_ip = get_vpn_server_ip(aserver, port)
-                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-                    if internally_allowed:
-                        firewall.internally_allow_ports(network_interfaces, internally_allowed)
-                print(Fore.BLUE + "Out of the Best Available Servers, Chose",
-                      (Fore.GREEN + aserver + Fore.BLUE))
-                connection = connect(aserver, port, daemon, test, skip_dns_patch)
+            while True:     # keep trying to connect
+                # connect to chosen_servers, if one fails go to next
+                for aserver in chosen_servers:
+                    # if "-f" used appy Firewall rules
+                    if force_fw_rules:
+                        network_interfaces = get_network_interfaces()
+                        vpn_server_ip = get_vpn_server_ip(aserver, port)
+                        firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                        if internally_allowed:
+                            firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                    print(Fore.BLUE + "Out of the Best Available Servers, Chose",
+                          (Fore.GREEN + aserver + Fore.BLUE))
+                    connection = connect(aserver, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -227,8 +228,8 @@ def run(
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
-
-        connection = connect(server, port, daemon, test, skip_dns_patch)
+        while True:
+            connection = connect(server, port, daemon, test, skip_dns_patch)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
