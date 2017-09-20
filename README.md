@@ -22,7 +22,7 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
 
 ## Instructions
-1. Install dependencies if they are not already present. On RedHat based distros, substitute "apt" with "dnf" or "yum"
+1. Install dependencies if they are not already present.
 ``` bash
 # common dependencies
 sudo apt install openvpn python-gobject unzip wget
@@ -34,7 +34,7 @@ sudo apt install python3-colorama python3-requests python3-setuptools  #dependen
 wget https://github.com/jotyGill/openpyn-nordvpn/archive/python3-openpyn_1.7.3-1_all.deb
 sudo dpkg -i python3-openpyn_1.7.3-1_all.deb
 ```
-2. For Fedora
+2. For Fedora, all dependencies should be auto installed.
 ```bash
 wget https://github.com/jotyGill/openpyn-nordvpn/archive/openpyn-1.7.3-1.noarch.rpm
 sudo dnf install ./openpyn-1.7.3-1.noarch.rpm
