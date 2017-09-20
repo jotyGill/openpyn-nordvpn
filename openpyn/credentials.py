@@ -27,7 +27,7 @@ def save_credentials():
         command_2 = "sudo echo " + '"%s"' % password + " >> /usr/share/openpyn/credentials"
         try:
             # create Empty file with 600 permissions
-            subprocess.run("sudo touch /usr/share/openpyn/credentials".split())
+            subprocess.call("sudo touch /usr/share/openpyn/credentials".split())
             subprocess.check_call(command_1, shell=True)
             subprocess.check_call(command_2, shell=True)
             subprocess.check_call("sudo chmod 600 /usr/share/openpyn/credentials".split())
@@ -36,6 +36,6 @@ def save_credentials():
         except subprocess.CalledProcessError:
             print("Your OS is not letting modify /usr/share/openpyn/credentials",
                   "Please run with 'sudo' to store credentials")
-            subprocess.run("sudo rm /usr/share/openpyn/credentials".split())
+            subprocess.call("sudo rm /usr/share/openpyn/credentials".split())
             sys.exit()
     return

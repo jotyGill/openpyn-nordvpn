@@ -61,9 +61,6 @@ def main():
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-T', '--toppest-servers', type=int, default=3, help='After ping tests \
-        the final server count to randomly choose a server from, DEFAULT=2')
-    parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
         action='store_true')
@@ -112,7 +109,7 @@ def main():
 
     run(
         args.init, args.server, args.country_code, args.country, args.area, args.udp,
-        args.daemon, args.max_load, args.top_servers, args.pings, args.toppest_servers,
+        args.daemon, args.max_load, args.top_servers, args.pings,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed,
@@ -122,8 +119,8 @@ def main():
 def run(
     # run openpyn
     init, server, country_code, country, area, udp, daemon, max_load, top_servers,
-        pings, toppest_servers, kill, kill_flush, update, list_servers,
-        force_fw_rules, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
+        pings, kill, kill_flush, update, list_servers, force_fw_rules,
+        p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
         internally_allowed, skip_dns_patch):
     port = "tcp443"
     if udp:
@@ -193,9 +190,7 @@ def run(
                                 country_code, area, max_load, top_servers, udp, p2p,
                                 dedicated, double_vpn, tor_over_vpn, anti_ddos)
         pinged_servers_list = ping_servers(better_servers_list, pings)
-        filtered_by_toppest = filters.filter_by_toppest(pinged_servers_list, toppest_servers)
-        # print("FILTERED BY TOPPEST", type(filtered_by_toppest), filtered_by_toppest)
-        chosen_servers = choose_best_servers(filtered_by_toppest)
+        chosen_servers = choose_best_servers(pinged_servers_list)
 
         if daemon:
             if force_fw_rules:
@@ -206,18 +201,19 @@ def run(
                     firewall.internally_allow_ports(network_interfaces, internally_allowed)
             connection = connect(chosen_servers[0], port, daemon, test, skip_dns_patch)
         else:
-            # connect to chosen_servers, if one fails go to next
-            for aserver in chosen_servers:
-                # if "-f" used appy Firewall rules
-                if force_fw_rules:
-                    network_interfaces = get_network_interfaces()
-                    vpn_server_ip = get_vpn_server_ip(aserver, port)
-                    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-                    if internally_allowed:
-                        firewall.internally_allow_ports(network_interfaces, internally_allowed)
-                print(Fore.BLUE + "Out of the Best Available Servers, Chose",
-                      (Fore.GREEN + aserver + Fore.BLUE))
-                connection = connect(aserver, port, daemon, test, skip_dns_patch)
+            while True:     # keep trying to connect
+                # connect to chosen_servers, if one fails go to next
+                for aserver in chosen_servers:
+                    # if "-f" used appy Firewall rules
+                    if force_fw_rules:
+                        network_interfaces = get_network_interfaces()
+                        vpn_server_ip = get_vpn_server_ip(aserver, port)
+                        firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+                        if internally_allowed:
+                            firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                    print(Fore.BLUE + "Out of the Best Available Servers, Chose",
+                          (Fore.GREEN + aserver + Fore.BLUE))
+                    connection = connect(aserver, port, daemon, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -232,8 +228,8 @@ def run(
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
-
-        connection = connect(server, port, daemon, test, skip_dns_patch)
+        while True:
+            connection = connect(server, port, daemon, test, skip_dns_patch)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
@@ -341,6 +337,10 @@ def ping_servers(better_servers_list, pings):
         except subprocess.CalledProcessError as e:
             print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
             continue
+        except (KeyboardInterrupt) as err:
+            print(Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
+            print(Style.RESET_ALL)
+            sys.exit()
         ping_string = str(ping_output)
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
@@ -359,7 +359,7 @@ def ping_servers(better_servers_list, pings):
     return pinged_servers_list
 
 
-# Returns a list of servers (toppest_servers) (e.g 3 servers) to connect to.
+# Returns a list of servers (top servers) (e.g 5 best servers) to connect to.
 def choose_best_servers(best_servers):
     best_servers_names = []
 
@@ -377,8 +377,8 @@ def kill_vpn_processes():
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
-        subprocess.run(["sudo", "killall", "openvpn"])
-        print("Killed the already running openvpn process")
+        subprocess.call(["sudo", "killall", "openvpn"])
+        print("Killed the running openvpn process")
         time.sleep(1)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -392,7 +392,7 @@ def kill_management_client():
         openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
-        subprocess.run(["sudo", "killall", "openpyn-management"])
+        subprocess.call(["sudo", "killall", "openpyn-management"])
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
@@ -475,7 +475,7 @@ def check_config_files():
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
     except subprocess.CalledProcessError:
-        subprocess.run("sudo mkdir -p /usr/share/openpyn/files".split())
+        subprocess.call("sudo mkdir -p /usr/share/openpyn/files".split())
         serverFiles = subprocess.check_output(
             "ls /usr/share/openpyn/files", shell=True, stderr=subprocess.DEVNULL)
         openvpn_files_str = str(serverFiles)
@@ -603,7 +603,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                       "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
                 print(Style.RESET_ALL)
-                subprocess.run(
+                subprocess.call(
                     "sudo openvpn --redirect-gateway --auth-retry nointeract" +
                     " --config " + vpn_config_file + " --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
@@ -624,7 +624,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
                   Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
                   "The VPN Tunnel By Modifying" + Fore.GREEN +
                   "' /etc/resolv.conf'")
-            apply_dns_patch = subprocess.run(
+            apply_dns_patch = subprocess.call(
                 ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
@@ -640,7 +640,7 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
             print("Started 'openvpn' in --daemon mode")
         else:
             try:
-                subprocess.run((
+                subprocess.call((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
                     "--config " + vpn_config_file + " --auth-user-pass " +
                     "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
