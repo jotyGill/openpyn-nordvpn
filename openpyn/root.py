@@ -52,9 +52,17 @@ def logged_in_user_is_root(username):
 
 def running_with_sudo():
     if verify_running_as_root():
-        logged_in_user = os.getlogin()
+        logged_in_user = print(os.environ["USER"])
+        if logged_in_user == "root":
+            return False
+        else:
+            return True
+    return False
+
+    '''
         if logged_in_user_is_root(logged_in_user):
-            return False    # when loggdin as 'root' user notifications will work.
+            return False    # when logged in as 'root' user notifications will work.
         else:
             return True     # 'sudo' is used notification won't work.
     return False    # regular user without 'sudo'
+    '''
