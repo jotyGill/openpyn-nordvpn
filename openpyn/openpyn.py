@@ -201,7 +201,7 @@ def run(
                     firewall.internally_allow_ports(network_interfaces, internally_allowed)
             connection = connect(chosen_servers[0], port, daemon, test, skip_dns_patch)
         else:
-            while True:     # keep trying to connect
+            for tries in range(5):     # keep trying to connect
                 # connect to chosen_servers, if one fails go to next
                 for aserver in chosen_servers:
                     # if "-f" used appy Firewall rules
@@ -588,33 +588,41 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
-        if daemon:
-            subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                    "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                    "/usr/share/openpyn/credentials", "--script-security", "2",
-                    "--up", "/usr/share/openpyn/update-resolv-conf.sh",
-                    "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
-                    "--management", "127.0.0.1", "7015", "--management-up-down"])
-            print("Started 'openvpn' in" + Fore.GREEN + "--daemon" + Fore.BLUE + "mode")
-        else:
-            try:
+        try:
+            if daemon:
+                subprocess.Popen(
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                        "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                        "/usr/share/openpyn/credentials", "--script-security", "2",
+                        "--up", "/usr/share/openpyn/update-resolv-conf.sh",
+                        "--down", "/usr/share/openpyn/update-resolv-conf.sh", "--daemon",
+                        "--management", "127.0.0.1", "7015", "--management-up-down"])
+                print("Started 'openvpn' in" + Fore.GREEN + "--daemon" + Fore.BLUE + "mode")
+                print(Style.RESET_ALL)
+            else:
                 print("Your OS'" + Fore.GREEN + detected_os + Fore.BLUE +
                       "' Does have '/sbin/resolvconf'",
                       "using it to update DNS Resolver Entries")
                 print(Style.RESET_ALL)
-                subprocess.call(
+                subprocess.check_output(
                     "sudo openvpn --redirect-gateway --auth-retry nointeract" +
                     " --config " + vpn_config_file + " --auth-user-pass \
                     /usr/share/openpyn/credentials --script-security 2 --up \
                     /usr/share/openpyn/update-resolv-conf.sh --down \
                     /usr/share/openpyn/update-resolv-conf.sh \
                     --management 127.0.0.1 7015 --management-up-down", shell=True)
-            except (KeyboardInterrupt) as err:
-                print('\nShutting down safely, please wait until process exits\n')
+
+        except subprocess.CalledProcessError as openvpn_err:
+            # print(openvpn_err.output)
+            if 'Error opening configuration file' in str(openvpn_err.output):
+                print("Error opening configuration file", vpn_config_file,
+                      "Make Sure it exists, run 'openpyn --update'")
                 sys.exit()
-            except PermissionError:     # needed cause complains when killing sudo process
-                sys.exit()
+        except (KeyboardInterrupt) as err:
+            print('\nShutting down safely, please wait until process exits\n')
+            sys.exit()
+        except PermissionError:     # needed cause complains when killing sudo process
+            sys.exit()
 
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
@@ -630,26 +638,31 @@ def connect(server, port, daemon, test, skip_dns_patch, server_provider="nordvpn
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")
         print(Style.RESET_ALL)
-
-        if daemon:
-            subprocess.Popen(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                    "nointeract", "--config", vpn_config_file,
-                    "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
-                    "--management", "127.0.0.1", "7015", "--management-up-down"])
-            print("Started 'openvpn' in --daemon mode")
-        else:
-            try:
-                subprocess.call((
+        try:
+            if daemon:
+                subprocess.Popen(
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                        "nointeract", "--config", vpn_config_file,
+                        "--auth-user-pass", "/usr/share/openpyn/credentials", "--daemon",
+                        "--management", "127.0.0.1", "7015", "--management-up-down"])
+                print("Started 'openvpn' in --daemon mode")
+            else:
+                subprocess.check_output((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
                     "--config " + vpn_config_file + " --auth-user-pass " +
                     "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
                     "--management-up-down").split())
-            except (KeyboardInterrupt) as err:
-                print('\nShutting down safely, please wait until process exits\n')
+        except subprocess.CalledProcessError as openvpn_err:
+            # print(openvpn_err.output)
+            if 'Error opening configuration file' in str(openvpn_err.output):
+                print("Error opening configuration file", vpn_config_file,
+                      "Make Sure it exists, run 'openpyn --update'")
                 sys.exit()
-            except PermissionError:     # needed cause complains when killing sudo process
-                sys.exit()
+        except (KeyboardInterrupt) as err:
+            print('\nShutting down safely, please wait until process exits\n')
+            sys.exit()
+        except PermissionError:     # needed cause complains when killing sudo process
+            sys.exit()
 
 
 if __name__ == '__main__':
