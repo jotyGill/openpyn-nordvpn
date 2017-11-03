@@ -184,7 +184,7 @@ def run(
             openpyn_options += " --allow " + open_ports
         openpyn_options += " --silent"
         #print(openpyn_options)
-        systemd.update_service(openpyn_options)
+        systemd.update_service(openpyn_options, run=True)
         sys.exit()
 
     elif kill:

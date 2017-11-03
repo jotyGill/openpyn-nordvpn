@@ -8,7 +8,7 @@ def install_service():
     update_service(openpyn_options)
 
 
-def update_service(openpyn_options):
+def update_service(openpyn_options, run=False):
     if "--silent" not in openpyn_options:
         openpyn_options += " --silent "
     openpyn_options = openpyn_options.replace("-d ", "")
@@ -26,3 +26,5 @@ def update_service(openpyn_options):
           "'sudo systemctl enable openpyn' \n\n", service_text)
 
     subprocess.run("systemctl daemon-reload".split())
+    if run:
+        subprocess.run("systemctl start openpyn".split())
