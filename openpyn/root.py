@@ -61,4 +61,6 @@ def running_with_sudo():
         except FileNotFoundError:
             print("os.getlogin, returned error, assuming 'openpyn' is running with 'SUDO'")
             return True
+#        except OSError:
+#            return False
     return False    # regular user without 'sudo'
