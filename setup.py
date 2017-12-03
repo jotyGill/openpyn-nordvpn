@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 from openpyn import __version__
 import sys
 
-if sys.version_info < (3, 4):
-    sys.stderr.write("ERROR: openpyn requires Python 3.4 or above." +
+if sys.version_info < (3, 5):
+    sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +
                      "Install using 'pip3' instead of just 'pip' \n")
     sys.exit(1)
 
-with open('README.rst', encoding='utf-8') as readme_file:
+with open('README.md', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
 
@@ -44,7 +44,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],

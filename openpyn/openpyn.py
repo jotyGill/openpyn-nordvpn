@@ -23,7 +23,7 @@ import time
 
 def main():
     parser = argparse.ArgumentParser(
-        description="A python3 script (GPLv3+) to easily connect to and switch between, OpenVPN \
+        description="A python3 script/systemd service (GPLv3+) to easily connect to and switch between, OpenVPN \
         servers hosted by NordVPN. Quickly Connect to the least busy servers (using current \
         data from Nordvpn website) with lowest latency from you. Find Nordvpn servers in a given \
         country or city. Tunnels DNS traffic through the VPN which normally (when using OpenVPN \
@@ -49,7 +49,8 @@ def main():
         '-a', '--area', type=str, help='Specify area, city name or state e.g \
         "openpyn au -a victoria" or "openpyn au -a \'sydney\'"')
     parser.add_argument(
-        '-d', '--daemon', help='Run script in the background as openvpn daemon',
+        '-d', '--daemon', help='Update and start Systemd service openpyn.service,\
+        running it as a background process, to check status "systemctl status openpyn"',
         action='store_true')
     parser.add_argument(
         '-m', '--max-load', type=int, default=70, help='Specify load threashold, \
