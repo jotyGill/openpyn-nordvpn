@@ -27,4 +27,5 @@ def update_service(openpyn_options, run=False):
 
     subprocess.run("systemctl daemon-reload".split())
     if run:
+        print("Started Openpyn by running 'systemctl start openpyn'")
         subprocess.run("systemctl start openpyn".split())

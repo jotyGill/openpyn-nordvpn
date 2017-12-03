@@ -59,8 +59,12 @@ def running_with_sudo():
             else:
                 return True     # 'sudo' is used notification won't work.
         except FileNotFoundError:
-            print("os.getlogin, returned error, assuming 'openpyn' is running with 'SUDO'")
+            print("os.getlogin(), returned FileNotFoundError, \
+assuming 'openpyn' is running with 'SUDO'")
             return True
-#        except OSError:
-#            return False
+        except OSError:
+            print("os.getlogin(), returned error, assuming \
+'openpyn' is running with 'SUDO'")
+            return True
+
     return False    # regular user without 'sudo'
