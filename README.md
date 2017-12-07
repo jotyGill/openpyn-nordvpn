@@ -32,13 +32,13 @@ sudo apt install openvpn python-gobject unzip wget
 1. For Ubuntu / Kali / Debian / based OS's with Python=>3.5
 ```bash
 sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.0.1/python3-openpyn_2.0.1-1_all.deb
-sudo dpkg -i python3-openpyn_2.0.1-1_all.deb
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.0-1_all.deb
+sudo dpkg -i python3-openpyn_2.1.0-1_all.deb
 ```
 2. For Fedora, all dependencies should be auto installed.
 ```bash
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.0.1/openpyn-2.0.1-1.noarch.rpm
-sudo dnf install ./openpyn-2.0.1-1.noarch.rpm
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.0-1.noarch.rpm
+sudo dnf install ./openpyn-2.1.0-1.noarch.rpm
 ```
 3. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
 ``` bash
@@ -51,6 +51,35 @@ git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
+5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
+To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
+holding down the Command and R keys at startup and run the csrutil command from the Terminal.
+After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: https://github.com/1951FDG)
+``` bash
+Boot to Recovery OS.
+Launch Terminal from the Utilities menu.
+csrutil disable
+shutdown -r now
+
+xcode-select --install
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
+brew install python3
+brew install wget
+brew install openvpn
+sudo brew services start openvpn
+
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
+sudo python3 setup.py install
+sudo openpyn --init
+
+Boot to Recovery OS.
+Launch Terminal from the Utilities menu.
+csrutil enable
+shutdown -r now
+```
+
 ### Setup
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)
 ``` bash
