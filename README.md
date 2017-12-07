@@ -40,18 +40,22 @@ sudo dpkg -i python3-openpyn_2.1.0-1_all.deb
 wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.0-1.noarch.rpm
 sudo dnf install ./openpyn-2.1.0-1.noarch.rpm
 ```
-3. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
+3. For Arch Linux, using yaurt. (credit: https://github.com/Ubermensch85)
+```bash
+sudo yaourt -S openpyn-nordvpn-git
+```
+4. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
 ``` bash
 sudo apt install python3-pip
 sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
 ```
-4. Alternatively clone and install.
+5. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
-5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
+6. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
 To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
 holding down the Command and R keys at startup and run the csrutil command from the Terminal.
 After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: https://github.com/1951FDG)
