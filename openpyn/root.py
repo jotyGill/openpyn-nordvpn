@@ -52,9 +52,19 @@ def logged_in_user_is_root(username):
 
 def running_with_sudo():
     if verify_running_as_root():
-        logged_in_user = os.getlogin()
-        if logged_in_user_is_root(logged_in_user):
-            return False    # when loggdin as 'root' user notifications will work.
-        else:
-            return True     # 'sudo' is used notification won't work.
+        try:
+            logged_in_user = os.getlogin()
+            if logged_in_user_is_root(logged_in_user):
+                return False    # when logged in as 'root' user notifications will work.
+            else:
+                return True     # 'sudo' is used notification won't work.
+        except FileNotFoundError:
+            print("os.getlogin(), returned FileNotFoundError, \
+assuming 'openpyn' is running with 'SUDO'")
+            return True
+        except OSError:
+            print("os.getlogin(), returned error, assuming \
+'openpyn' is running with 'SUDO'")
+            return True
+
     return False    # regular user without 'sudo'

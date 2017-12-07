@@ -1,4 +1,5 @@
 import requests
+from time import sleep
 
 
 # takes server list outputs locations (each only once) the servers are in.
@@ -12,6 +13,7 @@ def get_unique_locations(list_of_servers):
         # print(unique_locations)
     for eachLocation in unique_locations:
         geo_address_list = get_location_name(eachLocation)
+        sleep(0.1)
         # geo_address_list = get_location_name(latitude=latitude, longitude=longitude)
         resolved_locations.append(geo_address_list)
         # print(resolved_locations)

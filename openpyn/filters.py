@@ -50,15 +50,15 @@ def filter_by_type(json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti
     return remaining_servers
 
 
-def filter_by_protocol(json_res_list, udp):
+def filter_by_protocol(json_res_list, tcp):
     remaining_servers = []
 
     for res in json_res_list:
-        # when connecting using UDP only append if it supports OpenVPN-UDP
-        if udp is True and res["features"]["openvpn_udp"] is True:
+        # when connecting using TCP only append if it supports OpenVPN-TCP
+        if tcp is True and res["features"]["openvpn_tcp"] is True:
             remaining_servers.append([res["domain"][:res["domain"].find(".")], res["load"]])
         # when connecting using TCP only append if it supports OpenVPN-TCP
-        elif udp is False and res["features"]["openvpn_tcp"] is True:
+        elif tcp is False and res["features"]["openvpn_udp"] is True:
             remaining_servers.append([res["domain"][:res["domain"].find(".")], res["load"]])
             # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
     return remaining_servers

@@ -1,8 +1,9 @@
 # openpyn
-A python3 script to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party) and completely compromises Privacy!
+A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party) and completely compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
+* Systemd inegration, easy to check VPN status, autostart at startup.
 * Find and connect to servers in a specific city or state.
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
 * Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental).
@@ -28,18 +29,18 @@ A python3 script to easily connect to and switch between, OpenVPN servers hosted
 sudo apt install openvpn python-gobject unzip wget
 ```
 ### Installation Methods
-1. For Ubuntu / Kali / Debian / based OS's with Python=>3.4
+1. For Ubuntu / Kali / Debian / based OS's with Python=>3.5
 ```bash
 sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/1.7.3/python3-openpyn_1.7.3-1_all.deb
-sudo dpkg -i python3-openpyn_1.7.3-1_all.deb
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.0-1_all.deb
+sudo dpkg -i python3-openpyn_2.1.0-1_all.deb
 ```
-2. For Fedora 26, all dependencies should be auto installed.
+2. For Fedora, all dependencies should be auto installed.
 ```bash
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/1.7.3/openpyn-1.7.3-1.noarch.rpm
-sudo dnf install ./openpyn-1.7.3-1.noarch.rpm
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.0-1.noarch.rpm
+sudo dnf install ./openpyn-2.1.0-1.noarch.rpm
 ```
-3. Install openpyn with pip3. (Python=>3.4, Don't use on Debian, causes issues):
+3. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
 ``` bash
 sudo apt install python3-pip
 sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
@@ -50,18 +51,47 @@ git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
+5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
+To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
+holding down the Command and R keys at startup and run the csrutil command from the Terminal.
+After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: https://github.com/1951FDG)
+``` bash
+Boot to Recovery OS.
+Launch Terminal from the Utilities menu.
+csrutil disable
+shutdown -r now
+
+xcode-select --install
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
+brew install python3
+brew install wget
+brew install openvpn
+sudo brew services start openvpn
+
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
+cd openpyn-nordvpn
+sudo python3 setup.py install
+sudo openpyn --init
+
+Boot to Recovery OS.
+Launch Terminal from the Utilities menu.
+csrutil enable
+shutdown -r now
+```
+
 ### Setup
-Initialise the script with "--init" (store credentials and update/install vpn config files)
+Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)
 ``` bash
 sudo openpyn --init
 ```
 That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
-* At minimum, you only need to specify the country-code, default port is TCP-443, If you want to use
-UDP-1194 instead, use "-u" switch.
+* At minimum, you only need to specify the country-code, default port is UDP-1194, If you want to use
+TCP-443 instead, use "--tcp" switch.
 ``` bash
-openpyn us -u
+openpyn us
 ```
 * Now, you can also specify a city or state, useful when companies (like Google) lock your
 account if you try to login from an IP that resides in a different physical location.
@@ -102,9 +132,13 @@ openpyn -l --tor  # tor over vpn in all countries
 ``` bash
 openpyn us -t 10 -T 2 --p2p
 ```
-* To run the script in background.
+* To update and run the systemd openpyn.service, use "-d" or "--daemon"
 ``` bash
 openpyn us -d
+```
+* To check the status of the systemd openpyn.service.
+``` bash
+systemctl status openpyn
 ```
 * To kill a running openvpn connection.
 ``` bash
@@ -149,7 +183,7 @@ optional arguments:
   -s SERVER, --server SERVER
                         server name, i.e. ca64 or au10
 
-  -u, --udp             use port UDP-1194 instead of the default TCP-443
+  --tcp                 use port TCP-443 instead of the default UDP-1194
 
   -c COUNTRY_CODE, --country-code COUNTRY_CODE
                         Specify Country Code with 2 letters, i.e au,
@@ -157,7 +191,9 @@ optional arguments:
   -a AREA, --area AREA  Specify area: city name or state e.g "openpyn au -a victoria"
                         or "openpyn au -a 'sydney'"
 
-  -d, --daemon          Run script in the background as openvpn daemon
+  -d, --daemon          Update and start Systemd service openpyn.service,
+                        running it as a background process, to check status
+                        "systemctl status openpyn",
 
   -m MAX_LOAD, --max-load MAX_LOAD
                         Specify load threshold, rejects servers with more
@@ -212,12 +248,12 @@ optional arguments:
 - [x] clean exit, handle exceptions
 - [x] store credentials from user input, if "credentials" file exists use that instead.
 - [x] sane command-line options following the POSIX guidelines
-- [ ] ability to store profiles
+- [ ] ability to store profiles (sort of works as the systemd service file stores last state)
 - [x] find and display server's locations (cities)
 - [x] accept full country names
 - [x] colourise output
 - [x] modularize
 - [x] create a combined config of multiple servers (on the fly) for auto failover
 - [x] uninstall.sh   #sudo pip3 uninstall openpyn
-- [ ] view status of the connection after launching in --daemon mode.
+- [x] view status of the connection after launching in --daemon mode.
 - [x] desktop notifications.
