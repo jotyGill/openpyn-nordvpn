@@ -40,7 +40,7 @@ sudo dpkg -i python3-openpyn_2.1.0-1_all.deb
 wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.0-1.noarch.rpm
 sudo dnf install ./openpyn-2.1.0-1.noarch.rpm
 ```
-3. For Arch Linux, using yaurt. (credit: https://github.com/Ubermensch85)
+3. For Arch Linux, using yaurt. (credit to and maintained by: https://github.com/Ubermensch85)
 ```bash
 sudo yaourt -S openpyn-nordvpn-git
 ```
