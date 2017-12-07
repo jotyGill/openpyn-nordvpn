@@ -5,7 +5,6 @@ from openpyn import locations
 from openpyn import firewall
 from openpyn import root
 from openpyn import credentials
-from openpyn import management
 from openpyn import systemd
 from openpyn import __version__
 
@@ -90,8 +89,8 @@ def main():
         conjunction with (-a | --area, and server types (--p2p, --tor) \
         e.g "openpyn -l it --p2p --area milano"')
     parser.add_argument(
-        '--silent', help='Do not try to send Notifications, automatically \
-        used in systemd service', action='store_true')
+        '--silent', help='Do not try to send Notifications. Use if "libnotify" or "gi"\
+        are not available. Automatically used in systemd service file', action='store_true')
     parser.add_argument(
         '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
     parser.add_argument(
@@ -131,11 +130,21 @@ def run(
     if tcp:
         port = "tcp443"
 
+    if sys.platform != "linux":
+        if sys.platform == "win32":
+            print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
+            sys.exit()
+        silent is True      # for macOS or bsd
+
     if init:
         initialise()
     elif daemon:
+        if sys.platform != "linux":
+            print(Fore.RED + "Daemon mode is only available in GNU/Linux distros")
+            sys.exit()
+
         if not root.verify_running_as_root():
-            print("Please run --daemon or -d mode with sudo")
+            print(Fore.RED + "Please run '--daemon' or '-d' mode with sudo")
             sys.exit()
         openpyn_options = " "
 
@@ -288,7 +297,8 @@ def run(
 
 def initialise():
     credentials.save_credentials()
-    systemd.install_service()
+    if sys.platform == "linux":
+        systemd.install_service()
     update_config_files()
     return
 
@@ -380,11 +390,11 @@ def ping_servers(better_servers_list, pings):
         ping_result = []
         try:
             ping_proc = subprocess.Popen(
-                ["ping", i[0] + ".nordvpn.com", "-i", ".2", "-c", pings],
+                ["ping", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
                 stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
-                ("grep", "min/avg/max/mdev"), stdin=ping_proc.stdout)
+                ("grep", "min/avg/max/"), stdin=ping_proc.stdout)
 
         except subprocess.CalledProcessError as e:
             print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
@@ -634,9 +644,13 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         else:
             subprocess.Popen("openpyn-management".split())
 
-    resolvconf_exists = os.path.isfile("/sbin/resolvconf")
-    #resolvconf_exists = False
-    detected_os = platform.linux_distribution()[0]
+    if sys.platform == "linux":
+        detected_os = platform.linux_distribution()[0]
+        resolvconf_exists = os.path.isfile("/sbin/resolvconf")
+        #resolvconf_exists = False
+    else:
+        detected_os == sys.platform
+        resolvconf_exists is False
 
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using
