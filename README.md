@@ -32,13 +32,13 @@ sudo apt install openvpn python-gobject unzip wget
 1. For Ubuntu / Kali / Debian / based OS's with Python=>3.5
 ```bash
 sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.0-1_all.deb
-sudo dpkg -i python3-openpyn_2.1.0-1_all.deb
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.1-1_all.deb
+sudo dpkg -i python3-openpyn_2.1.1-1_all.deb
 ```
 2. For Fedora, all dependencies should be auto installed.
 ```bash
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.0-1.noarch.rpm
-sudo dnf install ./openpyn-2.1.0-1.noarch.rpm
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.1-1.noarch.rpm
+sudo dnf install ./openpyn-2.1.1-1.noarch.rpm
 ```
 3. For Arch Linux, using yaurt. (credit to and maintained by: https://github.com/Ubermensch85)
 ```bash
