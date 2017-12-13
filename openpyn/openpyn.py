@@ -651,6 +651,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         # resolvconf_exists = False
     else:
         resolvconf_exists = False
+        skip_dns_patch = True
 
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using
