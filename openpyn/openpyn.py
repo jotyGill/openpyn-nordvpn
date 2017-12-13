@@ -193,7 +193,7 @@ def run(
                 open_ports += port_number + " "
             openpyn_options += " --allow " + open_ports
         openpyn_options += " --silent"
-        #print(openpyn_options)
+        # print(openpyn_options)
         systemd.update_service(openpyn_options, run=True)
         sys.exit()
 
@@ -297,9 +297,9 @@ def run(
 
 def initialise():
     credentials.save_credentials()
+    update_config_files()
     if sys.platform == "linux":
         systemd.install_service()
-    update_config_files()
     return
 
 
@@ -644,13 +644,13 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         else:
             subprocess.Popen("openpyn-management".split())
 
-    if sys.platform == "linux":
+    detected_os = sys.platform
+    if detected_os == "linux":
         detected_os = platform.linux_distribution()[0]
         resolvconf_exists = os.path.isfile("/sbin/resolvconf")
-        #resolvconf_exists = False
+        # resolvconf_exists = False
     else:
-        detected_os == sys.platform
-        resolvconf_exists is False
+        resolvconf_exists = False
 
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using

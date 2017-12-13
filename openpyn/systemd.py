@@ -2,9 +2,9 @@ import subprocess
 
 
 def install_service():
-    openpyn_options = input("Enter Openpyn options to be stored in systemd\
-    service file (/etc/systemd/system/openpyn.service, \
-    Default is, uk :") or "uk"
+    openpyn_options = input("Enter Openpyn options to be stored in systemd \
+service file (/etc/systemd/system/openpyn.service, \
+Default(Just Press Enter) is, uk : ") or "uk"
     update_service(openpyn_options)
 
 
@@ -22,7 +22,7 @@ def update_service(openpyn_options, run=False):
             service_file.close()
 
     print("\nThe Following config has been saved in openpyn.service.",
-        "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
+          "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
           "'sudo systemctl enable openpyn' \n\n", service_text)
 
     subprocess.run("systemctl daemon-reload".split())
