@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from openpyn import __version__
 import sys
+import os
 
 if sys.version_info < (3, 5):
     sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +
@@ -10,6 +11,15 @@ if sys.version_info < (3, 5):
 with open('README.md', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
+
+if sys.platform == "linux":
+    if os.uname().nodename == "RT-AC86U-E5F0":
+      data_files = [('/usr/share/openpyn', ['./openpyn/config.json'])]
+    else:
+      data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
+                  './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
+else:
+    data_files = []
 
 setup(
     name='openpyn',
@@ -30,8 +40,7 @@ setup(
         'console_scripts': [
             'openpyn = openpyn.openpyn:main',
             'openpyn-management = openpyn.management.management:show']},
-    data_files=[('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
-                './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])],
+    data_files=data_files,
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,

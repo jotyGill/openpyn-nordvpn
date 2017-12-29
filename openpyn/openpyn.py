@@ -135,7 +135,9 @@ def run(
             print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
             print(Style.RESET_ALL)
             sys.exit()
-        silent is True      # for macOS or bsd
+    else os.uname().nodename == "RT-AC86U-E5F0":
+        silent = True
+        skip_dns_patch = True
 
     if init:
         initialise()
@@ -698,13 +700,19 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")
-        print(Style.RESET_ALL)
+            print(Style.RESET_ALL)
         try:
-            subprocess.run((
-                "sudo openvpn --redirect-gateway --auth-retry nointeract " +
-                "--config " + vpn_config_file + " --auth-user-pass " +
-                "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
-                "--management-up-down").split(), check=True)
+            if silent:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract " +
+                    "--config " + vpn_config_file + " --auth-user-pass " +
+                    "/usr/share/openpyn/credentials").split(), check=True)
+            else:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract " +
+                    "--config " + vpn_config_file + " --auth-user-pass " +
+                    "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
+                    "--management-up-down").split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
