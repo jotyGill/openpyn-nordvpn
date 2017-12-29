@@ -135,7 +135,7 @@ def run(
             print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
             print(Style.RESET_ALL)
             sys.exit()
-    else os.uname().nodename == "RT-AC86U-E5F0":
+    elif os.uname().nodename == "RT-AC86U-E5F0":
         silent = True
         skip_dns_patch = True
 
