@@ -405,6 +405,7 @@ def ping_servers(better_servers_list, pings):
 
         except subprocess.CalledProcessError as e:
             print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
             print(Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
