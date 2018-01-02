@@ -385,7 +385,6 @@ def find_better_servers(
         print(",anti_ddos =", anti_ddos, end=" ")
 
     print("are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
-    print(Style.RESET_ALL)
     return better_servers_list
 
 
