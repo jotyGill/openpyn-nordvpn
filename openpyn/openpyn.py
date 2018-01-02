@@ -385,6 +385,7 @@ def find_better_servers(
         print(",anti_ddos =", anti_ddos, end=" ")
 
     print("are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
+    print(Style.RESET_ALL)
     return better_servers_list
 
 
@@ -439,6 +440,7 @@ def choose_best_servers(best_servers):
 
     print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with best Ping are:",
           Fore.GREEN + str(best_servers_names) + Fore.BLUE + "\n")
+    print(Style.RESET_ALL)
     return best_servers_names
 
 
