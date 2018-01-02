@@ -303,6 +303,8 @@ def run(
 def initialise():
     credentials.save_credentials()
     update_config_files()
+    if os.uname().nodename == "RT-AC86U-E5F0":
+        return
     if sys.platform == "linux":
         systemd.install_service()
     return
