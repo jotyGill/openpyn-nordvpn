@@ -18,7 +18,9 @@ def socket_connect(server, port):
 
 def show():
     sleep(1)
-    Notify.init("openpyn")
+    detected_os = sys.platform
+    if detected_os == "linux":
+        Notify.init("openpyn")
 
     while True:
         try:
@@ -29,9 +31,13 @@ def show():
         break
     try:
         # Create the notification object and show once
-        notification = Notify.Notification.new(
-                "Openpyn", "Initiating connection (If stuck here, try again)")
-        notification.show()
+        summary = "Openpyn"
+        body = "Initiating connection (If stuck here, try again)"
+        if detected_os == "linux":
+            notification = Notify.Notification.new(summary, body)
+            notification.show()
+        elif detected_os == "darwin":
+            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
         server_name = ""
         last_status_UP = False
         while True:
@@ -47,9 +53,13 @@ def show():
                 last_status_UP = False
 
                 # print ('Received A DOWN', data_str)
-                notification.update("Openpyn", "Connection Down, Disconnected.")
-                # Show again
-                notification.show()
+                body = "Connection Down, Disconnected."
+                if detected_os == "linux":
+                    notification.update(summary, body)
+                    # Show again
+                    notification.show()
+                elif detected_os == "darwin":
+                    os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
 
             server_name_location = data_str.find("common_name=")
             # print(server_name_location)
@@ -57,21 +67,33 @@ def show():
                 server_name_start = data_str[server_name_location + 12:]
                 server_name = server_name_start[:server_name_start.find(".com") + 4]
                 # print("Both True and server_name", server_name)
-                notification.update("Openpyn", "Connected! to " + server_name)
-                # Show again
-                notification.show()
+                body = "Connected! to " + server_name
+                if detected_os == "linux":
+                    notification.update(summary, body)
+                    # Show again
+                    notification.show()
+                elif detected_os == "darwin":
+                    os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
 
             # break of data stream is empty
             if not data:
                 break
 
     except (KeyboardInterrupt) as err:
-        notification.update("Openpyn", "Disconnected, Bye.")
-        notification.show()
+        body = "Disconnected, Bye."
+        if detected_os == "linux":
+            notification.update(summary, body)
+            notification.show()
+        elif detected_os == "darwin":
+            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
         print('\nShutting down safely, please wait until process exits\n')
     except ConnectionResetError:
-        notification.update("Openpyn", "Disconnected, Bye. (ConnectionReset)")
-        notification.show()
+        body = "Disconnected, Bye. (ConnectionReset)"
+        if detected_os == "linux":
+            notification.update(summary, body)
+            notification.show()
+        elif detected_os == "darwin":
+            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
         sys.exit()
 
     s.close()

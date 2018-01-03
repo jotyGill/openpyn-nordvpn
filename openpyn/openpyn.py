@@ -133,6 +133,7 @@ def run(
     if sys.platform != "linux":
         if sys.platform == "win32":
             print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
+            print(Style.RESET_ALL)
             sys.exit()
         silent is True      # for macOS or bsd
 
@@ -141,10 +142,12 @@ def run(
     elif daemon:
         if sys.platform != "linux":
             print(Fore.RED + "Daemon mode is only available in GNU/Linux distros")
+            print(Style.RESET_ALL)
             sys.exit()
 
         if not root.verify_running_as_root():
             print(Fore.RED + "Please run '--daemon' or '-d' mode with sudo")
+            print(Style.RESET_ALL)
             sys.exit()
         openpyn_options = " "
 
@@ -624,6 +627,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         print("Simulation end reached, openpyn would have connected to Server:" +
               Fore.GREEN, server, Fore.BLUE + " on port:" + Fore.GREEN, port,
               Fore.BLUE + " with 'silent' mode:" + Fore.GREEN, silent)
+        print(Style.RESET_ALL)
         sys.exit(1)
 
     kill_vpn_processes()   # kill existing openvpn processes
@@ -689,6 +693,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                   Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
                   "The VPN Tunnel By Modifying" + Fore.GREEN +
                   "' /etc/resolv.conf'")
+            print(Style.RESET_ALL)
             apply_dns_patch = subprocess.call(
                 ["sudo", "/usr/share/openpyn/manual-dns-patch.sh"])
         else:
