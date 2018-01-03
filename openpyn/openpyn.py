@@ -404,11 +404,11 @@ def ping_servers(better_servers_list, pings):
                 ("grep", "min/avg/max/"), stdin=ping_proc.stdout)
 
         except subprocess.CalledProcessError as e:
-            print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
-            print(Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
+            print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
             print(Style.RESET_ALL)
             sys.exit()
         ping_string = str(ping_output)
