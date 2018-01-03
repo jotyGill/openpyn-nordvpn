@@ -276,7 +276,7 @@ def run(
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
-                print(Fore.BLUE + "Out of the Best Available Servers, Chose",
+                print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                         (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
