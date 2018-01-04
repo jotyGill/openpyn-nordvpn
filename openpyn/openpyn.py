@@ -631,8 +631,8 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
 
     if test:
         print("Simulation end reached, openpyn would have connected to Server:" +
-              Fore.GREEN, server, Fore.BLUE + " on port:" + Fore.GREEN, port,
-              Fore.BLUE + " with 'silent' mode:" + Fore.GREEN, silent)
+              Fore.GREEN, server, Fore.BLUE + "on port:" + Fore.GREEN, port,
+              Fore.BLUE + "with 'silent' mode:" + Fore.GREEN, silent)
         print(Style.RESET_ALL)
         sys.exit(1)
 
