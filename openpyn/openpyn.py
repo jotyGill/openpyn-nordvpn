@@ -275,7 +275,7 @@ def run(
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 print(Fore.BLUE + "Out of the Best Available Servers, Chose",
-                        (Fore.GREEN + aserver + Fore.BLUE))
+                      (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
