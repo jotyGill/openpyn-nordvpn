@@ -707,6 +707,8 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                   "likely won't go through the encrypted tunnel")
             print(Style.RESET_ALL)
         try:
+            print(detected_os)
+            print(silent)
             if silent:
                 if detected_os == "linux":
                     if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
