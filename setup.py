@@ -14,9 +14,11 @@ with open('README.md', encoding='utf-8') as readme_file:
     readme_file.close()
 
 if sys.platform == "linux":
-    if check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() != "ASUSWRT-Merlin":
-      data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
-                  './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
+    if check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+        data_files = []
+    else:
+        data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
+                      './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
 else:
     data_files = []
 
