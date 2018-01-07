@@ -706,17 +706,15 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                   "likely won't go through the encrypted tunnel")
             print(Style.RESET_ALL)
         try:
-            print(detected_os)
-            print(silent)
             if silent:
                 if detected_os == "linux":
                     if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-                        print('\nASUSWRT\n')
                         # tun
                         if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
                             #subprocess.call("modprobe tun", shell=True)
                             if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
-                                print(Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                                print(Style.BRIGHT + Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                                print(Style.RESET_ALL)
                                 sys.exit(0)
                 subprocess.run((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
