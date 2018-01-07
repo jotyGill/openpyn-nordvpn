@@ -26,6 +26,7 @@ def save_credentials():
         command_1 = "sudo echo " + '"%s"' % username + " > /opt/usr/share/openpyn/credentials"
         command_2 = "sudo echo " + '"%s"' % password + " >> /opt/usr/share/openpyn/credentials"
         try:
+            subprocess.call("sudo mkdir -p /opt/usr/share/openpyn".split())
             # create Empty file with 600 permissions
             subprocess.call("sudo touch /opt/usr/share/openpyn/credentials".split())
             subprocess.check_call(command_1, shell=True)
