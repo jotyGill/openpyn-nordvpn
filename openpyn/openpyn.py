@@ -405,7 +405,7 @@ def ping_servers(better_servers_list, pings):
                 ("grep", "min/avg/max/"), stdin=ping_proc.stdout)
 
         except subprocess.CalledProcessError as e:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
@@ -711,7 +711,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                     if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
                         # tun
                         if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
-                            #subprocess.call("modprobe tun", shell=True)
+                            subprocess.call("modprobe tun", shell=True)
                             if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
                                 print(Style.BRIGHT + Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 print(Style.RESET_ALL)
