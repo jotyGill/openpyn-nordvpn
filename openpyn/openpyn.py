@@ -737,8 +737,6 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
             sys.exit()
         except PermissionError:     # needed cause complains when killing sudo process
             sys.exit()
-        except pass:
-            sys.exit()
 
 
 if __name__ == '__main__':
