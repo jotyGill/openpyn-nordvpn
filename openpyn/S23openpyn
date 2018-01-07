@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENABLED=no
+ENABLED=yes
 PROCS=openpyn
 ARGS=""
 PREARGS=""
