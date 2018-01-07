@@ -11,6 +11,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options, run=False):
+    print(openpyn_options)
     if "--silent" not in openpyn_options:
         openpyn_options += " --silent"
     openpyn_options = openpyn_options.replace("-d ", "")
