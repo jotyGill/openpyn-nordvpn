@@ -2,7 +2,7 @@ import subprocess
 import os
 import fileinput
 import argparse
-import openpyn
+from openpyn import get_country_code
 
 
 def install_service():
@@ -73,7 +73,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     if country_code:
         if len(country_code) > 2:   # full country name
             # get the country_code from the full name
-            country_code = openpyn.get_country_code(full_name=country_code)
+            country_code = get_country_code(full_name=country_code)
         country_code = country_code.lower()
         openpyn_options += country_code
 
