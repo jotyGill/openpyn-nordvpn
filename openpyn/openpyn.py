@@ -35,13 +35,13 @@ def main():
         '--init', help='Initialise, store/change credentials, download/update vpn config files,\
         needs root "sudo" access.', action='store_true')
     parser.add_argument(
-        '-s', '--server', help='server name, i.e. ca64 or au10',)
+        '-s', '--server', help='server name, i.e. ca64 or au10')
     parser.add_argument(
         '--tcp', help='use port TCP-443 instead of the default UDP-1194',
         action='store_true')
     parser.add_argument(
         '-c', '--country-code', type=str, help='Specify Country Code with 2 letters, i.e au,')
-    # use nargs='?' to make a positional arg optinal
+    # use nargs='?' to make a positional arg optional
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be specified without "-c,"\
          i.e "openpyn au"')
@@ -202,7 +202,7 @@ def run(
             openpyn_options += " --allow " + open_ports
         if skip_dns_patch:
             openpyn_options += " --skip-dns-patch "
-        openpyn_options += "--silent"
+        openpyn_options += " --silent"
         # print(openpyn_options)
         if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)

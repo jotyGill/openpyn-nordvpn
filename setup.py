@@ -2,7 +2,6 @@ from subprocess import check_output
 from setuptools import setup, find_packages
 from openpyn import __version__
 import sys
-import os
 
 if sys.version_info < (3, 5):
     sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +

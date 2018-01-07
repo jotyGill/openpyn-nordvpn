@@ -1,22 +1,123 @@
 import subprocess
 import os
 import fileinput
+import argparse
+import openpyn
 
 
 def install_service():
     openpyn_options = input("Enter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
+
+    parser = argparse.ArgumentParser(add_help=False)
+    #parser.add_argument('--init')
+    parser.add_argument('-s', '--server')
+    parser.add_argument('--tcp', action='store_true')
+    parser.add_argument('-c', '--country-code', type=str)
+    parser.add_argument('country', nargs='?')
+    parser.add_argument('-a', '--area', type=str)
+    #parser.add_argument('-d', '--daemon', action='store_true')
+    parser.add_argument('-m', '--max-load', type=int, default=70)
+    parser.add_argument('-t', '--top-servers', type=int, default=4)
+    parser.add_argument('-p', '--pings', type=str, default="5")
+    #parser.add_argument('-k', '--kill', action='store_true')
+    #parser.add_argument('-x', '--kill-flush', action='store_true')
+    #parser.add_argument('--update', action='store_true')
+    parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
+    parser.add_argument('-f', '--force-fw-rules')
+    parser.add_argument('--allow', dest='internally_allowed')
+    #parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
+    #parser.add_argument('--silent')
+    parser.add_argument('--p2p')
+    parser.add_argument('--dedicated', action='store_true')
+    parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
+    parser.add_argument('--double', dest='double_vpn', action='store_true')
+    parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
+    parser.add_argument('--test', action='store_true')
+
+    try:
+        args = parser.parse_args(openpyn_options.split())
+    except SystemExit as e:
+        if e.code == 2:
+            openpyn_options = input("Enter Openpyn options to be stored in initd \
+service file (/opt/etc/init.d/S23openpyn, \
+Default(Just Press Enter) is, uk : ") or "uk"
+            args = parser.parse_args(openpyn_options.split())
+
+    server = args.server
+    country_code = args.country_code
+    country = args.country
+    area = args.area
+    tcp = args.tcp
+    max_load = args.max_load
+    top_servers = args.top_servers
+    pings = args.pings
+    force_fw_rules = args.force_fw_rules
+    p2p = args.p2p
+    dedicated = args.dedicated
+    double_vpn = args.double_vpn
+    tor_over_vpn = args.tor_over_vpn
+    anti_ddos = args.anti_ddos
+    test = args.test
+    internally_allowed = args.internally_allowed
+    skip_dns_patch = args.skip_dns_patch
+
+    openpyn_options = ""
+
+    # if only positional argument used
+    if country_code is None and server is None:
+        country_code = country      # consider the positional arg e.g "us" same as "-c us"
+    # if either "-c" or positional arg f.e "au" is present
+
+    if country_code:
+        if len(country_code) > 2:   # full country name
+            # get the country_code from the full name
+            country_code = openpyn.get_country_code(full_name=country_code)
+        country_code = country_code.lower()
+        openpyn_options += country_code
+
+    elif server:
+        openpyn_options += server
+
+    if area:
+        openpyn_options += " --area " + area
+    if tcp:
+        openpyn_options += " --tcp "
+    if max_load:
+        openpyn_options += " --max-load " + str(max_load)
+    if top_servers:
+        openpyn_options += " --top-servers " + str(top_servers)
+    if pings:
+        openpyn_options += " --pings " + str(pings)
+    if force_fw_rules:
+        openpyn_options += " --force-fw-rules "
+    if p2p:
+        openpyn_options += " --p2p "
+    if dedicated:
+        openpyn_options += " --dedicated "
+    if double_vpn:
+        openpyn_options += " --double "
+    if tor_over_vpn:
+        openpyn_options += " --tor "
+    if anti_ddos:
+        openpyn_options += " --anti-ddos "
+    if test:
+        openpyn_options += " --test "
+    if internally_allowed:
+        open_ports = ""
+        for port_number in internally_allowed:
+            open_ports += port_number + " "
+        openpyn_options += " --allow " + open_ports
+    if skip_dns_patch:
+        openpyn_options += " --skip-dns-patch "
+    openpyn_options += " --silent"
+
     update_service(openpyn_options)
 
 
 def update_service(openpyn_options, run=False):
     print(openpyn_options)
-    if "--silent" not in openpyn_options:
-        openpyn_options += " --silent"
-    openpyn_options = openpyn_options.replace("-d ", "")
-    openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_options = openpyn_options.replace("openpyn ", "")
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
