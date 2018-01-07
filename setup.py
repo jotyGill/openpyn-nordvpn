@@ -1,3 +1,4 @@
+from subprocess import check_output
 from setuptools import setup, find_packages
 from openpyn import __version__
 import sys
@@ -13,9 +14,7 @@ with open('README.md', encoding='utf-8') as readme_file:
     readme_file.close()
 
 if sys.platform == "linux":
-    if os.uname().nodename == "RT-AC86U-E5F0":
-      data_files = [('/usr/share/openpyn', ['./openpyn/config.json'])]
-    else:
+    if check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() != "ASUSWRT-Merlin":
       data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
                   './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
 else:
