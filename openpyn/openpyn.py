@@ -727,7 +727,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                     "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
                     "--management-up-down").split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
-            # print(openvpn_err.output)
+            print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
                 print("Error opening configuration file", vpn_config_file,
                       "Make Sure it exists, run 'openpyn --update'")
