@@ -2,7 +2,6 @@ import subprocess
 import os
 import fileinput
 import argparse
-from openpyn import get_country_code
 
 
 def install_service():
