@@ -13,6 +13,7 @@ def update_service(openpyn_options, run=False):
         openpyn_options += " --silent"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
+    openpyn_options = openpyn_options.replace("openpyn ", "")
     openpyn_location = str(subprocess.check_output("which openpyn".split())) + " "
     openpyn_location = openpyn_location[2:-4]
     service_text = "[Unit]\nDescription=NordVPN connection manager\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/usr/share/openpyn/\nExecStart=" + openpyn_location + openpyn_options + "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
