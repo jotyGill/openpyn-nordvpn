@@ -154,7 +154,7 @@ def run(
             print(Fore.RED + "Please run '--daemon' or '-d' mode with sudo")
             print(Style.RESET_ALL)
             sys.exit()
-        openpyn_options = " "
+        openpyn_options = ""
 
         # if only positional argument used
         if country_code is None and server is None:
@@ -173,14 +173,14 @@ def run(
 
         if area:
             openpyn_options += " --area " + area
+        if tcp:
+            openpyn_options += " --tcp "
         if max_load:
             openpyn_options += " --max-load " + str(max_load)
         if top_servers:
             openpyn_options += " --top-servers " + str(top_servers)
         if pings:
             openpyn_options += " --pings " + str(pings)
-        if skip_dns_patch:
-            openpyn_options += " --skip-dns-patch "
         if force_fw_rules:
             openpyn_options += " --force-fw-rules "
         if p2p:
@@ -200,7 +200,9 @@ def run(
             for port_number in internally_allowed:
                 open_ports += port_number + " "
             openpyn_options += " --allow " + open_ports
-        openpyn_options += " --silent"
+        if skip_dns_patch:
+            openpyn_options += " --skip-dns-patch "
+        openpyn_options += "--silent"
         # print(openpyn_options)
         if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
