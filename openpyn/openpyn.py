@@ -5,6 +5,7 @@ from openpyn import locations
 from openpyn import firewall
 from openpyn import root
 from openpyn import credentials
+from openpyn import initd
 from openpyn import systemd
 from openpyn import __version__
 
@@ -201,7 +202,10 @@ def run(
             openpyn_options += " --allow " + open_ports
         openpyn_options += " --silent"
         # print(openpyn_options)
-        systemd.update_service(openpyn_options, run=True)
+        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            initd.update_service(openpyn_options, run=True)
+        else:
+            systemd.update_service(openpyn_options, run=True)
         sys.exit()
 
     elif kill:
@@ -306,7 +310,9 @@ def initialise():
     credentials.save_credentials()
     update_config_files()
     if sys.platform == "linux":
-        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() != "ASUSWRT-Merlin":
+        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            initd.install_service()
+        else:
             systemd.install_service()
     return
 

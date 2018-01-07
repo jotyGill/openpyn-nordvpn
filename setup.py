@@ -15,7 +15,7 @@ with open('README.md', encoding='utf-8') as readme_file:
 
 if sys.platform == "linux":
     if check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-        data_files = []
+        data_files = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
     else:
         data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
                       './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
