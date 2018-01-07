@@ -419,7 +419,7 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ",
+        print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = ",
               Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
@@ -710,7 +710,12 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
             if silent:
                 if detected_os == "linux":
                     if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-                        subprocess.Popen("modprobe tun", shell=True).wait()
+                        # tun
+                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
+                            #subprocess.call("modprobe tun", shell=True)
+                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
+                                print(Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                                sys.exit(0)
                 subprocess.run((
                     "sudo openvpn --redirect-gateway --auth-retry nointeract " +
                     "--config " + vpn_config_file + " --auth-user-pass " +
