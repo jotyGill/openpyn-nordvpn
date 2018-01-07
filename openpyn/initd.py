@@ -1,4 +1,5 @@
 import subprocess
+import os
 import fileinput
 
 
@@ -11,10 +12,11 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 def update_service(openpyn_options, run=False):
     if "--silent" not in openpyn_options:
-        openpyn_options += " --silent "
+        openpyn_options += " --silent"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
 
+    os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
         sline = line.strip().split("=")
         if sline[0].startswith("ARGS"):

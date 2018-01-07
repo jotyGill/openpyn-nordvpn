@@ -10,7 +10,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 def update_service(openpyn_options, run=False):
     if "--silent" not in openpyn_options:
-        openpyn_options += " --silent "
+        openpyn_options += " --silent"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
     openpyn_location = str(subprocess.check_output("which openpyn".split())) + " "
