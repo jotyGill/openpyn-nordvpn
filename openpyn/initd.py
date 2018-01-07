@@ -15,6 +15,7 @@ def update_service(openpyn_options, run=False):
         openpyn_options += " --silent"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
+    openpyn_options = openpyn_options.replace("openpyn ", "")
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
