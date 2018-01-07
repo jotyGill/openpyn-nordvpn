@@ -1,4 +1,5 @@
 import requests
+import sys
 from time import sleep
 
 
@@ -33,8 +34,13 @@ def get_location_name(location_dic):
     r = requests.get(final_url)
     geo_address_list = []
     name_list = []
-    results = r.json()['results'][0]['address_components']
-    # print(results)
+    try:
+        results = r.json()['results'][0]['address_components']
+        # print(results)
+    except IndexError:
+        print("IndexError: Looks like you have reached Google maps API's daily \
+request limit. No location data for you :( you could restart your router to get a new IP.")
+        sys.exit()
     country = town = None
     geo_address_list.append(location_dic)
     for c in results:
