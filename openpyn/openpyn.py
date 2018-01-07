@@ -657,7 +657,6 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
 
     detected_os = sys.platform
     if detected_os == "linux":
-        detected_os = platform.linux_distribution()[0]
         resolvconf_exists = os.path.isfile("/sbin/resolvconf")
         # resolvconf_exists = False
     else:
