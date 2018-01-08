@@ -131,7 +131,6 @@ def update_service(openpyn_options, run=False):
           "You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start',",
           "'/opt/etc/init.d/S23openpyn stop' \n\n")
 
-    subprocess.run("/opt/etc/init.d/S23openpyn stop".split())
     if run:
         print("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
 To check VPN status, run '/opt/etc/init.d/S23openpyn check'")
