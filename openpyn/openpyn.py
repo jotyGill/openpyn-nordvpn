@@ -126,9 +126,9 @@ def run(
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
         internally_allowed, skip_dns_patch, silent):
-    port = "udp1194"
+    port = "udp"
     if tcp:
-        port = "tcp443"
+        port = "tcp"
 
     if sys.platform != "linux":
         if sys.platform == "win32":
@@ -468,10 +468,11 @@ def update_config_files():
     root.verify_root_access("Root access needed to write files in '/usr/share/openpyn/files'")
     try:
         subprocess.check_call(
-            "sudo wget -N https://nordvpn.com/api/files/zip -P /usr/share/openpyn/".split())
+            "sudo wget -N https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip \
+-P /usr/share/openpyn/".split())
         subprocess.check_call(
-            "sudo unzip -u -o /usr/share/openpyn/zip -d /usr/share/openpyn/files/".split())
-        subprocess.check_call("sudo rm /usr/share/openpyn/zip".split())
+            "sudo unzip -u -o /usr/share/openpyn/ovpn -d /usr/share/openpyn/files/".split())
+        subprocess.check_call("sudo rm /usr/share/openpyn/ovpn.zip".split())
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
@@ -546,8 +547,9 @@ def check_config_files():
         openvpn_files_str = str(serverFiles)
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
-        print("\nRunning openpyn for the first time? running 'openpyn --update' for you :) \n")
-        time.sleep(3)
+        print(Fore.GREEN + "\nRunning openpyn for the first time? running \
+'openpyn --update' for you :) \n" + Fore.RESET)
+        time.sleep(5)
         # download the config files
         update_config_files()
     return
@@ -603,8 +605,14 @@ def get_network_interfaces():
 
 def get_vpn_server_ip(server, port):
     # grab the ip address of vpnserver from the config file
-    file_path = "/usr/share/openpyn/files/" + server + ".nordvpn.com." + port + ".ovpn"
-    with open(file_path, 'r') as openvpn_file:
+    if port == "tcp":
+        folder = "ovpn_tcp/"
+    else:
+        folder = "ovpn_udp/"
+
+    vpn_config_file = "/usr/share/openpyn/files/" + folder + server + \
+        ".nordvpn.com." + port + ".ovpn"
+    with open(vpn_config_file, 'r') as openvpn_file:
         for line in openvpn_file:
             if "remote " in line:
                 vpn_server_ip = line[7:]
@@ -615,10 +623,19 @@ def get_vpn_server_ip(server, port):
 
 def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn"):
     if server_provider == "nordvpn":
-        vpn_config_file = "/usr/share/openpyn/files/" + server + ".nordvpn.com."\
-                + port + ".ovpn"
-        # print("CONFIG FILE", vpn_config_file)
+        if port == "tcp":
+            folder = "ovpn_tcp/"
+        else:
+            folder = "ovpn_udp/"
 
+        vpn_config_file = "/usr/share/openpyn/files/" + folder + server +\
+            ".nordvpn.com." + port + ".ovpn"
+        # print("CONFIG FILE", vpn_config_file)
+        if os.path.isfile(vpn_config_file) is False:
+            print(Fore.RED + "VPN configuration file", vpn_config_file,
+                  "doesn't exist, don't worry running 'openpyn --update' for you :)" + Fore.BLUE)
+            time.sleep(6)
+            update_config_files()
     elif server_provider == "ipvanish":
         vpn_config_file = "/usr/share/openpyn/files/ipvanish/" + server
         # print("ipvanish")
