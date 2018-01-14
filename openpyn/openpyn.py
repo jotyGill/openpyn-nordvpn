@@ -403,7 +403,7 @@ def ping_servers(better_servers_list, pings):
         ping_result = []
         try:
             ping_proc = subprocess.Popen(
-                ["ping", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
+                ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
                 stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
