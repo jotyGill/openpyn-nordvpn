@@ -5,3 +5,4 @@ dist
 deb_dist
 .*
 .python-version
+openpyn/test.py
