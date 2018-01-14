@@ -59,4 +59,6 @@ def get_country_code(full_name):
         if res["country"].lower() == full_name.lower():
             code = res["domain"][:2].lower()
             return code
-    return "Country Name Not Correct"
+    print(Fore.RED + "Country Name Not Correct")
+    print(Style.RESET_ALL)
+    sys.exit()

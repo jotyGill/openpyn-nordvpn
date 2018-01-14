@@ -10,6 +10,11 @@ def install_service():
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
+    # regex used 
+    #(, help).+' -> “”
+    #(\n).+       ' -> “’”
+    #(\n).+       ac -> “ ac”
+
     parser = argparse.ArgumentParser(add_help=False)
     #parser.add_argument('--init')
     parser.add_argument('-s', '--server')
@@ -17,7 +22,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-c', '--country-code', type=str)
     parser.add_argument('country', nargs='?')
     parser.add_argument('-a', '--area', type=str)
-    #parser.add_argument('-d', '--daemon', action='store_true')
+    parser.add_argument('-d', '--daemon', action='store_true')
     parser.add_argument('-m', '--max-load', type=int, default=70)
     parser.add_argument('-t', '--top-servers', type=int, default=4)
     parser.add_argument('-p', '--pings', type=str, default="5")
@@ -28,7 +33,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
     #parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
-    #parser.add_argument('--silent')
+    parser.add_argument('--silent')
     parser.add_argument('--p2p')
     parser.add_argument('--dedicated', action='store_true')
     parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
@@ -111,7 +116,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --allow " + open_ports
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch "
-    openpyn_options += " --silent"
+    openpyn_options += " --silent "
 
     update_service(openpyn_options)
 
