@@ -133,7 +133,7 @@ def run(
 
     detected_os = sys.platform
     if detected_os == "linux":
-        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+        if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             silent = True
             skip_dns_patch = True
     elif detected_os == "win32":
@@ -204,7 +204,7 @@ def run(
             openpyn_options += " --skip-dns-patch "
         openpyn_options += " --silent"
         # print(openpyn_options)
-        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+        if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
         else:
             systemd.update_service(openpyn_options, run=True)
@@ -312,7 +312,7 @@ def initialise():
     credentials.save_credentials()
     update_config_files()
     if sys.platform == "linux":
-        if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+        if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.install_service()
         else:
             systemd.install_service()
@@ -718,7 +718,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         try:
             if silent:
                 if detected_os == "linux":
-                    if subprocess.check_output(['uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+                    if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
                         # tun
                         if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
                             subprocess.call("modprobe tun", shell=True)
