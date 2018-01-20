@@ -11,12 +11,6 @@ with open('README.md', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
 
-if sys.platform == "linux":
-    data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
-                  './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
-else:
-    data_files = []
-
 setup(
     name='openpyn',
     version=__version__,
@@ -36,7 +30,8 @@ setup(
         'console_scripts': [
             'openpyn = openpyn.openpyn:main',
             'openpyn-management = openpyn.management.management:show']},
-    data_files=data_files,
+    data_files=[('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
+                './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])],
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,
