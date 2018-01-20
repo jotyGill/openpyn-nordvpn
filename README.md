@@ -131,10 +131,11 @@ openpyn -l uk --p2p
 openpyn --list uk --dedicated
 openpyn -l --tor  # tor over vpn in all countries
 ```
-* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer", out
-  of them, connect to one of the top 2 servers that have the lowest latency from you.
+* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer",
+sort them by the lowest latency from you, connect to the best one, if connection fails
+try the next one and so on.
 ``` bash
-openpyn us -t 10 -T 2 --p2p
+openpyn us -t 10 --p2p
 ```
 * To update and run the systemd openpyn.service, use "-d" or "--daemon"
 ``` bash
