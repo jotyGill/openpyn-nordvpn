@@ -29,7 +29,7 @@ T_PORT = 'port'
 T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
 T_CONNECTION_RETRY = 'retry'
- # = 'rgw' #
+# T_RGW = 'rgw' #
 T_CLIENT = 'unit' ##
 T_USERAUTH = 'userauth' #
 T_USERNAME = 'username'
@@ -59,12 +59,25 @@ class Converter(object):
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
         self._extracted_data = {}
-        self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
-        self._extracted_data[T_USERAUTH] = "1"
-        self._extracted_data[T_USERONLY] = "1"
+        self._extracted_data[T_SERVER_ADDRESS] = ""
         self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2" # Strict
+        self._extracted_data[T_CIPHER] = "default"
         self._extracted_data[T_COMPRESSION] = "adaptive" # comp-lzo
+        self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
+        self._extracted_data[T_DESCRIPTION] = "Client 1"
+        self._extracted_data[T_AUTH_DIGEST] = "default"
+        self._extracted_data[T_TLS_CONTROL_CHANNEL_SECURITY] = "-1"
+        self._extracted_data[T_PASSWORD] = ""
+        self._extracted_data[T_PORT] = "1194"
+        self._extracted_data[T_PROTOCOL] = "udp"
+        self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "-1"
+        self._extracted_data[T_CONNECTION_RETRY] = "30"
+        # self._extracted_data[T_RGW] = "0"
         self._extracted_data[T_CLIENT] = "1" # Client 1
+        self._extracted_data[T_USERAUTH] = "1"
+        self._extracted_data[T_USERNAME] = ""
+        self._extracted_data[T_USERONLY] = "1"
+        self._extracted_data[T_LOG_VERBOSITY] = "3"
 
     def set_name(self, name):
         """Name for the VPN connection"""
