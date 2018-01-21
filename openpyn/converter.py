@@ -16,9 +16,9 @@ LOG_VERBOSITY = 'verb '
 
 # TEMPLATE PLACEHOLDERS
 T_SERVER_ADDRESS = 'addr'
- # = 'adns'
+ # = 'adns' #
 T_CIPHER = 'cipher'
- # = 'comp'
+ # = 'comp' #
 T_CUSTOM_CONFIGURATION = 'custom2'
 T_DESCRIPTION = 'desc'
 T_AUTH_DIGEST = 'digest'
@@ -28,12 +28,13 @@ T_PORT = 'port'
 T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
 T_CONNECTION_RETRY = 'retry'
- # = 'rgw'
+ # = 'rgw' #
  # = 'unit' ##
- # = 'userauth'
+ # = 'userauth' #
 T_USERNAME = 'username'
- # = 'useronly'
- # = 'vpn_upload_unit' ###
+ # = 'useronly' #
+T_LOG_VERBOSITY = 'verb'
+ # = 'vpn_upload_unit' ##
 
 
 class Converter(object):
@@ -52,6 +53,7 @@ class Converter(object):
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
         self._extracted_data = {}
+        self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
 
     def set_name(self, name):
         """Name for the VPN connection"""
@@ -113,23 +115,6 @@ class Converter(object):
         """Extracts the needed information from the source configuration files"""
         self.pprint("Starting to extract information for {}".format(input_file))
 
-        # input_file_full = os.path.join(self._source_folder, input_file)
-        # with open(input_file_full, 'r') as f:
-        #     lines = f.readlines()
-        #     f.close()
-        #
-        # data = ""
-        # for line in lines:
-        #     if not line.startswith("#"):
-        #         data = data + line;
-        #         self._extract_server_address(line)
-        #         self._extract_cipher(line)
-        #         self._extract_auth_digest(line)
-        #         self._extract_tls_control_channel_security(line)
-        #         self._extract_tls_renegotiation_time(line)
-        #         self._extract_connection_retry(line)
-        #         print(line, end="")
-
         input_file_full = os.path.join(self._source_folder, input_file)
         with open(input_file_full, 'r') as lines:
             data = ""
@@ -139,10 +124,14 @@ class Converter(object):
             for line in islice(lines, 40):
                 if line.startswith("#"):
                     continue;
-                #print(line, end="")
-                if line.startswith("<ca>"):
+                # print(line, end="")
+                if line.startswith("\n"):
+                    pass;
+                elif line.startswith("<ca>"):
                     data = data + line;
                     break
+                elif line.startswith(PROTOCOL):
+                    pass;
                 elif self._extract_server_address(line):
                     pass
                 elif self._extract_cipher(line):
@@ -153,14 +142,18 @@ class Converter(object):
                     pass
                 elif self._extract_connection_retry(line):
                     pass
+                elif self._extract_log_verbosity(line):
+                    pass
+                elif self._extract_custom_configuration(line):
+                    pass
 
             for line in lines:
                 if line.startswith("#"):
                     continue;
+                # print(line, end="")
                 if line.startswith(TLS_CONTROL_CHANNEL_SECURITY):
                     self._extract_tls_control_channel_security(line)
                     continue;
-                #print(line, end="")
                 data = data + line;
             lines.close()
 
@@ -178,6 +171,7 @@ class Converter(object):
         self.pprint(self._ca)
         self.pprint(self._static)
         self.pprint(self._extracted_data)
+        self.pprint(self._extracted_data[T_CUSTOM_CONFIGURATION])
 
         return self._extracted_data
 
@@ -205,7 +199,6 @@ class Converter(object):
             return True
         return False
 
-
     def _extract_tls_control_channel_security(self, line):
         """Specific extractor for TLS Control Channel Security"""
         if TLS_CONTROL_CHANNEL_SECURITY in line:
@@ -230,6 +223,36 @@ class Converter(object):
                 self._extracted_data[T_CONNECTION_RETRY] = "-1"
             else:
                 self._extracted_data[T_CONNECTION_RETRY] = value
+            return True
+        return False
+
+    def _extract_log_verbosity(self, line):
+        """Specific extractor for Log Verbosity"""
+        if LOG_VERBOSITY in line:
+            _, value = line.split()
+            self._extracted_data[T_LOG_VERBOSITY] = value
+            return True
+        return False
+
+    def _extract_custom_configuration(self, line):
+        """Specific extractor for Custom Configuration"""
+        value = line.strip()
+        if value == "client":
+            pass
+        elif value == "dev tun":
+            pass
+        elif value == "nobind":
+            pass
+        elif value == "persist-key":
+            pass
+        elif value == "persist-tun":
+            pass
+        elif value == "auth-user-pass":
+            pass
+        elif value == "comp-lzo":
+            pass
+        else:
+            self._extracted_data[T_CUSTOM_CONFIGURATION] = self._extracted_data[T_CUSTOM_CONFIGURATION] + line
             return True
         return False
 
@@ -276,16 +299,16 @@ class Converter(object):
         if match_string is not None:
             self._static = match_string.group(1)
 
-    def _write_certificates(self):
+    def _write_certificates(self, client):
         # write keys
         if self._ca is not None:
-            cert_name = "vpn_crt_client" + "1" + "_ca"
+            cert_name = "vpn_crt_client" + client + "_ca"
             cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
             cert_file.write(self._ca)
             cert_file.close()
 
         if self._static is not None:
-            cert_name = "vpn_crt_client" + "1" + "_static"
+            cert_name = "vpn_crt_client" + client + "_static"
             cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
             cert_file.write(self._static)
             cert_file.close()
