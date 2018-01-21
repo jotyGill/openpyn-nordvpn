@@ -16,9 +16,9 @@ LOG_VERBOSITY = 'verb '
 
 # TEMPLATE PLACEHOLDERS
 T_SERVER_ADDRESS = 'addr'
- # = 'adns' #
+T_ACCEPT_DNS_CONFIGURATION = 'adns' #
 T_CIPHER = 'cipher'
- # = 'comp' #
+T_COMPRESSION = 'comp' #
 T_CUSTOM_CONFIGURATION = 'custom2'
 T_DESCRIPTION = 'desc'
 T_AUTH_DIGEST = 'digest'
@@ -29,11 +29,12 @@ T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
 T_CONNECTION_RETRY = 'retry'
  # = 'rgw' #
- # = 'unit' ##
- # = 'userauth' #
+T_CLIENT = 'unit' ##
+T_USERAUTH = 'userauth' #
 T_USERNAME = 'username'
- # = 'useronly' #
+T_USERONLY = 'useronly' #
 T_LOG_VERBOSITY = 'verb'
+
  # = 'vpn_upload_unit' ##
 
 
@@ -50,10 +51,16 @@ class Converter(object):
     _ca = None              #: NordVPN certificate
     _static = None          #: NordVPN static key
 
+    _adns = None            #: Accept DNS Configuration
+    _comp = None            #: Compression
+    _unit = None            #: Client
+
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
         self._extracted_data = {}
         self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
+        self._extracted_data[T_USERAUTH] = "1"
+        self._extracted_data[T_USERONLY] = "1"
 
     def set_name(self, name):
         """Name for the VPN connection"""
@@ -111,6 +118,27 @@ class Converter(object):
 
         self._username = username
 
+    def set_accept_dns_configuration(self, adns):
+        """Accept DNS Configuration for the VPN connection"""
+        if not adns:
+            raise Exception("You have to specify an adns.")
+
+        self._adns = adns
+
+    def set_compression(self, compression):
+        """Compression for the VPN connection"""
+        if not compression:
+            raise Exception("You have to specify an compression.")
+
+        self._comp = compression
+
+    def set_client(self, client):
+        """Client for the VPN connection"""
+        if not client:
+            raise Exception("You have to specify an client.")
+
+        self._unit = client
+
     def extract_information(self, input_file):
         """Extracts the needed information from the source configuration files"""
         self.pprint("Starting to extract information for {}".format(input_file))
@@ -164,6 +192,10 @@ class Converter(object):
         self._extract_vpn_port()
         self._extract_vpn_protocol()
         self._extract_vpn_username()
+
+        self._extract_accept_dns_configuration()
+        self._extract_compression()
+        self._extract_client()
 
         #self._extract_name(input_file)
         self._extract_certificates(data)
@@ -312,6 +344,18 @@ class Converter(object):
             cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
             cert_file.write(self._static)
             cert_file.close()
+
+    def _extract_accept_dns_configuration(self):
+        """Specific extractor for Accept DNS Configuration"""
+        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = self._adns
+
+    def _extract_compression(self):
+        """Specific extractor for Compression"""
+        self._extracted_data[T_COMPRESSION] = self._comp
+
+    def _extract_client(self):
+        """Specific extractor for Client"""
+        self._extracted_data[T_CLIENT] = self._unit
 
     def pprint(self, msg, appmsg=False):
         """
