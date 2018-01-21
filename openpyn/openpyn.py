@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from openpyn.converter import Converter
 from openpyn import filters
 from openpyn import locations
 from openpyn import firewall
@@ -274,6 +275,44 @@ def run(
         pinged_servers_list = ping_servers(better_servers_list, pings)
         chosen_servers = choose_best_servers(pinged_servers_list)
 
+        if nvram:
+            with open("/opt/usr/share/openpyn/credentials", 'r') as f:
+                lines = f.read().splitlines()
+                f.close()
+
+            url = "https://api.nordvpn.com/server"
+            json_response = get_json(url)
+            for res in json_response:
+                if res["domain"][:2].lower() == country_code.lower():
+                    country_name = res["country"]
+                    break
+
+            port_name = "1194"
+            protocol_name = "udp"
+            if tcp:
+                port_name = "443"
+                protocol_name = "tcp-client"
+
+            vpn_config_file = chosen_servers[0] + ".nordvpn.com." + port + ".ovpn"
+
+            c = converter(debug_mode=True)
+            c.set_username(lines[0])
+            c.set_password(lines[1])
+            c.set_description(country_name)
+            c.set_port(port_name)
+            c.set_protocol(proto_name)
+
+            c.set_name(chosen_servers[0])
+            c.set_source_folder("/opt/usr/share/openpyn/files/")
+            c.set_certs_folder("/jffs/openvpn/")
+
+            extracted_info = c.extract_information(vpn_config_file)
+            c._write_certificates()
+
+            ##nvram input
+
+            sys.exit(1)
+
         for tries in range(5):     # keep trying to connect
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
@@ -301,6 +340,10 @@ def run(
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
+
+        if nvram:
+            c = Converter(debug_mode=args.verbose)
+
         for i in range(5):
             connection = connect(server, port, silent, test, skip_dns_patch)
     else:
@@ -719,7 +762,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
             if silent:
                 if detected_os == "linux":
                     if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-                        # tun
+                        # make sure module is loaded
                         if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
                             subprocess.call("modprobe tun", shell=True)
                             if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
