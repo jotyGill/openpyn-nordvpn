@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import base64
 from itertools import islice
 
 # CONFIGURATION PLACEHOLDERS
@@ -51,9 +52,9 @@ class Converter(object):
     _ca = None              #: NordVPN certificate
     _static = None          #: NordVPN static key
 
-    _adns = None            #: Accept DNS Configuration
-    _comp = None            #: Compression
-    _unit = None            #: Client
+    _adns = None            #: Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
+    _comp = None            #: Compression ("-1", "no", "yes", "adaptive", "lz4")
+    _unit = None            #: Client ("1", "2", "3", "4", "5")
 
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
@@ -219,7 +220,18 @@ class Converter(object):
         self.pprint(self._ca)
         self.pprint(self._static)
         self.pprint(self._extracted_data)
-        self.pprint(self._extracted_data[T_CUSTOM_CONFIGURATION])
+
+        line = self._extracted_data[T_CUSTOM_CONFIGURATION]
+        if line[-1:] == "\n":
+            line = line[:-1]
+
+        self.pprint(line)
+
+        line = self.stringToBase64(line)
+        line = line.decode('utf-8')
+        self._extracted_data[T_CUSTOM_CONFIGURATION] = line
+
+        self.pprint(line)
 
         return self._extracted_data
 
@@ -304,6 +316,12 @@ class Converter(object):
             return True
         return False
 
+    def stringToBase64(self, s):
+        return base64.b64encode(bytes(s, 'utf-8'))
+
+    def base64ToString(self, b):
+        return base64.b64decode(b).decode('utf-8')
+
 
     def _extract_vpn_description(self):
         """Description for the VPN connection"""
@@ -329,7 +347,7 @@ class Converter(object):
     def _extract_name(self, input_file):
         """Specific extractor for VPN configuration name"""
         vpn_name = input_file.__str__()
-        vpn_name = vpn_name.replace('nordvpn.com.', '').replace('.ovpn', '')
+        vpn_name = vpn_name.replace("nordvpn.com.", "").replace(".ovpn", "")
 
         self._name = vpn_name
 
