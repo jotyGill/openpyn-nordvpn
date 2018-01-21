@@ -61,6 +61,9 @@ class Converter(object):
         self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
         self._extracted_data[T_USERAUTH] = "1"
         self._extracted_data[T_USERONLY] = "1"
+        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2" # Strict
+        self._extracted_data[T_COMPRESSION] = "adaptive" # comp-lzo
+        self._extracted_data[T_CLIENT] = "1" # Client 1
 
     def set_name(self, name):
         """Name for the VPN connection"""
@@ -121,21 +124,34 @@ class Converter(object):
     def set_accept_dns_configuration(self, adns):
         """Accept DNS Configuration for the VPN connection"""
         if not adns:
-            raise Exception("You have to specify an adns.")
+            raise Exception("You have to specify a value for accept DNS configuration.")
+        values = ("Disabled", "Relaxed", "Strict", "Exclusive")
+        for index, element in enumerate(values):
+            if adns.title() == element:
+                adns = str(index)
+                break
+        if not adns in ("0", "1", "2", "3"):
+            raise ValueError("Value must be one of {0}".format(values))
 
         self._adns = adns
 
     def set_compression(self, compression):
         """Compression for the VPN connection"""
         if not compression:
-            raise Exception("You have to specify an compression.")
+            raise Exception("You have to specify a value for compression.")
+        values = ("-1", "no", "yes", "adaptive", "lz4")
+        if not compression in values:
+            raise ValueError("Value must be one of {0}".format(values))
 
         self._comp = compression
 
     def set_client(self, client):
         """Client for the VPN connection"""
         if not client:
-            raise Exception("You have to specify an client.")
+            raise Exception("You have to specify a value for client.")
+        values = ("1", "2", "3", "4", "5")
+        if not client in values:
+            raise ValueError("Value must be one of {0}".format(values))
 
         self._unit = client
 
