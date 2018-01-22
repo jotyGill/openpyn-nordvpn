@@ -266,8 +266,8 @@ def run(
             country_code = get_country_code(full_name=country_code)
         country_code = country_code.lower()
         better_servers_list = find_better_servers(
-                                country_code, area, max_load, top_servers, tcp, p2p,
-                                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
+            country_code, area, max_load, top_servers, tcp, p2p,
+            dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
         pinged_servers_list = ping_servers(better_servers_list, pings)
         chosen_servers = choose_best_servers(pinged_servers_list)
 
@@ -361,9 +361,9 @@ def find_better_servers(
 
     # use api.nordvpn.com
     json_res_list = get_data_from_api(
-                    country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
-                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                    netflix=netflix)
+        country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
+        double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+        netflix=netflix)
 
     server_list = filters.filter_by_protocol(json_res_list=json_res_list, tcp=tcp)
 
@@ -494,13 +494,13 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn,
 
     # if list_servers was not a specific country it would be "all"
     json_res_list = get_data_from_api(
-                    country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
-                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                    netflix=netflix)
+        country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
+        double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+        netflix=netflix)
     # print(json_res_list)
 
     if area:
-            print("The NordVPN Servers In", list_servers.upper(), "Area", area, "Are :")
+        print("The NordVPN Servers In", list_servers.upper(), "Area", area, "Are :")
     else:
         print("The NordVPN Servers In", list_servers.upper(), "Are :")
 
@@ -605,7 +605,7 @@ def get_network_interfaces():
         ip_addr_out = interfaces_output[interfaces_output.find("inet") + 5:]
         ip_addr = ip_addr_out[:ip_addr_out.find(" ")]
 
-        interfaces_output = interfaces_output[5:interfaces_output.find(">")+1]
+        interfaces_output = interfaces_output[5:interfaces_output.find(">") + 1]
         interfaces_output = interfaces_output.replace(":", "").replace("<", "").replace(">", "")
 
         interface_output_list = interfaces_output.split(" ")
