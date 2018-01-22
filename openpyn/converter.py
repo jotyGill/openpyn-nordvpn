@@ -36,8 +36,6 @@ T_USERNAME = 'username'
 T_USERONLY = 'useronly' #
 T_LOG_VERBOSITY = 'verb'
 
- # = 'vpn_upload_unit' ##
-
 
 class Converter(object):
     _username = None        #: NordVPN username

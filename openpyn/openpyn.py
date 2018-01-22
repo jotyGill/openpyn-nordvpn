@@ -7,6 +7,7 @@ from openpyn import firewall
 from openpyn import root
 from openpyn import credentials
 from openpyn import initd
+from openpyn import nvram
 from openpyn import systemd
 from openpyn import __version__
 
@@ -110,6 +111,9 @@ def main():
     parser.add_argument(
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
+    parser.add_argument(
+        '--nvram', help='Save configuration to NVRAM (ASUSWRT-Merlin)',
+        action='store_true')
 
     args = parser.parse_args()
 
@@ -119,7 +123,7 @@ def main():
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent)
+        args.skip_dns_patch, args.silent, args.nvram)
 
 
 def run(
@@ -127,7 +131,7 @@ def run(
     init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
-        internally_allowed, skip_dns_patch, silent):
+        internally_allowed, skip_dns_patch, silent, nvram):
     port = "udp1194"
     if tcp:
         port = "tcp443"
@@ -275,44 +279,6 @@ def run(
         pinged_servers_list = ping_servers(better_servers_list, pings)
         chosen_servers = choose_best_servers(pinged_servers_list)
 
-        if nvram:
-            with open("/opt/usr/share/openpyn/credentials", 'r') as f:
-                lines = f.read().splitlines()
-                f.close()
-
-            url = "https://api.nordvpn.com/server"
-            json_response = get_json(url)
-            for res in json_response:
-                if res["domain"][:2].lower() == country_code.lower():
-                    country_name = res["country"]
-                    break
-
-            port_name = "1194"
-            protocol_name = "udp"
-            if tcp:
-                port_name = "443"
-                protocol_name = "tcp-client"
-
-            vpn_config_file = chosen_servers[0] + ".nordvpn.com." + port + ".ovpn"
-
-            c = converter(debug_mode=True)
-            c.set_username(lines[0])
-            c.set_password(lines[1])
-            c.set_description(country_name)
-            c.set_port(port_name)
-            c.set_protocol(proto_name)
-
-            c.set_name(chosen_servers[0])
-            c.set_source_folder("/opt/usr/share/openpyn/files/")
-            c.set_certs_folder("/jffs/openvpn/")
-
-            extracted_info = c.extract_information(vpn_config_file)
-            c._write_certificates()
-
-            ##nvram input
-
-            sys.exit(1)
-
         for tries in range(5):     # keep trying to connect
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
@@ -323,6 +289,9 @@ def run(
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                if nvram:
+                    nvram.run(aserver, country_code, client="1", compression="lz4", adns="Exclusive", tcp, True)
+                    sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                         (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
@@ -340,10 +309,9 @@ def run(
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
-
         if nvram:
-            c = Converter(debug_mode=args.verbose)
-
+            nvram.run(server, country_code, client="1", compression="lz4", adns="Exclusive", tcp, True)
+            sys.exit()
         for i in range(5):
             connection = connect(server, port, silent, test, skip_dns_patch)
     else:
