@@ -43,8 +43,8 @@ sudo dpkg -i python3-openpyn_2.1.1-1_all.deb
 ```
 3. For Fedora, all dependencies should be auto installed.
 ```bash
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.1-1.noarch.rpm
-sudo dnf install ./openpyn-2.1.1-1.noarch.rpm
+wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.2.0/openpyn-2.2-1.noarch.rpm
+sudo dnf install ./openpyn-2.2-1.noarch.rpm
 ```
 4. Alternatively clone and install.
 ``` bash
@@ -81,7 +81,7 @@ csrutil enable
 shutdown -r now
 ```
 
-### Setup
+## Setup
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)
 ``` bash
 sudo openpyn --init
@@ -240,6 +240,7 @@ optional arguments:
   --tor                 Only look for servers with "Tor Over VPN" support
   --double              Only look for servers with "Double VPN" support
   --anti-ddos           Only look for servers with "Anti DDos" support
+  --netflix             Only look for servers that are optimised for "Netflix"
   --test                Simulation only, do not actually connect to the vpn
                         server
 
