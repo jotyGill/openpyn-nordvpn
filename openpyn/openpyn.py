@@ -106,6 +106,9 @@ def main():
         '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Anti DDos" support',
         action='store_true')
     parser.add_argument(
+        '--netflix', dest='netflix', help='Only look for servers that are optimised for "Netflix"',
+        action='store_true')
+    parser.add_argument(
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
 
@@ -116,7 +119,7 @@ def main():
         args.daemon, args.max_load, args.top_servers, args.pings,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
-        args.tor_over_vpn, args.anti_ddos, args.test, args.internally_allowed,
+        args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.skip_dns_patch, args.silent)
 
 
@@ -124,11 +127,11 @@ def run(
     # run openpyn
     init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
-        p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, test,
+        p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
         internally_allowed, skip_dns_patch, silent):
-    port = "udp1194"
+    port = "udp"
     if tcp:
-        port = "tcp443"
+        port = "tcp"
 
     if sys.platform != "linux":
         if sys.platform == "win32":
@@ -188,6 +191,8 @@ def run(
             openpyn_options += " --tor "
         if anti_ddos:
             openpyn_options += " --anti-ddos "
+        if netflix:
+            openpyn_options += " --netflix "
         if test:
             openpyn_options += " --test "
         if internally_allowed:
@@ -221,11 +226,12 @@ def run(
     # a hack to list all countries and thier codes when no arg supplied with "-l"
     elif list_servers != 'nope':      # means "-l" supplied
         if list_servers is None:      # no arg given with "-l"
-            if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos:
+            if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos or netflix:
                 # show the special servers in all countries
                 display_servers(
                     list_servers="all", area=area, p2p=p2p, dedicated=dedicated,
-                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+                    netflix=netflix)
             else:
                 list_all_countries()
         # if a country code is supplied give details about that country only.
@@ -235,7 +241,8 @@ def run(
                 list_servers = get_country_code(full_name=list_servers)
             display_servers(
                 list_servers=list_servers, area=area, p2p=p2p, dedicated=dedicated,
-                double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+                netflix=netflix)
 
     # only clear/touch FW Rules if "-f" used
     elif force_fw_rules:
@@ -260,7 +267,7 @@ def run(
         country_code = country_code.lower()
         better_servers_list = find_better_servers(
                                 country_code, area, max_load, top_servers, tcp, p2p,
-                                dedicated, double_vpn, tor_over_vpn, anti_ddos)
+                                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
         pinged_servers_list = ping_servers(better_servers_list, pings)
         chosen_servers = choose_best_servers(pinged_servers_list)
 
@@ -275,7 +282,7 @@ def run(
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 print(Fore.BLUE + "Out of the Best Available Servers, Chose",
-                        (Fore.GREEN + aserver + Fore.BLUE))
+                      (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -326,13 +333,13 @@ def get_json(url):
 
 # Gets json data, from api.nordvpn.com. filter servers by type, country, area.
 def get_data_from_api(
-        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix):
 
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
 
     type_filtered_servers = filters.filter_by_type(
-        json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos)
+        json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
     if country_code != "all":       # if "-l" had country code with it. e.g "-l au"
         type_country_filtered = filters.filter_by_country(country_code, type_filtered_servers)
         if area is None:
@@ -346,7 +353,7 @@ def get_data_from_api(
 # Filters servers based on the speficied criteria.
 def find_better_servers(
     country_code, area, max_load, top_servers, tcp, p2p, dedicated,
-        double_vpn, tor_over_vpn, anti_ddos):
+        double_vpn, tor_over_vpn, anti_ddos, netflix):
     if tcp:
         used_protocol = "OPENVPN-TCP"
     else:
@@ -355,7 +362,8 @@ def find_better_servers(
     # use api.nordvpn.com
     json_res_list = get_data_from_api(
                     country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
-                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+                    netflix=netflix)
 
     server_list = filters.filter_by_protocol(json_res_list=json_res_list, tcp=tcp)
 
@@ -368,7 +376,7 @@ def find_better_servers(
         print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
 
     print(Fore.BLUE + "With 'Load' less than", Fore.GREEN + str(max_load) + Fore.BLUE,
-          "Which Support", Fore.GREEN + used_protocol + Fore.BLUE, end=" ")
+          "Which Support", Fore.GREEN + used_protocol, end=" ")
     if p2p:
         print(", p2p = ", p2p, end=" ")
     if dedicated:
@@ -376,11 +384,13 @@ def find_better_servers(
     if double_vpn:
         print(", double_vpn =", double_vpn, end=" ")
     if tor_over_vpn:
-        print(",tor_over_vpn =", tor_over_vpn, end=" ")
+        print(", tor_over_vpn =", tor_over_vpn, end=" ")
     if anti_ddos:
-        print(",anti_ddos =", anti_ddos, end=" ")
+        print(", anti_ddos =", anti_ddos, end=" ")
+    if netflix:
+        print(", netflix =", netflix, end=" ")
 
-    print("are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
+    print(Fore.BLUE + "are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
     return better_servers_list
 
 
@@ -393,7 +403,7 @@ def ping_servers(better_servers_list, pings):
         ping_result = []
         try:
             ping_proc = subprocess.Popen(
-                ["ping", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
+                ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
                 stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
@@ -468,22 +478,25 @@ def update_config_files():
     root.verify_root_access("Root access needed to write files in '/usr/share/openpyn/files'")
     try:
         subprocess.check_call(
-            "sudo wget -N https://nordvpn.com/api/files/zip -P /usr/share/openpyn/".split())
+            "sudo wget https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip \
+-P /usr/share/openpyn/".split())
         subprocess.check_call(
-            "sudo unzip -u -o /usr/share/openpyn/zip -d /usr/share/openpyn/files/".split())
-        subprocess.check_call("sudo rm /usr/share/openpyn/zip".split())
+            "sudo unzip -u -o /usr/share/openpyn/ovpn -d /usr/share/openpyn/files/".split())
+        subprocess.check_call("sudo rm /usr/share/openpyn/ovpn.zip".split())
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
 
 # Lists information abouts servers under the given criteria.
-def display_servers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos):
+def display_servers(list_servers, area, p2p, dedicated, double_vpn,
+                    tor_over_vpn, anti_ddos, netflix):
     servers_on_web = set()      # servers shown on the website
 
     # if list_servers was not a specific country it would be "all"
     json_res_list = get_data_from_api(
                     country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
-                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos)
+                    double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
+                    netflix=netflix)
     # print(json_res_list)
 
     if area:
@@ -504,7 +517,7 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn, tor_over_vpn
             print(location[2])
 
     if list_servers != "all" and p2p is False and dedicated is False and double_vpn is False \
-            and tor_over_vpn is False and anti_ddos is False and area is False:
+            and tor_over_vpn is False and anti_ddos is False and netflix is False and area is False:
             # else not applicable.
         print_latest_servers(server_set=servers_on_web)
     sys.exit()
@@ -546,8 +559,9 @@ def check_config_files():
         openvpn_files_str = str(serverFiles)
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
-        print("\nRunning openpyn for the first time? running 'openpyn --update' for you :) \n")
-        time.sleep(3)
+        print(Fore.GREEN + "\nRunning openpyn for the first time? running \
+'openpyn --update' for you :) \n" + Fore.RESET)
+        time.sleep(5)
         # download the config files
         update_config_files()
     return
@@ -603,8 +617,14 @@ def get_network_interfaces():
 
 def get_vpn_server_ip(server, port):
     # grab the ip address of vpnserver from the config file
-    file_path = "/usr/share/openpyn/files/" + server + ".nordvpn.com." + port + ".ovpn"
-    with open(file_path, 'r') as openvpn_file:
+    if port == "tcp":
+        folder = "ovpn_tcp/"
+    else:
+        folder = "ovpn_udp/"
+
+    vpn_config_file = "/usr/share/openpyn/files/" + folder + server + \
+        ".nordvpn.com." + port + ".ovpn"
+    with open(vpn_config_file, 'r') as openvpn_file:
         for line in openvpn_file:
             if "remote " in line:
                 vpn_server_ip = line[7:]
@@ -615,10 +635,19 @@ def get_vpn_server_ip(server, port):
 
 def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn"):
     if server_provider == "nordvpn":
-        vpn_config_file = "/usr/share/openpyn/files/" + server + ".nordvpn.com."\
-                + port + ".ovpn"
-        # print("CONFIG FILE", vpn_config_file)
+        if port == "tcp":
+            folder = "ovpn_tcp/"
+        else:
+            folder = "ovpn_udp/"
 
+        vpn_config_file = "/usr/share/openpyn/files/" + folder + server +\
+            ".nordvpn.com." + port + ".ovpn"
+        # print("CONFIG FILE", vpn_config_file)
+        if os.path.isfile(vpn_config_file) is False:
+            print(Fore.RED + "VPN configuration file", vpn_config_file,
+                  "doesn't exist, don't worry running 'openpyn --update' for you :)" + Fore.BLUE)
+            time.sleep(6)
+            update_config_files()
     elif server_provider == "ipvanish":
         vpn_config_file = "/usr/share/openpyn/files/ipvanish/" + server
         # print("ipvanish")
@@ -655,6 +684,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         # resolvconf_exists = False
     else:
         resolvconf_exists = False
+        skip_dns_patch = True
 
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using

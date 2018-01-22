@@ -14,8 +14,8 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 * Auto excludes the servers if ping to them fails or if they don't support OpenVPN \
   (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
-* Now list and connect to servers with "Peer To Peer" --p2p, "Dedicated IP" --dedicated, "Tor Over VPN" --tor, \
-"Double VPN" --double, "Anti DDos" --anti-ddos support.
+* Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \
+"Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
 * Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
 
@@ -29,33 +29,30 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 sudo apt install openvpn python-gobject unzip wget
 ```
 ### Installation Methods
-1. For Ubuntu / Kali / Debian / based OS's with Python=>3.5
+1. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues).
+Recommended method to receive frequent updates.
+``` bash
+sudo apt install python3-pip
+sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
+```
+2. For Ubuntu / Kali / Debian / based OS's with Python=>3.5
 ```bash
 sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
 wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.1-1_all.deb
 sudo dpkg -i python3-openpyn_2.1.1-1_all.deb
 ```
-2. For Fedora, all dependencies should be auto installed.
+3. For Fedora, all dependencies should be auto installed.
 ```bash
 wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/openpyn-2.1.1-1.noarch.rpm
 sudo dnf install ./openpyn-2.1.1-1.noarch.rpm
 ```
-3. For Arch Linux, using yaurt. (credit to and maintained by: https://github.com/Ubermensch85)
-```bash
-sudo yaourt -S openpyn-nordvpn-git
-```
-4. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, causes issues):
-``` bash
-sudo apt install python3-pip
-sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
-```
-5. Alternatively clone and install.
+4. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
-6. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
+5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
 To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
 holding down the Command and R keys at startup and run the csrutil command from the Terminal.
 After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: https://github.com/1951FDG)
@@ -131,10 +128,11 @@ openpyn -l uk --p2p
 openpyn --list uk --dedicated
 openpyn -l --tor  # tor over vpn in all countries
 ```
-* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer", out
-  of them, connect to one of the top 2 servers that have the lowest latency from you.
+* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer",
+sort them by the lowest latency from you, connect to the best one, if connection fails
+try the next one and so on.
 ``` bash
-openpyn us -t 10 -T 2 --p2p
+openpyn us -t 10 --p2p
 ```
 * To update and run the systemd openpyn.service, use "-d" or "--daemon"
 ``` bash
