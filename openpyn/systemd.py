@@ -19,11 +19,13 @@ def update_service(openpyn_options, run=False):
     openpyn_options = openpyn_options.replace("--daemon", "")
     openpyn_location = str(subprocess.check_output("which openpyn".split())) + " "
     openpyn_location = openpyn_location[2:-4]
-    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/usr/share/openpyn/\nExecStart=" + openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
+    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/usr/share/openpyn/\nExecStartPre=/usr/bin/sleep 10\nExecStart=" + \
+        openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
+        "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
     with open("/etc/systemd/system/openpyn.service", "w+") as service_file:
-            service_file.write(service_text)
-            service_file.close()
+        service_file.write(service_text)
+        service_file.close()
 
     print("\nThe Following config has been saved in openpyn.service.",
           "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
