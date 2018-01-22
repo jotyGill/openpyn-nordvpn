@@ -171,7 +171,7 @@ class Converter(object):
 
     def extract_information(self, input_file):
         """Extracts the needed information from the source configuration files"""
-        self.pprint("Starting to extract information for {}".format(input_file))
+        self.pprint("Processing file {}".format(input_file))
 
         input_file_full = os.path.join(self._source_folder, input_file)
         with open(input_file_full, 'r') as lines:
