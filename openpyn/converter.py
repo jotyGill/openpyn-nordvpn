@@ -152,6 +152,7 @@ class Converter(object):
         if not compression:
             raise Exception("You have to specify a value for compression.")
         values = ("-1", "no", "yes", "adaptive", "lz4")
+        values = ("yes", "adaptive")
         if not compression in values:
             raise ValueError("Value must be one of {0}".format(values))
 
