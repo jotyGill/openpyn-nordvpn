@@ -2,7 +2,7 @@ import subprocess
 import os
 import json
 from openpyn.converter import Converter, T_CLIENT
-import api
+from openpyn import api
 
 
 def run(server, country_code, client="1", compression="adaptive", adns="Strict", tcp=False, test=False):
