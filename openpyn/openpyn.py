@@ -178,7 +178,7 @@ def run(
         if area:
             openpyn_options += " --area " + area
         if tcp:
-            openpyn_options += " --tcp "
+            openpyn_options += " --tcp"
         if max_load:
             openpyn_options += " --max-load " + str(max_load)
         if top_servers:
@@ -186,26 +186,28 @@ def run(
         if pings:
             openpyn_options += " --pings " + str(pings)
         if force_fw_rules:
-            openpyn_options += " --force-fw-rules "
+            openpyn_options += " --force-fw-rules"
         if p2p:
-            openpyn_options += " --p2p "
+            openpyn_options += " --p2p"
         if dedicated:
-            openpyn_options += " --dedicated "
+            openpyn_options += " --dedicated"
         if double_vpn:
-            openpyn_options += " --double "
+            openpyn_options += " --double"
         if tor_over_vpn:
-            openpyn_options += " --tor "
+            openpyn_options += " --tor"
         if anti_ddos:
-            openpyn_options += " --anti-ddos "
+            openpyn_options += " --anti-ddos"
         if test:
-            openpyn_options += " --test "
+            openpyn_options += " --test"
         if internally_allowed:
             open_ports = ""
             for port_number in internally_allowed:
-                open_ports += port_number + " "
-            openpyn_options += " --allow " + open_ports
+                open_ports += " " + port_number
+            openpyn_options += " --allow" + open_ports
         if skip_dns_patch:
-            openpyn_options += " --skip-dns-patch "
+            openpyn_options += " --skip-dns-patch"
+        if nvram:
+            openpyn_options += " --nvram"
         openpyn_options += " --silent"
         # print(openpyn_options)
         if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
