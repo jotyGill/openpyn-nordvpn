@@ -586,7 +586,8 @@ def get_country_code(full_name):
         if res["country"].lower() == full_name.lower():
             code = res["domain"][:2].lower()
             return code
-    return "Country Name Not Correct"
+    print("Country Name Not Correct")
+    sys.exit()
 
 
 def get_network_interfaces():
