@@ -5,7 +5,7 @@ from openpyn.converter import Converter, T_CLIENT
 from openpyn import api
 
 
-def run(server, country_code, client="1", compression="adaptive", adns="Strict", tcp=False, test=False, debug_mode=False):
+def run(server, country_code, client="1", rgw="No", compression="adaptive", adns="Strict", tcp=False, test=False, debug_mode=False):
     with open("/opt/usr/share/openpyn/credentials", 'r') as f:
         lines = f.read().splitlines()
         f.close()
@@ -40,6 +40,7 @@ def run(server, country_code, client="1", compression="adaptive", adns="Strict",
 
     c.set_accept_dns_configuration(adns)
     c.set_compression(compression)
+    c.set_redirect_gateway(rgw)
     c.set_client(client)
 
     extracted_info = c.extract_information(vpn_config_file)

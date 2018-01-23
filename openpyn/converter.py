@@ -29,7 +29,7 @@ T_PORT = 'port'
 T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
 T_CONNECTION_RETRY = 'retry'
-# T_RGW = 'rgw' #
+T_REDIRECT_GATEWAY = 'rgw' #
 T_CLIENT = 'unit' ##
 T_USERAUTH = 'userauth' #
 T_USERNAME = 'username'
@@ -52,6 +52,7 @@ class Converter(object):
 
     _adns = None            #: Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
     _comp = None            #: Compression ("-1", "no", "yes", "adaptive", "lz4")
+    _rgw = None             #: Redirect Internet traffic ("No", "All", "Policy Rules", "Policy Rules (strict)")
     _unit = None            #: Client ("1", "2", "3", "4", "5")
 
     def __init__(self, debug_mode=False):
@@ -70,7 +71,7 @@ class Converter(object):
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "-1"
         self._extracted_data[T_CONNECTION_RETRY] = "30"
-        # self._extracted_data[T_RGW] = "0"
+        self._extracted_data[T_REDIRECT_GATEWAY] = "0" # No
         self._extracted_data[T_CLIENT] = "1" # Client 1
         self._extracted_data[T_USERAUTH] = "1"
         self._extracted_data[T_USERNAME] = ""
@@ -158,6 +159,20 @@ class Converter(object):
 
         self._comp = compression
 
+    def set_redirect_gateway(self, rgw):
+        """Redirect Internet traffic for the VPN connection"""
+        if not rgw:
+            raise Exception("You have to specify a value for redirect Internet traffic.")
+        values = ("No", "All", "Policy Rules", "Policy Rules (strict)")
+        for index, element in enumerate(values):
+            if rgw.title() == element:
+                rgw = str(index)
+                break
+        if not rgw in ("0", "1", "2", "3"):
+            raise ValueError("Value must be one of {0}".format(values))
+
+        self._rgw = rgw
+
     def set_client(self, client):
         """Client for the VPN connection"""
         if not client:
@@ -224,6 +239,7 @@ class Converter(object):
 
         self._extract_accept_dns_configuration()
         self._extract_compression()
+        self._extract_redirect_gateway()
         self._extract_client()
 
         #self._extract_name(input_file)
@@ -398,6 +414,10 @@ class Converter(object):
     def _extract_compression(self):
         """Specific extractor for Compression"""
         self._extracted_data[T_COMPRESSION] = self._comp
+
+    def _extract_redirect_gateway(self):
+        """Specific extractor for Redirect Internet traffic"""
+        self._extracted_data[T_REDIRECT_GATEWAY] = self._rgw
 
     def _extract_client(self):
         """Specific extractor for Client"""
