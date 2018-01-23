@@ -15,7 +15,7 @@ def get_unique_locations(list_of_servers):
         # print(unique_locations)
     for eachLocation in unique_locations:
         geo_address_list = get_location_name(eachLocation)
-        time.sleep(random.randrange(1, 5, 1)*0.1)
+        time.sleep(random.randrange(1, 5, 1) * 0.1)
         # geo_address_list = get_location_name(latitude=latitude, longitude=longitude)
         resolved_locations.append(geo_address_list)
         # print(resolved_locations)
@@ -36,7 +36,8 @@ def get_location_name(location_dic):
     geo_address_list = []
     name_list = []
     try:
-        results = r.json()['results'][0]['address_components']
+        response = r.json()
+        results = response['results'][0]['address_components']
         # print(results)
     except IndexError:
         print("IndexError: Looks like you have reached Google maps API's daily \
