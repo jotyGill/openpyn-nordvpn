@@ -290,7 +290,7 @@ def run(
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 if nvram:
-                    nvram.run(aserver, country_code, client="1", compression="lz4", adns="Exclusive", tcp, True)
+                    nvram.run(aserver, country_code, "1", "lz4", "Exclusive", tcp, True)
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                         (Fore.GREEN + aserver + Fore.BLUE))
@@ -310,7 +310,7 @@ def run(
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
         if nvram:
-            nvram.run(server, country_code, client="1", compression="lz4", adns="Exclusive", tcp, True)
+            nvram.run(server, country_code, "1", "lz4", "Exclusive", tcp, True)
             sys.exit()
         for i in range(5):
             connection = connect(server, port, silent, test, skip_dns_patch)
