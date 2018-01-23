@@ -6,7 +6,7 @@ from openpyn import firewall
 from openpyn import root
 from openpyn import credentials
 from openpyn import initd
-from openpyn import nvram
+from openpyn import asus
 from openpyn import systemd
 from openpyn import __version__
 
