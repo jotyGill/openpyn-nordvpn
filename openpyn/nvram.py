@@ -1,7 +1,7 @@
 import subprocess
 import os
 import json
-from converter import Converter, T_CLIENT
+from openpyn.converter import Converter, T_CLIENT
 import api
 
 

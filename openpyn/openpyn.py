@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from openpyn.converter import Converter
 from openpyn import filters
 from openpyn import locations
 from openpyn import firewall
