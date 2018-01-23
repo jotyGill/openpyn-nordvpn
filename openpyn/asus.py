@@ -91,7 +91,7 @@ def set(c, key, value, unit, service, test=False):
                 return
         c.pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
-            subprocess.run(["/bin/nvram", "set", argument2], check=True)
+            subprocess.run(["sudo", "/bin/nvram", "set", argument2], check=True)
             pass
     except subprocess.CalledProcessError as e:
         print(e.output)
