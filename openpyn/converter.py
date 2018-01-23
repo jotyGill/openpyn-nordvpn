@@ -364,8 +364,8 @@ class Converter(object):
 
     def _extract_certificates(self, input_file):
         # prepare regex
-        regex_ca = re.compile("<ca>.(.*).</ca>", re.IGNORECASE|re.DOTALL)
-        regex_tls = re.compile("<tls-auth>.(.*).</tls-auth>", re.IGNORECASE|re.DOTALL)
+        regex_ca = re.compile("<ca>.(.*)</ca>", re.IGNORECASE|re.DOTALL)
+        regex_tls = re.compile("<tls-auth>.(.*)</tls-auth>", re.IGNORECASE|re.DOTALL)
 
         # extract keys
         match_string = regex_ca.search(input_file)

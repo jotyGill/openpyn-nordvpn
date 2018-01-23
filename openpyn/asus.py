@@ -5,7 +5,7 @@ from openpyn.converter import Converter, T_CLIENT
 from openpyn import api
 
 
-def run(server, country_code, client="1", compression="adaptive", adns="Strict", tcp=False, test=False):
+def run(server, country_code, client="1", compression="adaptive", adns="Strict", tcp=False, test=False, debug_mode=False):
     with open("/opt/usr/share/openpyn/credentials", 'r') as f:
         lines = f.read().splitlines()
         f.close()
@@ -27,7 +27,7 @@ def run(server, country_code, client="1", compression="adaptive", adns="Strict",
 
     vpn_config_file = server + ".nordvpn.com." + port + ".ovpn"
 
-    c = Converter(debug_mode=False)
+    c = Converter(debug_mode)
     c.set_username(lines[0])
     c.set_password(lines[1])
     c.set_description(country_name)
@@ -43,7 +43,8 @@ def run(server, country_code, client="1", compression="adaptive", adns="Strict",
     c.set_client(client)
 
     extracted_info = c.extract_information(vpn_config_file)
-    c._write_certificates(client)
+    if not test:
+        c._write_certificates(client)
 
     c.pprint(extracted_info)
 
