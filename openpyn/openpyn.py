@@ -55,9 +55,9 @@ def main():
         '-m', '--max-load', type=int, default=70, help='Specify load threashold, \
         rejects servers with more load than this, DEFAULT=70')
     parser.add_argument(
-        '-t', '--top-servers', type=int, default=4, help='Specify the number of Top \
+        '-t', '--top-servers', type=int, default=10, help='Specify the number of Top \
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
-         Pinged. DEFAULT=4')
+         Pinged. DEFAULT=10')
     parser.add_argument(
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
@@ -499,10 +499,23 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn,
         netflix=netflix)
     # print(json_res_list)
 
+    print(Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
+          list_servers.upper() + Fore.BLUE, end=" ")
     if area:
-        print("The NordVPN Servers In", list_servers.upper(), "Area", area, "Are :")
-    else:
-        print("The NordVPN Servers In", list_servers.upper(), "Are :")
+        print("Area ", Fore.GREEN + area + Fore.BLUE, end=" ")
+    if p2p:
+        print("with " + Fore.GREEN + "p2p" + Fore.BLUE + " support", end=" ")
+    if dedicated:
+        print("with " + Fore.GREEN + "dedicated" + Fore.BLUE + " support", end=" ")
+    if double_vpn:
+        print("with " + Fore.GREEN + "double_vpn" + Fore.BLUE + " support", end=" ")
+    if tor_over_vpn:
+        print("with " + Fore.GREEN + "tor_over_vpn" + Fore.BLUE + " support", end=" ")
+    if anti_ddos:
+        print("with " + Fore.GREEN + "anti_ddos" + Fore.BLUE + " support", end=" ")
+    if netflix:
+        print("with " + Fore.GREEN + "netflix" + Fore.BLUE + " support", end=" ")
+    print("Are:\n" + Style.RESET_ALL)
 
     # add server names to "servers_on_web" set
     for res in json_res_list:
