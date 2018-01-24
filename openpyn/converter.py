@@ -10,7 +10,6 @@ SERVER_ADDRESS = 'remote '
 CIPHER = 'cipher '
 AUTH_DIGEST = 'auth '
 TLS_CONTROL_CHANNEL_SECURITY = 'key-direction '
-PROTOCOL = 'proto '
 TLS_RENEGOTIATION_TIME = 'reneg-sec '
 CONNECTION_RETRY = 'resolv-retry '
 LOG_VERBOSITY = 'verb '
@@ -24,6 +23,7 @@ T_CUSTOM_CONFIGURATION = 'custom2'
 T_DESCRIPTION = 'desc'
 T_AUTH_DIGEST = 'digest'
 T_TLS_CONTROL_CHANNEL_SECURITY = 'hmac'
+T_INTERFACE_TYPE = 'if'
 T_PASSWORD = 'password'
 T_PORT = 'port'
 T_PROTOCOL = 'proto'
@@ -66,6 +66,7 @@ class Converter(object):
         self._extracted_data[T_DESCRIPTION] = "Client 1"
         self._extracted_data[T_AUTH_DIGEST] = "default"
         self._extracted_data[T_TLS_CONTROL_CHANNEL_SECURITY] = "-1"
+        self._extracted_data[T_INTERFACE_TYPE] = "tun"
         self._extracted_data[T_PASSWORD] = ""
         self._extracted_data[T_PORT] = "1194"
         self._extracted_data[T_PROTOCOL] = "udp"
@@ -202,8 +203,6 @@ class Converter(object):
                 elif line.startswith("<ca>"):
                     data = data + line;
                     break
-                elif line.startswith(PROTOCOL):
-                    pass;
                 elif self._extract_server_address(line):
                     pass
                 elif self._extract_cipher(line):
@@ -325,9 +324,8 @@ class Converter(object):
     def _extract_custom_configuration(self, line):
         """Specific extractor for Custom Configuration"""
         value = line.strip()
+        # These are already added by ASUSWRT-Merlin
         if value == "client":
-            pass
-        elif value == "dev tun":
             pass
         elif value == "nobind":
             pass
@@ -335,9 +333,18 @@ class Converter(object):
             pass
         elif value == "persist-tun":
             pass
-        elif value == "auth-user-pass":
+        elif value == "pull": # (pull is implied by client)
             pass
-        elif value == "comp-lzo":
+        # These are already added by us
+        elif value.startswith("auth-user-pass"):
+            pass
+        elif value.startswith("comp-lzo"):
+            pass
+        elif value.startswith("dev"):
+            pass;
+        elif value.startswith("proto"):
+            pass;
+        elif value.startswith("redirect-gateway"):
             pass
         else:
             self._extracted_data[T_CUSTOM_CONFIGURATION] = self._extracted_data[T_CUSTOM_CONFIGURATION] + line
