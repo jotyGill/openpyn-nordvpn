@@ -111,8 +111,7 @@ def main():
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
     parser.add_argument(
-        '--nvram', help='Save configuration to NVRAM (ASUSWRT-Merlin)',
-        action='store_true')
+        '-n', '--nvram', type=str, default="5", help='Specify client to save configuration to NVRAM (ASUSWRT-Merlin), DEFAULT=5')
 
     args = parser.parse_args()
 
@@ -207,7 +206,7 @@ def run(
         if skip_dns_patch:
             openpyn_options += " --skip-dns-patch"
         if nvram:
-            openpyn_options += " --nvram"
+            openpyn_options += " --nvram " + str(nvram)
         openpyn_options += " --silent"
         # print(openpyn_options)
         if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
@@ -291,7 +290,7 @@ def run(
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 if nvram:
-                    asus.run(aserver, country_code, "5", "All", "adaptive", "Strict", tcp, test)
+                    asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                         (Fore.GREEN + aserver + Fore.BLUE))
@@ -311,7 +310,7 @@ def run(
             if internally_allowed:
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
         if nvram:
-            asus.run(server, country_code, "5", "All", "adaptive", "Strict", tcp, test)
+            asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             sys.exit()
         for i in range(5):
             connection = connect(server, port, silent, test, skip_dns_patch)

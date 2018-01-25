@@ -40,7 +40,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--double', dest='double_vpn', action='store_true')
     parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--nvram', action='store_true')
+    parser.add_argument('-n', '--nvram', type=str, default="5")
 
     try:
         args = parser.parse_args(openpyn_options.split())
@@ -119,7 +119,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
     if nvram:
-        openpyn_options += " --nvram"
+        openpyn_options += " --nvram " + str(nvram)
     openpyn_options += " --silent"
 
     update_service(openpyn_options)
