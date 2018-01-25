@@ -1,6 +1,7 @@
 import subprocess
 import os
 import pwd
+import sys
 
 
 def verify_root_access(message):
@@ -39,6 +40,9 @@ def obtain_root_access():
             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         print("except occured while running obtain_root_access() 'sudo ls' command")
+    except (KeyboardInterrupt) as err:
+        print('\n(KeyboardInterrupt) Ctr+C received, Bye\n')
+        sys.exit()
 
 
 def logged_in_user_is_root(username):
