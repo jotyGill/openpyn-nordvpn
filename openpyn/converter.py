@@ -63,17 +63,17 @@ class Converter(object):
         self._extracted_data[T_CIPHER] = "default"
         self._extracted_data[T_COMPRESSION] = "adaptive" # comp-lzo
         self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
-        self._extracted_data[T_DESCRIPTION] = "Client 1"
+        self._extracted_data[T_DESCRIPTION] = "Client 5"
         self._extracted_data[T_AUTH_DIGEST] = "default"
         self._extracted_data[T_TLS_CONTROL_CHANNEL_SECURITY] = "-1"
         self._extracted_data[T_INTERFACE_TYPE] = "tun"
         self._extracted_data[T_PASSWORD] = ""
         self._extracted_data[T_PORT] = "1194"
         self._extracted_data[T_PROTOCOL] = "udp"
-        self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "-1"
-        self._extracted_data[T_CONNECTION_RETRY] = "30"
-        self._extracted_data[T_REDIRECT_GATEWAY] = "0" # No
-        self._extracted_data[T_CLIENT] = "1" # Client 1
+        self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
+        self._extracted_data[T_CONNECTION_RETRY] = "-1"
+        self._extracted_data[T_REDIRECT_GATEWAY] = "1" # All
+        self._extracted_data[T_CLIENT] = "5" # Client 5
         self._extracted_data[T_USERAUTH] = "1"
         self._extracted_data[T_USERNAME] = ""
         self._extracted_data[T_USERONLY] = "1"
@@ -137,8 +137,8 @@ class Converter(object):
 
     def set_accept_dns_configuration(self, adns):
         """Accept DNS Configuration for the VPN connection"""
-        if not adns:
-            raise Exception("You have to specify a value for accept DNS configuration.")
+        if adns is None:
+            return
         values = ("Disabled", "Relaxed", "Strict", "Exclusive")
         for index, element in enumerate(values):
             if adns.title() == element:
@@ -151,8 +151,8 @@ class Converter(object):
 
     def set_compression(self, compression):
         """Compression for the VPN connection"""
-        if not compression:
-            raise Exception("You have to specify a value for compression.")
+        if compression is None:
+            return
         values = ("-1", "no", "yes", "adaptive", "lz4")
         values = ("yes", "adaptive")
         if not compression in values:
@@ -162,8 +162,8 @@ class Converter(object):
 
     def set_redirect_gateway(self, rgw):
         """Redirect Internet traffic for the VPN connection"""
-        if not rgw:
-            raise Exception("You have to specify a value for redirect Internet traffic.")
+        if rgw is None:
+            return
         values = ("No", "All", "Policy Rules", "Policy Rules (strict)")
         for index, element in enumerate(values):
             if rgw.title() == element:
@@ -176,8 +176,8 @@ class Converter(object):
 
     def set_client(self, client):
         """Client for the VPN connection"""
-        if not client:
-            raise Exception("You have to specify a value for client.")
+        if client is None:
+            return
         values = ("1", "2", "3", "4", "5")
         if not client in values:
             raise ValueError("Value must be one of {0}".format(values))
@@ -425,19 +425,23 @@ class Converter(object):
 
     def _extract_accept_dns_configuration(self):
         """Specific extractor for Accept DNS Configuration"""
-        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = self._adns
+        if self._adns is not None:
+            self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = self._adns
 
     def _extract_compression(self):
         """Specific extractor for Compression"""
-        self._extracted_data[T_COMPRESSION] = self._comp
+        if self._comp is not None:
+            self._extracted_data[T_COMPRESSION] = self._comp
 
     def _extract_redirect_gateway(self):
         """Specific extractor for Redirect Internet traffic"""
-        self._extracted_data[T_REDIRECT_GATEWAY] = self._rgw
+        if self._rgw is not None:
+            self._extracted_data[T_REDIRECT_GATEWAY] = self._rgw
 
     def _extract_client(self):
         """Specific extractor for Client"""
-        self._extracted_data[T_CLIENT] = self._unit
+        if self._unit is not None:
+            self._extracted_data[T_CLIENT] = self._unit
 
     def pprint(self, msg, appmsg=False):
         """
