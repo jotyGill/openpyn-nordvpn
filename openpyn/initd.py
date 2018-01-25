@@ -67,6 +67,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     double_vpn = args.double_vpn
     tor_over_vpn = args.tor_over_vpn
     anti_ddos = args.anti_ddos
+    netflix = args.netflix
     test = args.test
     internally_allowed = args.internally_allowed
     skip_dns_patch = args.skip_dns_patch
