@@ -17,13 +17,15 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
             country_name = res["country"]
             break
 
-    port = "udp1194"
+    port = "udp"
     port_name = "1194"
     protocol_name = "udp"
+    folder = "ovpn_udp/"
     if tcp:
-        port = "tcp443"
+        port = "tcp"
         port_name = "443"
         protocol_name = "tcp-client"
+        folder = "ovpn_tcp/"
 
     vpn_config_file = server + ".nordvpn.com." + port + ".ovpn"
 
@@ -35,7 +37,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
     c.set_protocol(protocol_name)
 
     c.set_name(server)
-    c.set_source_folder("/opt/usr/share/openpyn/files/")
+    c.set_source_folder("/opt/usr/share/openpyn/files/" + folder)
     c.set_certs_folder("/jffs/openvpn/")
 
     c.set_accept_dns_configuration(adns)

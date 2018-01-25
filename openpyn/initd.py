@@ -25,7 +25,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-a', '--area', type=str)
     parser.add_argument('-d', '--daemon', action='store_true')
     parser.add_argument('-m', '--max-load', type=int, default=70)
-    parser.add_argument('-t', '--top-servers', type=int, default=4)
+    parser.add_argument('-t', '--top-servers', type=int, default=10)
     parser.add_argument('-p', '--pings', type=str, default="5")
     #parser.add_argument('-k', '--kill', action='store_true')
     #parser.add_argument('-x', '--kill-flush', action='store_true')
@@ -40,6 +40,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
     parser.add_argument('--double', dest='double_vpn', action='store_true')
     parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
+    parser.add_argument('--netflix', dest='netflix', action='store_true')
     parser.add_argument('--test', action='store_true')
     parser.add_argument('-n', '--nvram', type=str, default="5")
 
@@ -116,6 +117,8 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --tor"
     if anti_ddos:
         openpyn_options += " --anti-ddos"
+    if netflix:
+        openpyn_options += " --netflix"
     if test:
         openpyn_options += " --test"
     if internally_allowed:
