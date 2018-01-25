@@ -70,6 +70,12 @@ Default(Just Press Enter) is, uk : ") or "uk"
     skip_dns_patch = args.skip_dns_patch
     nvram = args.nvram
 
+    detected_os = sys.platform
+    if detected_os == "linux":
+        if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            silent = True
+            skip_dns_patch = True
+
     openpyn_options = ""
 
     # if only positional argument used
