@@ -116,7 +116,7 @@ def main():
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
     parser.add_argument(
-        '-n', '--nvram', type=str, default="5", help='Specify client to save configuration to NVRAM (ASUSWRT-Merlin), DEFAULT=5')
+        '-n', '--nvram', type=str, help='Specify client to save configuration to NVRAM (ASUSWRT-Merlin)')
 
     args = parser.parse_args()
 
