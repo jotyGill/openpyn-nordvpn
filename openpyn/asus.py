@@ -5,7 +5,7 @@ from openpyn.converter import Converter, T_CLIENT
 from openpyn import api
 
 
-def run(server, country_code, client=None, rgw=None, compression=None, adns=None, tcp=False, test=False, debug_mode=False):
+def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp=False, test=False, debug_mode=False):
     with open("/opt/usr/share/openpyn/credentials", 'r') as f:
         lines = f.read().splitlines()
         f.close()
@@ -45,7 +45,7 @@ def run(server, country_code, client=None, rgw=None, compression=None, adns=None
 
     extracted_info = c.extract_information(vpn_config_file)
     if not test:
-        c._write_certificates(c._unit)
+        c._write_certificates(client)
 
     c.pprint(extracted_info)
 
@@ -67,7 +67,7 @@ def run(server, country_code, client=None, rgw=None, compression=None, adns=None
     # 'vpn_client_unit$'
     key = ""
     value = ""
-    unit = c._unit
+    unit = client
     service = "client"
 
     for key, value in extracted_info.items():
@@ -75,7 +75,7 @@ def run(server, country_code, client=None, rgw=None, compression=None, adns=None
 
     # 'vpn_upload_unit'
     key = T_CLIENT
-    value = c._unit
+    value = client
     unit = ""
     service = "upload"
 
