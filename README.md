@@ -121,7 +121,7 @@ openpyn -l
 ``` bash
 openpyn -l uk
 ```
-* To find servers with features like "peer-to-peer", "dedicated ip", "tor over vpn",
+* To find servers with features like "peer-to-peer", "netflix", "tor over vpn",
   "double vpn" in all countries or a given country.
 ``` bash
 openpyn -l uk --p2p
@@ -136,7 +136,7 @@ openpyn us -t 10 --p2p
 ```
 * To update and run the systemd openpyn.service, use "-d" or "--daemon"
 ``` bash
-openpyn us -d
+sudo openpyn us -d
 ```
 * To check the status of the systemd openpyn.service.
 ``` bash
