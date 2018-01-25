@@ -9,7 +9,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options, run=False):
-    print(openpyn_options)
     if "--silent" not in openpyn_options:
         openpyn_options += " --silent "
     if "-f" in openpyn_options or "--force-fw-rules" in openpyn_options:
@@ -18,7 +17,6 @@ def update_service(openpyn_options, run=False):
         kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_options = openpyn_options.replace("openpyn ", "")
     openpyn_location = str(subprocess.check_output("which openpyn".split())) + " "
     openpyn_location = openpyn_location[2:-4]
     service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/usr/share/openpyn/\nExecStartPre=/usr/bin/sleep 10\nExecStart=" + \
