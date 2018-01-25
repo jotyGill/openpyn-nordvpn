@@ -21,6 +21,8 @@ import sys
 import platform
 import time
 
+# regex used
+#^((?!opt).)*/usr/share
 
 def main():
     parser = argparse.ArgumentParser(
@@ -505,10 +507,10 @@ def update_config_files():
     try:
         subprocess.check_call(
             "sudo wget https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip \
--P /usr/share/openpyn/".split())
+-P /opt/usr/share/openpyn/".split())
         subprocess.check_call(
-            "sudo unzip -u -o /usr/share/openpyn/ovpn -d /usr/share/openpyn/files/".split())
-        subprocess.check_call("sudo rm /usr/share/openpyn/ovpn.zip".split())
+            "sudo unzip -u -o /opt/usr/share/openpyn/ovpn -d /opt/usr/share/openpyn/files/".split())
+        subprocess.check_call("sudo rm /opt/usr/share/openpyn/ovpn.zip".split())
     except subprocess.CalledProcessError:
         print("Exception occured while wgetting zip")
 
@@ -663,7 +665,7 @@ def get_vpn_server_ip(server, port):
     else:
         folder = "ovpn_udp/"
 
-    vpn_config_file = "/usr/share/openpyn/files/" + folder + server + \
+    vpn_config_file = "/opt/usr/share/openpyn/files/" + folder + server + \
         ".nordvpn.com." + port + ".ovpn"
     with open(vpn_config_file, 'r') as openvpn_file:
         for line in openvpn_file:
@@ -681,7 +683,7 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         else:
             folder = "ovpn_udp/"
 
-        vpn_config_file = "/usr/share/openpyn/files/" + folder + server +\
+        vpn_config_file = "/opt/usr/share/openpyn/files/" + folder + server +\
             ".nordvpn.com." + port + ".ovpn"
         # print("CONFIG FILE", vpn_config_file)
         if os.path.isfile(vpn_config_file) is False:
