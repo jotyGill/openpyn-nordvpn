@@ -18,6 +18,7 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
 * Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
+* NVRAM write support for Asuswrt-merlin
 
 ## Demo
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
@@ -55,13 +56,9 @@ sudo python3 setup.py install
 5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
 To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
 holding down the Command and R keys at startup and run the csrutil command from the Terminal.
-After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: https://github.com/1951FDG)
+After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
-Boot to Recovery OS.
-Launch Terminal from the Utilities menu.
-csrutil disable
-shutdown -r now
-
+# common dependencies
 xcode-select --install
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
@@ -69,17 +66,47 @@ brew install python3
 brew install wget
 brew install openvpn
 sudo brew services start openvpn
-
+```
+``` bash
+# Boot to Recovery OS.
+# Launch Terminal from the Utilities menu.
+csrutil disable
+shutdown -r now
+```
+``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
-sudo openpyn --init
-
-Boot to Recovery OS.
-Launch Terminal from the Utilities menu.
+```
+``` bash
+# Boot to Recovery OS.
+# Launch Terminal from the Utilities menu.
 csrutil enable
 shutdown -r now
 ```
+6. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
+``` bash
+# common dependencies
+opkg install git
+opkg install git-http
+opkg install iputils-ping
+opkg install procps-ng-pgrep
+opkg install python3
+opkg install python3-pip
+opkg install sudo
+opkg install unzip
+opkg install wget
+```
+``` bash
+cd /tmp/share/
+git clone https://github.com/1951FDG/openpyn-nordvpn.git
+cd openpyn-nordvpn/
+git checkout RT-AC86U-E5F0
+git pull
+pip3 install -U setuptools
+pip3 install --upgrade .
+```
+
 
 ## Setup
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)
@@ -153,6 +180,12 @@ sudo openpyn -x   #optionally --allow 22 if using as ssh server
 * To Download/Update the latest vpn config files from NordVPN by:
 ``` bash
 openpyn --update
+```
+
+* To quickly save best NordVPN server in US to NVRAM for "OpenVPN Client 5"
+(ASUSWRT-Merlin):
+``` bash
+openpyn us --nvram 5
 ```
 
 ## Usage Options
@@ -243,13 +276,16 @@ optional arguments:
   --netflix             Only look for servers that are optimised for "Netflix"
   --test                Simulation only, do not actually connect to the vpn
                         server
+  -n NVRAM, --nvram NVRAM
+                        Specify client to save configuration to NVRAM
+                        (ASUSWRT-Merlin)
 
   ```
 ## Todo
 - [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
 - [x] utilise the frequently updated api at "api.nordvpn.com/server"
 - [x] clean exit, handle exceptions
-- [x] store credentials from user input, if "credentials" file exists use that instead.
+- [x] store credentials from user input, if "credentials" file exists use that instead
 - [x] sane command-line options following the POSIX guidelines
 - [ ] ability to store profiles (sort of works as the systemd service file stores last state)
 - [x] find and display server's locations (cities)
@@ -258,5 +294,6 @@ optional arguments:
 - [x] modularize
 - [x] create a combined config of multiple servers (on the fly) for auto failover
 - [x] uninstall.sh   #sudo pip3 uninstall openpyn
-- [x] view status of the connection after launching in --daemon mode.
-- [x] desktop notifications.
+- [x] view status of the connection after launching in --daemon mode
+- [x] desktop notifications
+- [x] initd script for Asuswrt-merlin: "/opt/etc/init.d/S23openpyn start"
