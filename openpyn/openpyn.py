@@ -34,13 +34,13 @@ def main():
         '--init', help='Initialise, store/change credentials, download/update vpn config files,\
         needs root "sudo" access.', action='store_true')
     parser.add_argument(
-        '-s', '--server', help='server name, i.e. ca64 or au10',)
+        '-s', '--server', help='server name, i.e. ca64 or au10')
     parser.add_argument(
         '--tcp', help='use port TCP-443 instead of the default UDP-1194',
         action='store_true')
     parser.add_argument(
         '-c', '--country-code', type=str, help='Specify Country Code with 2 letters, i.e au,')
-    # use nargs='?' to make a positional arg optinal
+    # use nargs='?' to make a positional arg optional
     parser.add_argument(
         'country', nargs='?', help='Country Code can also be specified without "-c,"\
          i.e "openpyn au"')
@@ -138,7 +138,6 @@ def run(
             print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
             print(Style.RESET_ALL)
             sys.exit()
-        silent is True      # for macOS or bsd
 
     if init:
         initialise()
@@ -152,7 +151,7 @@ def run(
             print(Fore.RED + "Please run '--daemon' or '-d' mode with sudo")
             print(Style.RESET_ALL)
             sys.exit()
-        openpyn_options = " "
+        openpyn_options = ""
 
         # if only positional argument used
         if country_code is None and server is None:
@@ -171,35 +170,37 @@ def run(
 
         if area:
             openpyn_options += " --area " + area
+        if tcp:
+            openpyn_options += " --tcp"
         if max_load:
             openpyn_options += " --max-load " + str(max_load)
         if top_servers:
             openpyn_options += " --top-servers " + str(top_servers)
         if pings:
             openpyn_options += " --pings " + str(pings)
-        if skip_dns_patch:
-            openpyn_options += " --skip-dns-patch "
         if force_fw_rules:
-            openpyn_options += " --force-fw-rules "
+            openpyn_options += " --force-fw-rules"
         if p2p:
-            openpyn_options += " --p2p "
+            openpyn_options += " --p2p"
         if dedicated:
-            openpyn_options += " --dedicated "
+            openpyn_options += " --dedicated"
         if double_vpn:
-            openpyn_options += " --double "
+            openpyn_options += " --double"
         if tor_over_vpn:
-            openpyn_options += " --tor "
+            openpyn_options += " --tor"
         if anti_ddos:
-            openpyn_options += " --anti-ddos "
+            openpyn_options += " --anti-ddos"
         if netflix:
-            openpyn_options += " --netflix "
+            openpyn_options += " --netflix"
         if test:
-            openpyn_options += " --test "
+            openpyn_options += " --test"
         if internally_allowed:
             open_ports = ""
             for port_number in internally_allowed:
-                open_ports += port_number + " "
-            openpyn_options += " --allow " + open_ports
+                open_ports += " " + port_number
+            openpyn_options += " --allow" + open_ports
+        if skip_dns_patch:
+            openpyn_options += " --skip-dns-patch"
         openpyn_options += " --silent"
         # print(openpyn_options)
         systemd.update_service(openpyn_options, run=True)
@@ -281,8 +282,8 @@ def run(
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
                     if internally_allowed:
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
-                print(Fore.BLUE + "Out of the Best Available Servers, Chose",
-                      (Fore.GREEN + aserver + Fore.BLUE))
+                print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
+                        (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -410,10 +411,11 @@ def ping_servers(better_servers_list, pings):
                 ("grep", "min/avg/max/"), stdin=ping_proc.stdout)
 
         except subprocess.CalledProcessError as e:
-            print(Fore.RED + "Ping Failed to :", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
-            print(Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
+            print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
             print(Style.RESET_ALL)
             sys.exit()
         ping_string = str(ping_output)
@@ -423,7 +425,7 @@ def ping_servers(better_servers_list, pings):
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print("Pinging Server " + i[0] + " min/avg/max/mdev = ",
+        print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = ",
               Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
@@ -444,6 +446,7 @@ def choose_best_servers(best_servers):
 
     print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with best Ping are:",
           Fore.GREEN + str(best_servers_names) + Fore.BLUE + "\n")
+    print(Style.RESET_ALL)
     return best_servers_names
 
 
@@ -599,7 +602,8 @@ def get_country_code(full_name):
         if res["country"].lower() == full_name.lower():
             code = res["domain"][:2].lower()
             return code
-    print("Country Name Not Correct")
+    print(Fore.RED + "Country Name Not Correct")
+    print(Style.RESET_ALL)
     sys.exit()
 
 
@@ -668,8 +672,8 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
 
     if test:
         print("Simulation end reached, openpyn would have connected to Server:" +
-              Fore.GREEN, server, Fore.BLUE + " on port:" + Fore.GREEN, port,
-              Fore.BLUE + " with 'silent' mode:" + Fore.GREEN, silent)
+              Fore.GREEN, server, Fore.BLUE + "on port:" + Fore.GREEN, port,
+              Fore.BLUE + "with 'silent' mode:" + Fore.GREEN, silent)
         print(Style.RESET_ALL)
         sys.exit(1)
 
@@ -742,13 +746,19 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")
-        print(Style.RESET_ALL)
+            print(Style.RESET_ALL)
         try:
-            subprocess.run((
-                "sudo openvpn --redirect-gateway --auth-retry nointeract " +
-                "--config " + vpn_config_file + " --auth-user-pass " +
-                "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
-                "--management-up-down").split(), check=True)
+            if silent:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract " +
+                    "--config " + vpn_config_file + " --auth-user-pass " +
+                    "/usr/share/openpyn/credentials").split(), check=True)
+            else:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract " +
+                    "--config " + vpn_config_file + " --auth-user-pass " +
+                    "/usr/share/openpyn/credentials --management 127.0.0.1 7015 " +
+                    "--management-up-down").split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
