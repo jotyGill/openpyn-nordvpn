@@ -32,7 +32,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
     c = Converter(debug_mode)
     c.set_username(lines[0])
     c.set_password(lines[1])
-    c.set_description(country_name)
+    c.set_description("Client" + " " + country_name)
     c.set_port(port_name)
     c.set_protocol(protocol_name)
 
