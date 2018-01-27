@@ -736,14 +736,21 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                   "' Does have '/sbin/resolvconf'",
                   "using it to update DNS Resolver Entries")
             print(Style.RESET_ALL)
-            subprocess.run((
-                "sudo openvpn --redirect-gateway --auth-retry nointeract" +
-                " --config " + vpn_config_file + " --auth-user-pass \
-                /usr/share/openpyn/credentials --script-security 2 --up \
-                /usr/share/openpyn/update-resolv-conf.sh --down \
-                /usr/share/openpyn/update-resolv-conf.sh \
-                --management 127.0.0.1 7015 --management-up-down").split(), check=True)
-
+            if silent:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract" +
+                    " --config " + vpn_config_file + " --auth-user-pass \
+                    /usr/share/openpyn/credentials --script-security 2 --up \
+                    /usr/share/openpyn/update-resolv-conf.sh --down \
+                    /usr/share/openpyn/update-resolv-conf.sh").split(), check=True)
+            else:
+                subprocess.run((
+                    "sudo openvpn --redirect-gateway --auth-retry nointeract" +
+                    " --config " + vpn_config_file + " --auth-user-pass \
+                    /usr/share/openpyn/credentials --script-security 2 --up \
+                    /usr/share/openpyn/update-resolv-conf.sh --down \
+                    /usr/share/openpyn/update-resolv-conf.sh \
+                    --management 127.0.0.1 7015 --management-up-down").split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
