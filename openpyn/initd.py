@@ -75,7 +75,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
     detected_os = sys.platform
     if detected_os == "linux":
-        if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+        if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             silent = True
             skip_dns_patch = True
 
@@ -154,4 +154,4 @@ def update_service(openpyn_options, run=False):
     if run:
         print("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
 To check VPN status, run '/opt/etc/init.d/S23openpyn check'")
-        subprocess.run("/opt/etc/init.d/S23openpyn start".split())
+        subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])

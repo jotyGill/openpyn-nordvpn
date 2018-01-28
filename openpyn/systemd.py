@@ -1,3 +1,4 @@
+from openpyn import __basefilepath__
 import subprocess
 
 
@@ -17,9 +18,9 @@ def update_service(openpyn_options, run=False):
         kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_location = str(subprocess.check_output("which openpyn".split())) + " "
+    openpyn_location = str(subprocess.check_output(["which", "openpyn"])) + " "
     openpyn_location = openpyn_location[2:-4]
-    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=/usr/share/openpyn/\nExecStartPre=/usr/bin/sleep 10\nExecStart=" + \
+    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=" + __basefilepath__ + "\nExecStartPre=/usr/bin/sleep 10\nExecStart=" + \
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
@@ -31,8 +32,8 @@ def update_service(openpyn_options, run=False):
           "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
           "'sudo systemctl enable openpyn' \n\n", service_text)
 
-    subprocess.run("systemctl daemon-reload".split())
+    subprocess.run(["systemctl", "daemon-reload"])
     if run:
         print("Started Openpyn by running 'systemctl start openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
-        subprocess.run("systemctl start openpyn".split())
+        subprocess.run(["systemctl", "start", "openpyn"])

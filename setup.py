@@ -1,6 +1,7 @@
 from subprocess import check_output
 from setuptools import setup, find_packages
 from openpyn import __version__
+from openpyn import __basefilepath__
 import sys
 
 if sys.version_info < (3, 5):
@@ -16,7 +17,7 @@ if sys.platform == "linux":
     if check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
         data_files = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
     else:
-        data_files = [('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
+        data_files = [(__basefilepath__[:-1], ['./openpyn/scripts/manual-dns-patch.sh',
                       './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
 else:
     data_files = []

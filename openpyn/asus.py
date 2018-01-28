@@ -1,12 +1,13 @@
+from openpyn import __basefilepath__
+from openpyn import api
 import subprocess
 import os
 import json
 from openpyn.converter import Converter, T_CLIENT
-from openpyn import api
 
 
 def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp=False, test=False, debug_mode=False):
-    with open("/opt/usr/share/openpyn/credentials", 'r') as f:
+    with open(__basefilepath__ + "credentials", 'r') as f:
         lines = f.read().splitlines()
         f.close()
 
@@ -37,7 +38,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
     c.set_protocol(protocol_name)
 
     c.set_name(server)
-    c.set_source_folder("/opt/usr/share/openpyn/files/" + folder)
+    c.set_source_folder(__basefilepath__ + "files/" + folder)
     c.set_certs_folder("/jffs/openvpn/")
 
     c.set_accept_dns_configuration(adns)
