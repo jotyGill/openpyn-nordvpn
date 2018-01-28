@@ -246,7 +246,7 @@ def run(
             if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos or netflix:
                 # show the special servers in all countries
                 display_servers(
-                    list_servers="all", area=area, p2p=p2p, dedicated=dedicated,
+                    list_servers="all", port=port, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
                     netflix=netflix)
             else:
@@ -257,7 +257,7 @@ def run(
             if len(list_servers) > 2:
                 list_servers = get_country_code(full_name=list_servers)
             display_servers(
-                list_servers=list_servers, area=area, p2p=p2p, dedicated=dedicated,
+                list_servers=list_servers, port=port, area=area, p2p=p2p, dedicated=dedicated,
                 double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
                 netflix=netflix)
 
@@ -516,7 +516,7 @@ def update_config_files():
 
 
 # Lists information abouts servers under the given criteria.
-def display_servers(list_servers, area, p2p, dedicated, double_vpn,
+def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
                     tor_over_vpn, anti_ddos, netflix):
     servers_on_web = set()      # servers shown on the website
 
@@ -557,29 +557,34 @@ def display_servers(list_servers, area, p2p, dedicated, double_vpn,
         for location in locations_in_country:
             print(location[2])
 
-    if list_servers != "all" and p2p is False and dedicated is False and double_vpn is False \
-            and tor_over_vpn is False and anti_ddos is False and netflix is False and area is False:
+    if list_servers != "all" and not p2p and not dedicated and not double_vpn \
+            and not tor_over_vpn and not anti_ddos and not netflix and not area:
             # else not applicable.
-        print_latest_servers(server_set=servers_on_web)
+        print_latest_servers(list_servers=list_servers, port=port, server_set=servers_on_web)
     sys.exit()
 
 
-def print_latest_servers(server_set):
+def print_latest_servers(list_servers, port, server_set):
+    if port == "tcp":
+        folder = "ovpn_tcp/"
+    else:
+        folder = "ovpn_udp/"
+
     servers_in_files = set()      # servers from .openvpn files
     new_servers = set()   # new Servers, not published on website yet, or taken down
 
     serverFiles = subprocess.check_output(
-        "ls /opt/usr/share/openpyn/files" + list_servers + "*", shell=True)
+        "ls /opt/usr/share/openpyn/files/" + folder + list_servers + "*", shell=True)
     openvpn_files_str = str(serverFiles)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
 
     for server in openvpn_files_list:
-        server_name = server[server.find("files/") + 6:server.find(".")]
+        server_name = server[server.find("files/" + folder) + 15:server.find(".")]
         servers_in_files.add(server_name)
 
     for server in servers_in_files:
-        if server not in servers_on_web:
+        if server not in server_set:
             new_servers.add(server)
     if len(new_servers) > 0:
         print("The following server have not even been listed on the nord's site yet",
