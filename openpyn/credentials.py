@@ -36,7 +36,8 @@ def save_credentials():
             subprocess.check_call(command_2, shell=True)
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
-            print("Awesome, the credentials have been saved in " + "'" + credentials_file_path + "'" + "\n")
+            print("Awesome, the credentials have been saved in " +
+                  "'" + credentials_file_path + "'" + "\n")
         except subprocess.CalledProcessError:
             print("Your OS is not letting modify " + "'" + credentials_file_path + "'",
                   "Please run with 'sudo' to store credentials")

@@ -17,7 +17,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     #(\n).+       ac -> “ ac”
 
     parser = argparse.ArgumentParser(add_help=False)
-    #parser.add_argument('--init')
+    # parser.add_argument('--init')
     parser.add_argument('-s', '--server')
     parser.add_argument('--tcp', action='store_true')
     parser.add_argument('-c', '--country-code', type=str)

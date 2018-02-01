@@ -10,9 +10,9 @@ def filter_by_area(area, type_country_filtered):
         for item in resolved_locations:
             if aServer["location"]["lat"] == item[1]["lat"] and \
                     aServer["location"]["long"] == item[1]["long"] and area in item[2]:
-                    aServer["location_names"] = item[2]  # add location info to server
-                    # print(aServer)
-                    remaining_servers.append(aServer)
+                aServer["location_names"] = item[2]  # add location info to server
+                # print(aServer)
+                remaining_servers.append(aServer)
     return remaining_servers
 
 
@@ -46,7 +46,7 @@ def filter_by_type(json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti
                 for number in range(server[0], server[1] + 1):
                     # print(server[2]+str(number)+".")
                     # print(eachServer["domain"])
-                    if server[2]+str(number)+"." in eachServer["domain"]:
+                    if server[2] + str(number) + "." in eachServer["domain"]:
                         remaining_servers.append(eachServer)
                         # print(eachServer["domain"])
         for ServerType in eachServer["categories"]:

@@ -149,7 +149,6 @@ def run(
         print(Style.RESET_ALL)
         sys.exit()
 
-
     if init:
         initialise()
     elif daemon:
@@ -302,7 +301,7 @@ def run(
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
-                        (Fore.GREEN + aserver + Fore.BLUE))
+                      (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -465,7 +464,8 @@ def kill_management_client():
 
 
 def update_config_files():
-    root.verify_root_access("Root access needed to write files in " + "'" + __basefilepath__ + "files/" + "'")
+    root.verify_root_access("Root access needed to write files in " +
+                            "'" + __basefilepath__ + "files/" + "'")
     try:
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
@@ -681,21 +681,21 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
             print(Style.RESET_ALL)
             if silent:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials", "--script-security", "2",
-                 "--up", __basefilepath__ + "update-resolv-conf.sh",
-                 "--down", __basefilepath__ + "update-resolv-conf.sh"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials", "--script-security", "2",
+                     "--up", __basefilepath__ + "update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "update-resolv-conf.sh"],
+                    check=True)
             else:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials", "--script-security", "2",
-                 "--up", __basefilepath__ + "update-resolv-conf.sh",
-                 "--down", __basefilepath__ + "update-resolv-conf.sh",
-                 "--management", "127.0.0.1", "7015", "--management-up-down"],
-                  check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials", "--script-security", "2",
+                     "--up", __basefilepath__ + "update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "update-resolv-conf.sh",
+                     "--management", "127.0.0.1", "7015", "--management-up-down"],
+                    check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
@@ -728,24 +728,25 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                 if detected_os == "linux":
                     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
                         # make sure module is loaded
-                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
+                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
                             subprocess.call("modprobe tun", shell=True)
-                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
-                                print(Style.BRIGHT + Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
+                                print(Style.BRIGHT + Fore.RED +
+                                      "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 print(Style.RESET_ALL)
                                 sys.exit(0)
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials"],
+                    check=True)
             else:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials",
-                 "--management", "127.0.0.1", "7015", "--management-up-down"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials",
+                     "--management", "127.0.0.1", "7015", "--management-up-down"],
+                    check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
