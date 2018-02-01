@@ -398,7 +398,7 @@ def ping_servers(better_servers_list, pings):
                 ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
 
             ping_string = str(ping_output)
-            print(ping_string)
+            # print(ping_string)
             if " 0%" not in ping_string:
                 print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
                       i[0], "Skipping it\n" + Fore.BLUE)
