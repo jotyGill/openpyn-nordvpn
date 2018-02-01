@@ -394,17 +394,23 @@ def ping_servers(better_servers_list, pings):
                 ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
                 stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
-            ping_output = subprocess.check_output(["grep", "min/avg/max/"], stdin=ping_proc.stdout)
+            ping_output = subprocess.check_output(
+                ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
 
+            ping_string = str(ping_output)
+            print(ping_string)
+            if " 0%" not in ping_string:
+                print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
+                      i[0], "Skipping it\n" + Fore.BLUE)
+                continue
         except subprocess.CalledProcessError as e:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it\n" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
             print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
             print(Style.RESET_ALL)
             sys.exit()
-        ping_string = str(ping_output)
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
         ping_list = ping_string.split("/")
