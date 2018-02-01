@@ -1,7 +1,7 @@
-from subprocess import check_output
 from setuptools import setup, find_packages
 from openpyn import __version__
 from openpyn import __basefilepath__
+from openpyn import __data_files__
 import sys
 
 if sys.version_info < (3, 5):
@@ -12,15 +12,6 @@ if sys.version_info < (3, 5):
 with open('README.md', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
-
-if sys.platform == "linux":
-    if check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-        data_files = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
-    else:
-        data_files = [(__basefilepath__[:-1], ['./openpyn/scripts/manual-dns-patch.sh',
-                      './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]
-else:
-    data_files = []
 
 setup(
     name='openpyn',
@@ -41,7 +32,7 @@ setup(
         'console_scripts': [
             'openpyn = openpyn.openpyn:main',
             'openpyn-management = openpyn.management.management:show']},
-    data_files=data_files,
+    data_files=__data_files__,
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,
