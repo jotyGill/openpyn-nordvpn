@@ -27,7 +27,7 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 1. Install dependencies if they are not already present.
 ``` bash
 # common dependencies
-sudo apt install openvpn python-gobject unzip wget
+sudo apt install openvpn unzip wget
 ```
 ### Installation Methods
 1. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, use method 2 instead).
@@ -117,7 +117,7 @@ That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
 * At minimum, you only need to specify the country-code, default port is UDP-1194, If you want to use
-TCP-443 instead, use "--tcp" switch.
+TCP-443 instead, use "--tcp" switch. ON NON GUI OSs USE SWITCH '--silent'
 ``` bash
 openpyn us
 ```
