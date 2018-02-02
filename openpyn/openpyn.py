@@ -287,7 +287,7 @@ def run(
         pinged_servers_list = ping_servers(better_servers_list, pings)
         chosen_servers = choose_best_servers(pinged_servers_list)
 
-        for tries in range(5):     # keep trying to connect
+        for tries in range(3):     # keep trying to connectS
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 # if "-f" used appy Firewall rules
