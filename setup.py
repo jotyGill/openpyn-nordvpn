@@ -1,6 +1,9 @@
-from setuptools import setup, find_packages
 from openpyn import __version__
+from openpyn import __basefilepath__
+from openpyn import __data_files__
+
 import sys
+import setuptools
 
 if sys.version_info < (3, 5):
     sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +
@@ -11,7 +14,7 @@ with open('README.md', encoding='utf-8') as readme_file:
     full_description = readme_file.read()
     readme_file.close()
 
-setup(
+setuptools.setup(
     name='openpyn',
     version=__version__,
     description='Easily connect to and switch between, OpenVPN servers hosted by NordVPN.',
@@ -25,13 +28,12 @@ setup(
         'vpn wrapper', 'private vpn', 'privacy'],
     install_requires=['requests', 'colorama'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
-    packages=find_packages(),
+    packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
             'openpyn = openpyn.openpyn:main',
             'openpyn-management = openpyn.management.management:show']},
-    data_files=[('/usr/share/openpyn', ['./openpyn/scripts/manual-dns-patch.sh',
-                './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])],
+    data_files=__data_files__,
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,

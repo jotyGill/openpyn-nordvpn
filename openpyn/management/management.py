@@ -59,7 +59,8 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+                    os.system(
+                        """osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
 
             server_name_location = data_str.find("common_name=")
             # print(server_name_location)
@@ -73,7 +74,8 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+                    os.system(
+                        """osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
 
             # break of data stream is empty
             if not data:
