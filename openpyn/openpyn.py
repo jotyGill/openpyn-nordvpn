@@ -540,9 +540,13 @@ def print_latest_servers(list_servers, port, server_set):
 
     servers_in_files = set()      # servers from .openvpn files
     new_servers = set()   # new Servers, not published on website yet, or taken down
-
-    serverFiles = subprocess.check_output(
-        "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
+    try:
+        serverFiles = subprocess.check_output(
+            "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
+    except subprocess.CalledProcessError:
+        print(Fore.RED + "The supplied Contry Code is likely wrong or you just don't have \
+its config files (In which case run 'sudo openpyn --update')" + Style.RESET_ALL)
+        sys.exit()
     openvpn_files_str = str(serverFiles)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
