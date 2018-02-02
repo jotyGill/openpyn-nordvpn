@@ -281,13 +281,13 @@ def run(
             # get the country_code from the full name
             country_code = api.get_country_code(full_name=country_code)
         country_code = country_code.lower()
-        better_servers_list = find_better_servers(
-            country_code, area, max_load, top_servers, tcp, p2p,
-            dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
-        pinged_servers_list = ping_servers(better_servers_list, pings)
-        chosen_servers = choose_best_servers(pinged_servers_list)
 
-        for tries in range(3):     # keep trying to connectS
+        for tries in range(3):     # keep trying to connect to new servers
+            better_servers_list = find_better_servers(
+                country_code, area, max_load, top_servers, tcp, p2p,
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
+            pinged_servers_list = ping_servers(better_servers_list, pings)
+            chosen_servers = choose_best_servers(pinged_servers_list)
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 # if "-f" used appy Firewall rules
@@ -320,7 +320,7 @@ def run(
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             sys.exit()
-        for i in range(5):
+        for i in range(20):
             connection = connect(server, port, silent, test, skip_dns_patch)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
