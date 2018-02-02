@@ -18,9 +18,11 @@ def update_service(openpyn_options, run=False):
         kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_location = str(subprocess.check_output(["which", "openpyn"])) + " "
-    openpyn_location = openpyn_location[2:-4]
-    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory=" + __basefilepath__ + "\nExecStartPre=/usr/bin/sleep 10\nExecStart=" + \
+    openpyn_location = str(subprocess.check_output(["which", "openpyn"]))[2:-3]
+    sleep_location = str(subprocess.check_output(["which", "sleep"]))[2:-3]
+
+    service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\nAfter=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\nWorkingDirectory="\
+        + __basefilepath__ + "\nExecStartPre=" + sleep_location + " 10\nExecStart=" + \
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
