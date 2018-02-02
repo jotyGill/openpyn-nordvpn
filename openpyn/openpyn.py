@@ -149,7 +149,6 @@ def run(
         print(Style.RESET_ALL)
         sys.exit()
 
-
     if init:
         initialise()
     elif daemon:
@@ -282,13 +281,13 @@ def run(
             # get the country_code from the full name
             country_code = api.get_country_code(full_name=country_code)
         country_code = country_code.lower()
-        better_servers_list = find_better_servers(
-            country_code, area, max_load, top_servers, tcp, p2p,
-            dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
-        pinged_servers_list = ping_servers(better_servers_list, pings)
-        chosen_servers = choose_best_servers(pinged_servers_list)
 
-        for tries in range(5):     # keep trying to connect
+        for tries in range(3):     # keep trying to connect to new servers
+            better_servers_list = find_better_servers(
+                country_code, area, max_load, top_servers, tcp, p2p,
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
+            pinged_servers_list = ping_servers(better_servers_list, pings)
+            chosen_servers = choose_best_servers(pinged_servers_list)
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 # if "-f" used appy Firewall rules
@@ -302,7 +301,7 @@ def run(
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
-                        (Fore.GREEN + aserver + Fore.BLUE))
+                      (Fore.GREEN + aserver + Fore.BLUE))
                 connection = connect(aserver, port, silent, test, skip_dns_patch)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -321,7 +320,7 @@ def run(
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             sys.exit()
-        for i in range(5):
+        for i in range(20):
             connection = connect(server, port, silent, test, skip_dns_patch)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
@@ -395,17 +394,23 @@ def ping_servers(better_servers_list, pings):
                 ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
                 stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
-            ping_output = subprocess.check_output(["grep", "min/avg/max/"], stdin=ping_proc.stdout)
+            ping_output = subprocess.check_output(
+                ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
 
+            ping_string = str(ping_output)
+            # print(ping_string)
+            if " 0%" not in ping_string:
+                print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
+                      i[0], "Skipping it\n" + Fore.BLUE)
+                continue
         except subprocess.CalledProcessError as e:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it\n" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
             print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
             print(Style.RESET_ALL)
             sys.exit()
-        ping_string = str(ping_output)
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
         ping_list = ping_string.split("/")
@@ -465,7 +470,8 @@ def kill_management_client():
 
 
 def update_config_files():
-    root.verify_root_access("Root access needed to write files in " + "'" + __basefilepath__ + "files/" + "'")
+    root.verify_root_access("Root access needed to write files in " +
+                            "'" + __basefilepath__ + "files/" + "'")
     try:
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
@@ -534,9 +540,13 @@ def print_latest_servers(list_servers, port, server_set):
 
     servers_in_files = set()      # servers from .openvpn files
     new_servers = set()   # new Servers, not published on website yet, or taken down
-
-    serverFiles = subprocess.check_output(
-        "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
+    try:
+        serverFiles = subprocess.check_output(
+            "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
+    except subprocess.CalledProcessError:
+        print(Fore.RED + "The supplied Contry Code is likely wrong or you just don't have \
+its config files (In which case run 'sudo openpyn --update')" + Style.RESET_ALL)
+        sys.exit()
     openvpn_files_str = str(serverFiles)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
@@ -681,21 +691,21 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
             print(Style.RESET_ALL)
             if silent:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials", "--script-security", "2",
-                 "--up", __basefilepath__ + "update-resolv-conf.sh",
-                 "--down", __basefilepath__ + "update-resolv-conf.sh"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials", "--script-security", "2",
+                     "--up", __basefilepath__ + "update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "update-resolv-conf.sh"],
+                    check=True)
             else:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials", "--script-security", "2",
-                 "--up", __basefilepath__ + "update-resolv-conf.sh",
-                 "--down", __basefilepath__ + "update-resolv-conf.sh",
-                 "--management", "127.0.0.1", "7015", "--management-up-down"],
-                  check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials", "--script-security", "2",
+                     "--up", __basefilepath__ + "update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "update-resolv-conf.sh",
+                     "--management", "127.0.0.1", "7015", "--management-up-down"],
+                    check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
@@ -728,24 +738,25 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                 if detected_os == "linux":
                     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
                         # make sure module is loaded
-                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
+                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
                             subprocess.call("modprobe tun", shell=True)
-                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1]=='0'):
-                                print(Style.BRIGHT + Fore.RED + "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
+                                print(Style.BRIGHT + Fore.RED +
+                                      "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 print(Style.RESET_ALL)
                                 sys.exit(0)
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials"],
+                    check=True)
             else:
                 subprocess.run(
-                ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                 "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                 __basefilepath__ + "credentials",
-                 "--management", "127.0.0.1", "7015", "--management-up-down"],
-                 check=True)
+                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
+                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
+                     __basefilepath__ + "credentials",
+                     "--management", "127.0.0.1", "7015", "--management-up-down"],
+                    check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):

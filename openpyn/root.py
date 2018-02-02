@@ -26,10 +26,10 @@ def verify_root_access(message):
 
 # check if openpyn itself has been started with root access.
 def verify_running_as_root():
-        if os.getuid() == 0:
-            # print(message, '\n')
-            return True
-        return False
+    if os.getuid() == 0:
+        # print(message, '\n')
+        return True
+    return False
 
 
 def obtain_root_access():

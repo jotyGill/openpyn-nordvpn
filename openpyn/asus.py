@@ -84,13 +84,15 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
 
     set(c, key, value, unit, service, test)
 
+
 def set(c, key, value, unit, service, test=False):
     argument1 = "vpn" + "_" + service + unit + "_" + key
     argument2 = argument1 + "=" + value
     try:
         c.pprint("/bin/nvram" + " " + "get" + " " + argument1)
         if not test:
-            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            current = subprocess.run(["/bin/nvram", "get", argument1],
+                                     check=True, stdout=subprocess.PIPE).stdout
             if current.decode('utf-8').strip() == value:
                 return
         c.pprint("/bin/nvram" + " " + "set" + " " + argument2)

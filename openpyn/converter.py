@@ -16,9 +16,9 @@ LOG_VERBOSITY = 'verb '
 
 # TEMPLATE PLACEHOLDERS
 T_SERVER_ADDRESS = 'addr'
-T_ACCEPT_DNS_CONFIGURATION = 'adns' #
+T_ACCEPT_DNS_CONFIGURATION = 'adns'
 T_CIPHER = 'cipher'
-T_COMPRESSION = 'comp' #
+T_COMPRESSION = 'comp'
 T_CUSTOM_CONFIGURATION = 'custom2'
 T_DESCRIPTION = 'desc'
 T_AUTH_DIGEST = 'digest'
@@ -29,11 +29,11 @@ T_PORT = 'port'
 T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
 T_CONNECTION_RETRY = 'retry'
-T_REDIRECT_GATEWAY = 'rgw' #
-T_CLIENT = 'unit' ##
-T_USERAUTH = 'userauth' #
+T_REDIRECT_GATEWAY = 'rgw'
+T_CLIENT = 'unit'
+T_USERAUTH = 'userauth'
 T_USERNAME = 'username'
-T_USERONLY = 'useronly' #
+T_USERONLY = 'useronly'
 T_LOG_VERBOSITY = 'verb'
 
 
@@ -50,18 +50,20 @@ class Converter(object):
     _ca = None              #: NordVPN certificate
     _static = None          #: NordVPN static key
 
-    _adns = None            #: Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
+    #: Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
+    _adns = None
     _comp = None            #: Compression ("-1", "no", "yes", "adaptive", "lz4")
-    _rgw = None             #: Redirect Internet traffic ("No", "All", "Policy Rules", "Policy Rules (strict)")
+    #: Redirect Internet traffic ("No", "All", "Policy Rules", "Policy Rules (strict)")
+    _rgw = None
     _unit = None            #: Client ("1", "2", "3", "4", "5")
 
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
         self._extracted_data = {}
         self._extracted_data[T_SERVER_ADDRESS] = ""
-        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2" # Strict
+        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2"  # Strict
         self._extracted_data[T_CIPHER] = "default"
-        self._extracted_data[T_COMPRESSION] = "adaptive" # comp-lzo
+        self._extracted_data[T_COMPRESSION] = "adaptive"  # comp-lzo
         self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
         self._extracted_data[T_DESCRIPTION] = "Client 5"
         self._extracted_data[T_AUTH_DIGEST] = "default"
@@ -72,8 +74,8 @@ class Converter(object):
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
         self._extracted_data[T_CONNECTION_RETRY] = "-1"
-        self._extracted_data[T_REDIRECT_GATEWAY] = "1" # All
-        self._extracted_data[T_CLIENT] = "5" # Client 5
+        self._extracted_data[T_REDIRECT_GATEWAY] = "1"  # All
+        self._extracted_data[T_CLIENT] = "5"  # Client 5
         self._extracted_data[T_USERAUTH] = "1"
         self._extracted_data[T_USERNAME] = ""
         self._extracted_data[T_USERONLY] = "1"
@@ -96,7 +98,8 @@ class Converter(object):
     def set_certs_folder(self, certs_output):
         """Sets the certificates destination folder"""
         if not certs_output or not os.path.isdir(certs_output):
-            raise Exception("You have to specify a valid path for the certificates destination folder.")
+            raise Exception(
+                "You have to specify a valid path for the certificates destination folder.")
 
         self._certs_folder = certs_output
 
@@ -196,12 +199,12 @@ class Converter(object):
 
             for line in islice(lines, 40):
                 if line.startswith("#"):
-                    continue;
+                    continue
                 # print(line, end="")
                 if line.startswith("\n"):
-                    pass;
+                    pass
                 elif line.startswith("<ca>"):
-                    data = data + line;
+                    data = data + line
                     break
                 elif self._extract_server_address(line):
                     pass
@@ -220,12 +223,12 @@ class Converter(object):
 
             for line in lines:
                 if line.startswith("#"):
-                    continue;
+                    continue
                 # print(line, end="")
                 if line.startswith(TLS_CONTROL_CHANNEL_SECURITY):
                     self._extract_tls_control_channel_security(line)
-                    continue;
-                data = data + line;
+                    continue
+                data = data + line
             lines.close()
 
         #print(data, end="")
@@ -241,7 +244,7 @@ class Converter(object):
         self._extract_redirect_gateway()
         self._extract_client()
 
-        #self._extract_name(input_file)
+        # self._extract_name(input_file)
         self._extract_certificates(data)
 
         self.pprint(self._ca)
@@ -342,7 +345,7 @@ class Converter(object):
             pass
         elif value == "persist-tun":
             pass
-        elif value == "pull": # (pull is implied by client)
+        elif value == "pull":  # (pull is implied by client)
             pass
         # These are already added by us
         elif value.startswith("auth-user-pass"):
@@ -350,9 +353,9 @@ class Converter(object):
         elif value.startswith("comp-lzo"):
             pass
         elif value.startswith("dev"):
-            pass;
+            pass
         elif value.startswith("proto"):
-            pass;
+            pass
         elif value.startswith("redirect-gateway"):
             pass
         else:
@@ -365,7 +368,6 @@ class Converter(object):
 
     def base64ToString(self, b):
         return base64.b64decode(b).decode('utf-8')
-
 
     def _extract_vpn_description(self):
         """Description for the VPN connection"""
@@ -387,7 +389,6 @@ class Converter(object):
         """Username for the VPN connection"""
         self._extracted_data[T_USERNAME] = self._username
 
-
     def _extract_name(self, input_file):
         """Specific extractor for VPN configuration name"""
         vpn_name = input_file.__str__()
@@ -397,8 +398,8 @@ class Converter(object):
 
     def _extract_certificates(self, input_file):
         # prepare regex
-        regex_ca = re.compile("<ca>.(.*)</ca>", re.IGNORECASE|re.DOTALL)
-        regex_tls = re.compile("<tls-auth>.(.*)</tls-auth>", re.IGNORECASE|re.DOTALL)
+        regex_ca = re.compile("<ca>.(.*)</ca>", re.IGNORECASE | re.DOTALL)
+        regex_tls = re.compile("<tls-auth>.(.*)</tls-auth>", re.IGNORECASE | re.DOTALL)
 
         # extract keys
         match_string = regex_ca.search(input_file)
