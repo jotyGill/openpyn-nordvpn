@@ -120,7 +120,7 @@ def main():
         NVRAM (ASUSWRT-Merlin)')
     parser.add_argument(
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through openvpn \
-        options, e.g. "openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'"')
+        options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
 
     args = parser.parse_args()
 
