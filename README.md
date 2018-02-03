@@ -281,8 +281,8 @@ optional arguments:
                         Specify client to save configuration to NVRAM
                         (ASUSWRT-Merlin)
   -o OPENVPN_OPTIONS, --openvpn-options OPENVPN_OPTIONS
-                        Pass through openvpn options, e.g. openpyn uk -o \'--
-                        status /var/log/status.log --log /var/log/log.log\'
+                        Pass through openvpn options, e.g. openpyn uk -o '--
+                        status /var/log/status.log --log /var/log/log.log'
 
   ```
 ## Todo
