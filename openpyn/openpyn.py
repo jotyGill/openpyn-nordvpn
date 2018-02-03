@@ -116,7 +116,11 @@ def main():
         '--test', help='Simulation only, do not actually connect to the vpn server',
         action='store_true')
     parser.add_argument(
-        '-n', '--nvram', type=str, help='Specify client to save configuration to NVRAM (ASUSWRT-Merlin)')
+        '-n', '--nvram', type=str, help='Specify client to save configuration to \
+        NVRAM (ASUSWRT-Merlin)')
+    parser.add_argument(
+        '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through openvpn \
+        options, e.g. "openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'"')
 
     args = parser.parse_args()
 
@@ -126,7 +130,7 @@ def main():
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram)
+        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options)
 
 
 def run(
@@ -134,7 +138,7 @@ def run(
     init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
-        internally_allowed, skip_dns_patch, silent, nvram):
+        internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
     port = "udp"
     if tcp:
         port = "tcp"
@@ -302,7 +306,7 @@ def run(
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                       (Fore.GREEN + aserver + Fore.BLUE))
-                connection = connect(aserver, port, silent, test, skip_dns_patch)
+                connection = connect(aserver, port, silent, test, skip_dns_patch, openvpn_options)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -321,7 +325,7 @@ def run(
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             sys.exit()
         for i in range(20):
-            connection = connect(server, port, silent, test, skip_dns_patch)
+            connection = connect(server, port, silent, test, skip_dns_patch, openvpn_options)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
@@ -629,7 +633,7 @@ def get_vpn_server_ip(server, port):
         return vpn_server_ip
 
 
-def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn"):
+def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
     if server_provider == "nordvpn":
         if port == "tcp":
             folder = "ovpn_tcp/"
@@ -695,17 +699,18 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
                      "--up", __basefilepath__ + "update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "update-resolv-conf.sh"],
-                    check=True)
+                     "--down", __basefilepath__ + "update-resolv-conf.sh"]
+                    + openvpn_options.split(), check=True)
             else:
+                print(openvpn_options)
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
                      "--up", __basefilepath__ + "update-resolv-conf.sh",
                      "--down", __basefilepath__ + "update-resolv-conf.sh",
-                     "--management", "127.0.0.1", "7015", "--management-up-down"],
-                    check=True)
+                     "--management", "127.0.0.1", "7015", "--management-up-down"]
+                    + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
@@ -748,15 +753,15 @@ def connect(server, port, silent, test, skip_dns_patch, server_provider="nordvpn
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                     __basefilepath__ + "credentials"],
-                    check=True)
+                     __basefilepath__ + "credentials"]
+                    + openvpn_options.split(), check=True)
             else:
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials",
-                     "--management", "127.0.0.1", "7015", "--management-up-down"],
-                    check=True)
+                     "--management", "127.0.0.1", "7015", "--management-up-down"]
+                    + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
