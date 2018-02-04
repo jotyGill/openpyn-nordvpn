@@ -217,6 +217,8 @@ def run(
             openpyn_options += " --skip-dns-patch"
         if nvram:
             openpyn_options += " --nvram " + str(nvram)
+        if openvpn_options:
+            openpyn_options += " --openvpn-options '" + openvpn_options + "'"
         openpyn_options += " --silent"
         # print(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":

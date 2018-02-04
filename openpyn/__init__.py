@@ -1,7 +1,7 @@
 import sys
 import subprocess
 
-__version__ = "2.4.0"
+__version__ = "2.4.1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __basefilepath__ = "/usr/share/openpyn/"
 __data_files__ = []     # will be overwritten for non Mac OS
