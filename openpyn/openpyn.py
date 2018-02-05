@@ -686,7 +686,8 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
     else:
         resolvconf_exists = False
         skip_dns_patch = True
-
+    if not openvpn_options:
+        openvpn_options = ""
     if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         # tunnel dns throught vpn by changing /etc/resolv.conf using
         # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -704,7 +705,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                      "--down", __basefilepath__ + "update-resolv-conf.sh"]
                     + openvpn_options.split(), check=True)
             else:
-                print(openvpn_options)
+                # print(openvpn_options)
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
