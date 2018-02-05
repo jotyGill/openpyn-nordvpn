@@ -100,11 +100,10 @@ opkg install wget
 ```
 ``` bash
 cd /tmp/share/
-git clone https://github.com/1951FDG/openpyn-nordvpn.git
+git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn/
-git checkout RT-AC86U-E5F0
 git pull
-pip3 install -U setuptools
+pip3 install --upgrade setuptools
 pip3 install --upgrade .
 ```
 
