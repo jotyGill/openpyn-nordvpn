@@ -27,11 +27,11 @@ def save_credentials():
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
         password = input("Enter the password for NordVPN: ")
         try:
+            subprocess.call(["sudo", "mkdir", "-p", __basefilepath__])
             with open(credentials_file_path, 'w') as creds:
                 creds.write(username + "\n")
                 creds.write(password + "\n")
             creds.close()
-            subprocess.call(["sudo", "mkdir", "-p", __basefilepath__])
             # Change file permission to 600
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
