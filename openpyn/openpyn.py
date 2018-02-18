@@ -228,22 +228,19 @@ def run(
         sys.exit()
 
     elif kill:
-        if sys.platform == "linux":     # systemd daemon is only available on linux
-            stop_openpyn_daemon()
-        kill_vpn_processes()  # dont touch iptable rules
-        # let management-client normally shut, if still alive kill it with fire
         kill_management_client()
+        kill_vpn_processes()  # dont touch iptable rules
+        kill_openpyn_process()
         sys.exit()
     elif kill_flush:
-        if sys.platform == "linux":     # systemd daemon is only available on linux
-            stop_openpyn_daemon()
-        kill_vpn_processes()
-        kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
         if internally_allowed:
             network_interfaces = get_network_interfaces()
             firewall.internally_allow_ports(network_interfaces, internally_allowed)
+        kill_management_client()
+        kill_vpn_processes()
+        kill_openpyn_process()
         sys.exit()
     elif update:
         update_config_files()
@@ -452,17 +449,6 @@ def choose_best_servers(best_servers):
     return best_servers_names
 
 
-def stop_openpyn_daemon():
-    try:
-        openpyn_daemon = subprocess.check_output(
-            ["sudo", "systemctl", "stop", "openpyn"], stderr=subprocess.DEVNULL)
-        time.sleep(0.5)
-    except subprocess.CalledProcessError as ce:
-        # when Exception, the systemctl issued non 0 result, "not found"
-        pass
-    return
-
-
 def kill_vpn_processes():
     try:
         openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
@@ -477,13 +463,22 @@ def kill_vpn_processes():
     return
 
 
+def kill_openpyn_process():
+    try:
+        root.verify_root_access("Root access needed to kill openpyn process")
+        subprocess.call(["sudo", "killall", "openpyn"])
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the openvpn_processes issued non 0 result, "not found"
+        pass
+    return
+
+
 def kill_management_client():
     # kill the management client if it is for some reason still alive
     try:
-        openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
-        # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
-        subprocess.call(["sudo", "killall", "openpyn-management"])
+        subprocess.check_output(["sudo", "killall", "openpyn-management"],
+                                stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
