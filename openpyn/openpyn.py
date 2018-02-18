@@ -393,13 +393,28 @@ def find_better_servers(
 # returns a sorted list by Ping Avg and Median Deveation
 def ping_servers(better_servers_list, pings):
     pinged_servers_list = []
+    ping_supports_option_i = True       # older ping command doens't support "-i"
+
+    try:
+        subprocess.check_output(["ping", "-n", "-i", ".2", "-c", "2", "8.8.8.8"],
+                                stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the processes issued error, "option is not supported"
+        ping_supports_option_i = False
+        print("Your 'ping' command doesn't support '-i', \
+falling back to wait of 1 second between pings, pings will be slow\n")
     for i in better_servers_list:
         # ping_result to append 2  lists into it
         ping_result = []
         try:
-            ping_proc = subprocess.Popen(
-                ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
-                stdout=subprocess.PIPE)
+            if ping_supports_option_i:
+                ping_proc = subprocess.Popen(
+                    ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
+                    stdout=subprocess.PIPE)
+            else:
+                ping_proc = subprocess.Popen(
+                    ["ping", "-n", "-c", pings, i[0] + ".nordvpn.com"],
+                    stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
                 ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
