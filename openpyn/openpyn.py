@@ -228,11 +228,15 @@ def run(
         sys.exit()
 
     elif kill:
+        if sys.platform == "linux":     # systemd daemon is only available on linux
+            stop_openpyn_daemon()
         kill_vpn_processes()  # dont touch iptable rules
         # let management-client normally shut, if still alive kill it with fire
         kill_management_client()
         sys.exit()
     elif kill_flush:
+        if sys.platform == "linux":     # systemd daemon is only available on linux
+            stop_openpyn_daemon()
         kill_vpn_processes()
         kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
@@ -446,6 +450,17 @@ def choose_best_servers(best_servers):
           Fore.GREEN + str(best_servers_names) + Fore.BLUE + "\n")
     print(Style.RESET_ALL)
     return best_servers_names
+
+
+def stop_openpyn_daemon():
+    try:
+        openpyn_daemon = subprocess.check_output(
+            ["sudo", "systemctl", "stop", "openpyn"], stderr=subprocess.DEVNULL)
+        time.sleep(0.5)
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the systemctl issued non 0 result, "not found"
+        pass
+    return
 
 
 def kill_vpn_processes():
