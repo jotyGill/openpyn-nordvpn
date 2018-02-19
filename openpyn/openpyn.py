@@ -506,12 +506,32 @@ def update_config_files():
     try:
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
+    except subprocess.CalledProcessError:
+        print(
+            Fore.RED + "Exception occured while wgetting zip, is the internet working? \
+is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
+[https://github.com/jotyGill/openpyn-nordvpn/issues/109]" + Style.RESET_ALL)
+        sys.exit()
+    try:
         subprocess.check_call(
-            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"])
+            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
+            stderr=subprocess.DEVNULL)
         subprocess.check_call(
             ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
     except subprocess.CalledProcessError:
-        print("Exception occured while wgetting zip")
+        try:
+            subprocess.check_call(
+                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_udp"])
+            subprocess.check_call(
+                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_tcp"])
+            subprocess.check_call(
+                ["sudo", "unzip", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"])
+            subprocess.check_call(
+                ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
+        except subprocess.CalledProcessError:
+            print(Fore.RED + "Exception occured while unzipping ovpn.zip, is unzip installed?" +
+                  Style.RESET_ALL)
+            sys.exit()
 
 
 # Lists information abouts servers under the given criteria.
