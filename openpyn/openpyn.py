@@ -63,8 +63,8 @@ def main():
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=10')
     parser.add_argument(
-        '-p', '--pings', type=str, default="5", help='Specify number of pings \
-        to be sent to each server to determine quality, DEFAULT=5')
+        '-p', '--pings', type=str, default="3", help='Specify number of pings \
+        to be sent to each server to determine quality, DEFAULT=3')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
@@ -401,7 +401,7 @@ def ping_servers(better_servers_list, pings):
     except subprocess.CalledProcessError as ce:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
-        print("Your 'ping' command doesn't support '-i', \
+        print("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow\n")
     for i in better_servers_list:
         # ping_result to append 2  lists into it
@@ -426,7 +426,8 @@ falling back to wait of 1 second between pings, pings will be slow\n")
                       i[0], "Skipping it\n" + Fore.BLUE)
                 continue
         except subprocess.CalledProcessError as e:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it\n" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:",
+                  i[0], "Excluding it from the list\n" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
