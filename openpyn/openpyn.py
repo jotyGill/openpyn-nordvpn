@@ -413,7 +413,7 @@ falling back to wait of 1 second between pings, pings will be slow\n")
                     stdout=subprocess.PIPE)
             else:
                 ping_proc = subprocess.Popen(
-                    ["ping", "-n", "-c", pings, i[0] + ".nordvpn.com"],
+                    ["ping", "-c", pings, i[0] + ".nordvpn.com"],
                     stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
