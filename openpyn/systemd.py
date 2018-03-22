@@ -23,7 +23,7 @@ def update_service(openpyn_options, run=False):
 
     service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\n" + \
         "After=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\n" + \
-        "WorkingDirectory=" + __basefilepath__ + "\nExecStartPre=" + sleep_location + " 10\nExecStart=" + \
+        "WorkingDirectory=" + __basefilepath__ + "\nExecStartPre=" + sleep_location + " 5\nExecStart=" + \
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
@@ -39,4 +39,4 @@ def update_service(openpyn_options, run=False):
     if run:
         print("Started Openpyn by running 'systemctl start openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
-        subprocess.run(["systemctl", "start", "openpyn"])
+        subprocess.Popen(["systemctl", "start", "openpyn"])
