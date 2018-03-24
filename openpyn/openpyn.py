@@ -421,8 +421,8 @@ falling back to wait of 1 second between pings, pings will be slow\n")
 
             ping_string = str(ping_output)
             # print(ping_string)
-            if " 0%" not in ping_string:
-                print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
+            if "0%" not in ping_string:
+                print(Style.BRIGHT + Fore.RED + "Some packet loss while pinging",
                       i[0], "Skipping it\n" + Fore.BLUE)
                 continue
         except subprocess.CalledProcessError as e:
