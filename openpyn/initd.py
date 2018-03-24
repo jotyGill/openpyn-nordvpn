@@ -81,6 +81,9 @@ Default(Just Press Enter) is, uk : ") or "uk"
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             silent = True
             skip_dns_patch = True
+        elif os.path.exists('/etc/openwrt_release'):
+            silent = True
+            skip_dns_patch = True
 
     openpyn_options = ""
 

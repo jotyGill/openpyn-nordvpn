@@ -148,6 +148,9 @@ def run(
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             silent = True
             skip_dns_patch = True
+        elif os.path.exists('/etc/openwrt_release'):
+            silent = True
+            skip_dns_patch = True
     elif detected_os == "win32":
         print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
         print(Style.RESET_ALL)
@@ -156,7 +159,7 @@ def run(
     if init:
         initialise()
     elif daemon:
-        if sys.platform != "linux":
+        if detected_os != "linux":
             print(Fore.RED + "Daemon mode is only available in GNU/Linux distros")
             print(Style.RESET_ALL)
             sys.exit()
@@ -222,6 +225,8 @@ def run(
         openpyn_options += " --silent"
         # print(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            initd.update_service(openpyn_options, run=True)
+        elif os.path.exists('/etc/openwrt_release'):
             initd.update_service(openpyn_options, run=True)
         else:
             systemd.update_service(openpyn_options, run=True)
@@ -338,6 +343,8 @@ def initialise():
     update_config_files()
     if sys.platform == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            initd.install_service()
+        elif os.path.exists('/etc/openwrt_release'):
             initd.install_service()
         else:
             systemd.install_service()
