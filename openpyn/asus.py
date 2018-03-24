@@ -1,12 +1,10 @@
 from openpyn import __basefilepath__
 from openpyn import api
 import subprocess
-import os
-import json
 from openpyn.converter import Converter, T_CLIENT
 
 
-def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp=False, test=False, debug_mode=False):
+def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     with open(__basefilepath__ + "credentials", 'r') as f:
         lines = f.read().splitlines()
         f.close()
@@ -14,7 +12,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
     url = "https://api.nordvpn.com/server"
     json_response = api.get_json(url)
     for res in json_response:
-        if res["domain"][:2].lower() == country_code.lower():
+        if res["domain"][:2].lower() == c_code.lower():
             country_name = res["country"]
             break
 
@@ -30,7 +28,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
 
     vpn_config_file = server + ".nordvpn.com." + port + ".ovpn"
 
-    c = Converter(debug_mode)
+    c = Converter(debug)
     c.set_username(lines[0])
     c.set_password(lines[1])
     c.set_description("Client" + " " + country_name)
@@ -42,7 +40,7 @@ def run(server, country_code, client, rgw=None, compression=None, adns=None, tcp
     c.set_certs_folder("/jffs/openvpn/")
 
     c.set_accept_dns_configuration(adns)
-    c.set_compression(compression)
+    c.set_compression(comp)
     c.set_redirect_gateway(rgw)
     c.set_client(client)
 

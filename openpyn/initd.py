@@ -12,9 +12,9 @@ service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
     # regex used
-    #(, help).+' -> “”
-    #(\n).+       ' -> “’”
-    #(\n).+       ac -> “ ac”
+    # (, help).+' -> “”
+    # (\n).+       ' -> “’”
+    # (\n).+       ac -> “ ac”
 
     parser = argparse.ArgumentParser(add_help=False)
     # parser.add_argument('--init')
@@ -27,13 +27,13 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-m', '--max-load', type=int, default=70)
     parser.add_argument('-t', '--top-servers', type=int, default=10)
     parser.add_argument('-p', '--pings', type=str, default="5")
-    #parser.add_argument('-k', '--kill', action='store_true')
-    #parser.add_argument('-x', '--kill-flush', action='store_true')
-    #parser.add_argument('--update', action='store_true')
+    # parser.add_argument('-k', '--kill', action='store_true')
+    # parser.add_argument('-x', '--kill-flush', action='store_true')
+    # parser.add_argument('--update', action='store_true')
     parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
-    #parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
+    # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
     parser.add_argument('--silent')
     parser.add_argument('--p2p')
     parser.add_argument('--dedicated', action='store_true')
