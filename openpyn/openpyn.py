@@ -151,6 +151,9 @@ def run(
         elif os.path.exists('/etc/openwrt_release'):
             silent = True
             skip_dns_patch = True
+            nvram = None
+        else
+            nvram = None
     elif detected_os == "win32":
         print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
         print(Style.RESET_ALL)
