@@ -1,9 +1,10 @@
 import sys
+import os.path
 import subprocess
 
-__version__ = "2.3.1"
+__version__ = "2.4.2"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
-__basefilepath__ = "/usr/share/openpyn/"
+__basefilepath__ = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir)
 __data_files__ = []     # will be overwritten for non Mac OS
 
 if sys.platform == "linux":

@@ -19,6 +19,7 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
 * Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
 * NVRAM write support for Asuswrt-merlin
+* Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
 
 ## Demo
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
@@ -278,6 +279,9 @@ optional arguments:
   -n NVRAM, --nvram NVRAM
                         Specify client to save configuration to NVRAM
                         (ASUSWRT-Merlin)
+  -o OPENVPN_OPTIONS, --openvpn-options OPENVPN_OPTIONS
+                        Pass through openvpn options, e.g. openpyn uk -o '--
+                        status /var/log/status.log --log /var/log/log.log'
 
   ```
 ## Todo
