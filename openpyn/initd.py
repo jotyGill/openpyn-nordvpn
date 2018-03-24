@@ -71,6 +71,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     test = args.test
     internally_allowed = args.internally_allowed
     skip_dns_patch = args.skip_dns_patch
+    silent = args.silent
     nvram = args.nvram
 
     detected_os = sys.platform
@@ -129,9 +130,10 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --allow" + open_ports
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
+    if silent:
+        openpyn_options += " --silent"
     if nvram:
         openpyn_options += " --nvram " + str(nvram)
-    openpyn_options += " --silent"
 
     update_service(openpyn_options)
 
