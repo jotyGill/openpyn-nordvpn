@@ -12,15 +12,11 @@ from openpyn import systemd
 from openpyn import __version__
 from openpyn import __basefilepath__
 
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 import subprocess
 import argparse
-import requests
-import random
 import os
-import json
 import sys
-import platform
 import time
 
 

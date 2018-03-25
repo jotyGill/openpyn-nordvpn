@@ -1,7 +1,6 @@
 from openpyn import filters
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 import requests
-import json
 import sys
 
 

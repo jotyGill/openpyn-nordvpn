@@ -5,7 +5,6 @@ import socket
 import os
 import sys
 from time import sleep
-from openpyn import root
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 
