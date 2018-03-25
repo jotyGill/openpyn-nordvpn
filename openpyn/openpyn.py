@@ -144,7 +144,7 @@ def run(
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             silent = True
             skip_dns_patch = True
-        elif os.path.exists('/etc/openwrt_release'):
+        elif os.path.exists("/etc/openwrt_release"):
             silent = True
             skip_dns_patch = True
             nvram = None
@@ -225,7 +225,7 @@ def run(
         # print(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
-        elif os.path.exists('/etc/openwrt_release'):
+        elif os.path.exists("/etc/openwrt_release"):
             initd.update_service(openpyn_options, run=True)
         else:
             systemd.update_service(openpyn_options, run=True)
@@ -343,7 +343,7 @@ def initialise():
     if sys.platform == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.install_service()
-        elif os.path.exists('/etc/openwrt_release'):
+        elif os.path.exists("/etc/openwrt_release"):
             initd.install_service()
         else:
             systemd.install_service()
