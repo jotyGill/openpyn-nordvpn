@@ -4,8 +4,11 @@ import subprocess
 import sys
 
 
+credentials_file_path = __basefilepath__ + "credentials"
+print("credentials file ", credentials_file_path)
+
+
 def check_credentials():
-    credentials_file_path = __basefilepath__ + "credentials"
     try:
         serverFiles = subprocess.check_output(
             "ls " + credentials_file_path, shell=True, stderr=subprocess.DEVNULL)
@@ -15,7 +18,6 @@ def check_credentials():
 
 
 def save_credentials():
-    credentials_file_path = __basefilepath__ + "credentials"
     if root.verify_running_as_root() is False:
         print("Please run as 'sudo openpyn --init' the first time. Root access is",
               "needed to store credentials in " + "'" + credentials_file_path + "'" + ".")
@@ -27,7 +29,6 @@ def save_credentials():
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
         password = input("Enter the password for NordVPN: ")
         try:
-            subprocess.call(["sudo", "mkdir", "-p", __basefilepath__])
             with open(credentials_file_path, 'w') as creds:
                 creds.write(username + "\n")
                 creds.write(password + "\n")
@@ -37,9 +38,6 @@ def save_credentials():
 
             print("Awesome, the credentials have been saved in " +
                   "'" + credentials_file_path + "'" + "\n")
-        except subprocess.CalledProcessError:
-            print("Your OS is not letting modify " + "'" + credentials_file_path + "'",
-                  "Please run with 'sudo' to store credentials")
-            subprocess.call(["sudo", "rm", credentials_file_path])
-            sys.exit()
+        except (IOError, OSError) as e:
+            print("IOError while creating 'credentials' file.")
     return
