@@ -421,8 +421,8 @@ falling back to wait of 1 second between pings, pings will be slow\n")
 
             ping_string = str(ping_output)
             # print(ping_string)
-            if " 0%" not in ping_string:
-                print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
+            if "0%" not in ping_string:
+                print(Style.BRIGHT + Fore.RED + "Some packet loss while pinging",
                       i[0], "Skipping it\n" + Fore.BLUE)
                 continue
         except subprocess.CalledProcessError as e:
@@ -682,6 +682,7 @@ def get_vpn_server_ip(server, port):
 
 
 def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
+    detected_os = sys.platform
     if server_provider == "nordvpn":
         if port == "tcp":
             folder = "ovpn_tcp/"
@@ -719,13 +720,12 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
 
     if not silent:
         # notifications Don't work with 'sudo'
-        if root.running_with_sudo():
+        if detected_os == "linux" and root.running_with_sudo():
             print(Fore.RED + "Desktop notifications don't work when using 'sudo', run without it, "
                   + "when asked, provide the sudo credentials" + Fore.BLUE)
         else:
             subprocess.Popen("openpyn-management".split())
 
-    detected_os = sys.platform
     if detected_os == "linux":
         resolvconf_exists = os.path.isfile("/sbin/resolvconf")
         # resolvconf_exists = False
