@@ -45,8 +45,8 @@ def show():
             notification = Notify.Notification.new(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            notification = format(body, summary)
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".notification)
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         server_name = ""
         last_status_UP = False
         # s.send(str.encode("state on"))
@@ -69,9 +69,8 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    notification = format(body, summary)
-                    os.system(
-                        """osascript -e 'display notification "{}" with title "{}"'""".notification)
+                    notification = "\"{}\" with title \"{}\"".format(body, summary)
+                    os.system("""osascript -e 'display notification {}'""".format(notification))
 
             server_name_location = data_str.find("common_name=")
             # print(server_name_location)
@@ -85,9 +84,8 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    notification = format(body, summary)
-                    os.system(
-                        """osascript -e 'display notification "{}" with title "{}"'""".notification)
+                    notification = "\"{}\" with title \"{}\"".format(body, summary)
+                    os.system("""osascript -e 'display notification {}'""".format(notification))
 
             # break of data stream is empty
             if not data:
@@ -99,8 +97,8 @@ def show():
             notification.update(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            notification = format(body, summary)
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".notification)
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         print('\nShutting down safely, please wait until process exits\n')
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
@@ -108,8 +106,8 @@ def show():
             notification.update(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            notification = format(body, summary)
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".notification)
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         sys.exit()
 
     s.close()
