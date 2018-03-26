@@ -38,32 +38,48 @@ T_LOG_VERBOSITY = 'verb'
 
 
 class Converter(object):
-    _username = None        #: NordVPN username
-    _password = None        #: NordVPN password
-    _description = None     #: NordVPN description
-    _port = None            #: NordVPN port
-    _protocol = None        #: NordVPN protocol
+    # NordVPN username
+    _username = None
+    # NordVPN password
+    _password = None
+    # NordVPN description
+    _description = None
+    # NordVPN port
+    _port = None
+    # NordVPN protocol
+    _protocol = None
 
-    _name = None            #: NordVPN name
-    _source_folder = None   #: OpenVPN configuration folder
-    _certs_folder = None    #: OpenVPN Certificates configuration folder
-    _ca = None              #: NordVPN certificate
-    _static = None          #: NordVPN static key
+    # NordVPN name
+    _name = None
+    # OpenVPN configuration files folder
+    _source_folder = None
+    # OpenVPN certificates folder
+    _certs_folder = None
+    # NordVPN certificate
+    _ca = None
+    # NordVPN static key
+    _static = None
 
-    #: Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
+    # Accept DNS Configuration ("Disabled", "Relaxed", "Strict", "Exclusive")
+    # Default: "Strict"
     _adns = None
-    _comp = None            #: Compression ("-1", "no", "yes", "adaptive", "lz4")
-    #: Redirect Internet traffic ("No", "All", "Policy Rules", "Policy Rules (strict)")
+    # Compression ("-1", "no", "yes", "adaptive", "lz4")
+    # Default: "adaptive" (comp-lzo)
+    _comp = None
+    # Redirect Internet traffic ("No", "All", "Policy Rules", "Policy Rules (strict)")
+    # Default: "All"
     _rgw = None
-    _unit = None            #: Client ("1", "2", "3", "4", "5")
+    # VPN Client Instance ("1", "2", "3", "4", "5")
+    # Default: "5"
+    _unit = None
 
     def __init__(self, debug_mode=False):
         self.debug_mode = debug_mode
         self._extracted_data = {}
         self._extracted_data[T_SERVER_ADDRESS] = ""
-        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2"  # Strict
+        self._extracted_data[T_ACCEPT_DNS_CONFIGURATION] = "2"
         self._extracted_data[T_CIPHER] = "default"
-        self._extracted_data[T_COMPRESSION] = "adaptive"  # comp-lzo
+        self._extracted_data[T_COMPRESSION] = "adaptive"
         self._extracted_data[T_CUSTOM_CONFIGURATION] = ""
         self._extracted_data[T_DESCRIPTION] = "Client 5"
         self._extracted_data[T_AUTH_DIGEST] = "default"
@@ -74,8 +90,8 @@ class Converter(object):
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
         self._extracted_data[T_CONNECTION_RETRY] = "-1"
-        self._extracted_data[T_REDIRECT_GATEWAY] = "1"  # All
-        self._extracted_data[T_CLIENT] = "5"  # Client 5
+        self._extracted_data[T_REDIRECT_GATEWAY] = "1"
+        self._extracted_data[T_CLIENT] = "5"
         self._extracted_data[T_USERAUTH] = "1"
         self._extracted_data[T_USERNAME] = ""
         self._extracted_data[T_USERONLY] = "1"
@@ -84,57 +100,56 @@ class Converter(object):
     def set_name(self, name):
         """Name for the VPN connection"""
         if not name:
-            raise Exception("You have to specify an name.")
+            raise Exception("Please specify an name.")
 
         self._name = name
 
     def set_source_folder(self, source_input):
-        """Sets the source configuration folder for the openvpn config files"""
+        """Sets the source folder for the configuration files"""
         if not source_input or not os.path.isdir(source_input):
-            raise Exception("You have to specify a valid path for the source configuration folder.")
+            raise Exception("Please specify a valid path for the configuration files.")
 
         self._source_folder = source_input
 
     def set_certs_folder(self, certs_output):
-        """Sets the certificates destination folder"""
+        """Sets the destination folder for the certificates"""
         if not certs_output or not os.path.isdir(certs_output):
-            raise Exception(
-                "You have to specify a valid path for the certificates destination folder.")
+            raise Exception("Please specify a valid path for the certificates.")
 
         self._certs_folder = certs_output
 
     def set_description(self, description):
         """Description for the VPN connection"""
         if not description:
-            raise Exception("You have to specify an description.")
+            raise Exception("Please specify an description.")
 
         self._description = description
 
     def set_password(self, password):
         """Password for the VPN connection"""
         if not password:
-            raise Exception("You have to specify an password.")
+            raise Exception("Please specify an password.")
 
         self._password = password
 
     def set_port(self, port):
         """Port for the VPN connection"""
         if not port:
-            raise Exception("You have to specify an port.")
+            raise Exception("Please specify an port.")
 
         self._port = port
 
     def set_protocol(self, protocol):
         """Protocol for the VPN connection"""
         if not protocol:
-            raise Exception("You have to specify an protocol.")
+            raise Exception("Please specify an protocol.")
 
         self._protocol = protocol
 
     def set_username(self, username):
         """Username for the VPN connection"""
         if not username:
-            raise Exception("You have to specify an username.")
+            raise Exception("Please specify an username.")
 
         self._username = username
 
@@ -147,7 +162,7 @@ class Converter(object):
             if adns.title() == element:
                 adns = str(index)
                 break
-        if not adns in ("0", "1", "2", "3"):
+        if adns not in ("0", "1", "2", "3"):
             raise ValueError("Value must be one of {0}".format(values))
 
         self._adns = adns
@@ -158,7 +173,7 @@ class Converter(object):
             return
         values = ("-1", "no", "yes", "adaptive", "lz4")
         values = ("yes", "adaptive")
-        if not compression in values:
+        if compression not in values:
             raise ValueError("Value must be one of {0}".format(values))
 
         self._comp = compression
@@ -172,7 +187,7 @@ class Converter(object):
             if rgw.title() == element:
                 rgw = str(index)
                 break
-        if not rgw in ("0", "1", "2", "3"):
+        if rgw not in ("0", "1", "2", "3"):
             raise ValueError("Value must be one of {0}".format(values))
 
         self._rgw = rgw
@@ -182,7 +197,7 @@ class Converter(object):
         if client is None:
             return
         values = ("1", "2", "3", "4", "5")
-        if not client in values:
+        if client not in values:
             raise ValueError("Value must be one of {0}".format(values))
 
         self._unit = client
@@ -231,7 +246,7 @@ class Converter(object):
                 data = data + line
             lines.close()
 
-        #print(data, end="")
+        # print(data, end="")
 
         self._extract_vpn_description()
         self._extract_vpn_password()
@@ -345,7 +360,8 @@ class Converter(object):
             pass
         elif value == "persist-tun":
             pass
-        elif value == "pull":  # (pull is implied by client)
+        # Pull is implied by "client"
+        elif value == "pull":
             pass
         # These are already added by us
         elif value.startswith("auth-user-pass"):
@@ -359,7 +375,7 @@ class Converter(object):
         elif value.startswith("redirect-gateway"):
             pass
         else:
-            self._extracted_data[T_CUSTOM_CONFIGURATION] = self._extracted_data[T_CUSTOM_CONFIGURATION] + line
+            self._extracted_data[T_CUSTOM_CONFIGURATION] += line
             return True
         return False
 

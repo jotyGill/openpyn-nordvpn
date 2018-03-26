@@ -12,9 +12,9 @@ service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
     # regex used
-    #(, help).+' -> “”
-    #(\n).+       ' -> “’”
-    #(\n).+       ac -> “ ac”
+    # (, help).+' --> “”
+    # (\n).+       ' --> “'”
+    # (\n).+       ac --> “ ac”
 
     parser = argparse.ArgumentParser(add_help=False)
     # parser.add_argument('--init')
@@ -27,13 +27,13 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-m', '--max-load', type=int, default=70)
     parser.add_argument('-t', '--top-servers', type=int, default=10)
     parser.add_argument('-p', '--pings', type=str, default="5")
-    #parser.add_argument('-k', '--kill', action='store_true')
-    #parser.add_argument('-x', '--kill-flush', action='store_true')
-    #parser.add_argument('--update', action='store_true')
+    # parser.add_argument('-k', '--kill', action='store_true')
+    # parser.add_argument('-x', '--kill-flush', action='store_true')
+    # parser.add_argument('--update', action='store_true')
     parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
-    #parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
+    # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
     parser.add_argument('--silent')
     parser.add_argument('--p2p')
     parser.add_argument('--dedicated', action='store_true')
@@ -43,6 +43,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--netflix', dest='netflix', action='store_true')
     parser.add_argument('--test', action='store_true')
     parser.add_argument('-n', '--nvram', type=str, default="5")
+    parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
 
     try:
         args = parser.parse_args(openpyn_options.split())
@@ -71,11 +72,16 @@ Default(Just Press Enter) is, uk : ") or "uk"
     test = args.test
     internally_allowed = args.internally_allowed
     skip_dns_patch = args.skip_dns_patch
+    silent = args.silent
     nvram = args.nvram
+    openvpn_options = args.openvpn_options
 
     detected_os = sys.platform
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            silent = True
+            skip_dns_patch = True
+        elif os.path.exists("/etc/openwrt_release"):
             silent = True
             skip_dns_patch = True
 
@@ -129,9 +135,12 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --allow" + open_ports
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
+    if silent:
+        openpyn_options += " --silent"
     if nvram:
         openpyn_options += " --nvram " + str(nvram)
-    openpyn_options += " --silent"
+    if openvpn_options:
+        openpyn_options += " --openvpn-options '" + openvpn_options + "'"
 
     update_service(openpyn_options)
 

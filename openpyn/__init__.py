@@ -14,3 +14,9 @@ print("__basefilepath__", __basefilepath__)
 if sys.platform == "linux":
     if subprocess.check_output(['/bin/uname', '-o']).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
         __data_files__ = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
+    elif os.path.exists("/etc/openwrt_release"):
+        __data_files__ = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
+    else:
+        __data_files__ = [(__basefilepath__[:-1],
+                           ['./openpyn/scripts/manual-dns-patch.sh',
+                            './openpyn/scripts/update-resolv-conf.sh', './openpyn/config.json'])]

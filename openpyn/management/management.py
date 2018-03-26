@@ -4,7 +4,6 @@ import socket
 import os
 import sys
 from time import sleep
-from openpyn import root
 
 try:
     import gi

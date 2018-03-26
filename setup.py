@@ -1,5 +1,4 @@
 from openpyn import __version__
-from openpyn import __basefilepath__
 from openpyn import __data_files__
 
 import sys
