@@ -753,8 +753,8 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh"]
+                     "--up", __basefilepath__ + "scripts/update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "scripts/update-resolv-conf.sh"]
                     + openvpn_options.split(), check=True)
             else:
                 # print(openvpn_options)
@@ -762,8 +762,8 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
+                     "--up", __basefilepath__ + "scripts/update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "scripts/update-resolv-conf.sh",
                      "--management", "127.0.0.1", "7015", "--management-up-down"]
                     + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
@@ -788,7 +788,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                   "' /etc/resolv.conf'")
             print(Style.RESET_ALL)
             apply_dns_patch = subprocess.call(
-                ["sudo", __basefilepath__ + "openpyn/scripts/manual-dns-patch.sh"])
+                ["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")
