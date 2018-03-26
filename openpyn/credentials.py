@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -8,12 +9,7 @@ print("credentials file ", credentials_file_path)
 
 
 def check_credentials():
-    try:
-        subprocess.check_output(
-            "ls " + credentials_file_path, shell=True, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        return False
-    return True
+    return os.path.exists(credentials_file_path)
 
 
 def save_credentials():
