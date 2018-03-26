@@ -134,7 +134,7 @@ openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
 ```
 * When using "-f", To allow custom ports (from internal ip ranges, i.e 192.168 or 10.) through the firewall.
 ``` bash
-sudo openpyn us -f --allow 22  #only accessible from local network
+openpyn us -f --allow 22 80 443  #only accessible from local network
 ```
 * To quickly connect to a specific server.
 ``` bash
@@ -256,7 +256,7 @@ optional arguments:
                         To be used with "f" to allow ports but ONLY to
                         INTERNAL IP RANGE. e.g, you can use your PC as
                         SSH, HTTP server for local devices (e.g 192.168.1.*
-                        range) by using "openpyn us --allow 22 80"
+                        range) by using "openpyn us -f --allow 22 80"
 
   --update              Fetch the latest config files from nord''s site
 

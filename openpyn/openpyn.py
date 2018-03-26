@@ -59,8 +59,8 @@ def main():
          Servers to choose from the NordVPN\'s Sever list for the given Country, These will be \
          Pinged. DEFAULT=10')
     parser.add_argument(
-        '-p', '--pings', type=str, default="5", help='Specify number of pings \
-        to be sent to each server to determine quality, DEFAULT=5')
+        '-p', '--pings', type=str, default="3", help='Specify number of pings \
+        to be sent to each server to determine quality, DEFAULT=3')
     parser.add_argument(
         '-k', '--kill', help='Kill any running Openvnp process, very useful \
         to kill openpyn process running in background with "-d" switch',
@@ -232,18 +232,19 @@ def run(
         sys.exit()
 
     elif kill:
-        kill_vpn_processes()  # dont touch iptable rules
-        # let management-client normally shut, if still alive kill it with fire
         kill_management_client()
+        kill_vpn_processes()  # dont touch iptable rules
+        kill_openpyn_process()
         sys.exit()
     elif kill_flush:
-        kill_vpn_processes()
-        kill_management_client()
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
         if internally_allowed:
             network_interfaces = get_network_interfaces()
             firewall.internally_allow_ports(network_interfaces, internally_allowed)
+        kill_management_client()
+        kill_vpn_processes()
+        kill_openpyn_process()
         sys.exit()
     elif update:
         update_config_files()
@@ -398,25 +399,41 @@ def find_better_servers(
 # returns a sorted list by Ping Avg and Median Deveation
 def ping_servers(better_servers_list, pings):
     pinged_servers_list = []
+    ping_supports_option_i = True       # older ping command doens't support "-i"
+
+    try:
+        subprocess.check_output(["ping", "-n", "-i", ".2", "-c", "2", "8.8.8.8"],
+                                stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the processes issued error, "option is not supported"
+        ping_supports_option_i = False
+        print("Your 'ping' command doesn't support '-i' or '-n', \
+falling back to wait of 1 second between pings, pings will be slow\n")
     for i in better_servers_list:
         # ping_result to append 2  lists into it
         ping_result = []
         try:
-            ping_proc = subprocess.Popen(
-                ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
-                stdout=subprocess.PIPE)
+            if ping_supports_option_i:
+                ping_proc = subprocess.Popen(
+                    ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
+                    stdout=subprocess.PIPE)
+            else:
+                ping_proc = subprocess.Popen(
+                    ["ping", "-c", pings, i[0] + ".nordvpn.com"],
+                    stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
                 ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
 
             ping_string = str(ping_output)
             # print(ping_string)
-            if " 0%" not in ping_string:
-                print(Style.BRIGHT + Fore.RED + "Some packat loss while pinging",
+            if "0%" not in ping_string:
+                print(Style.BRIGHT + Fore.RED + "Some packet loss while pinging",
                       i[0], "Skipping it\n" + Fore.BLUE)
                 continue
         except subprocess.CalledProcessError as e:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to:", i[0], "Skipping it\n" + Fore.BLUE)
+            print(Style.BRIGHT + Fore.RED + "Ping Failed to:",
+                  i[0], "Excluding it from the list\n" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
         except (KeyboardInterrupt) as err:
@@ -468,13 +485,22 @@ def kill_vpn_processes():
     return
 
 
+def kill_openpyn_process():
+    try:
+        root.verify_root_access("Root access needed to kill openpyn process")
+        subprocess.call(["sudo", "killall", "openpyn"])
+    except subprocess.CalledProcessError as ce:
+        # when Exception, the openvpn_processes issued non 0 result, "not found"
+        pass
+    return
+
+
 def kill_management_client():
     # kill the management client if it is for some reason still alive
     try:
-        openvpn_processes = subprocess.check_output(["pgrep", "openpyn-management"])
-        # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
-        subprocess.call(["sudo", "killall", "openpyn-management"])
+        subprocess.check_output(["sudo", "killall", "openpyn-management"],
+                                stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as ce:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
@@ -487,12 +513,32 @@ def update_config_files():
     try:
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
+    except subprocess.CalledProcessError:
+        print(
+            Fore.RED + "Exception occured while wgetting zip, is the internet working? \
+is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
+[https://github.com/jotyGill/openpyn-nordvpn/issues/109]" + Style.RESET_ALL)
+        sys.exit()
+    try:
         subprocess.check_call(
-            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"])
+            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
+            stderr=subprocess.DEVNULL)
         subprocess.check_call(
             ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
     except subprocess.CalledProcessError:
-        print("Exception occured while wgetting zip")
+        try:
+            subprocess.check_call(
+                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_udp"])
+            subprocess.check_call(
+                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_tcp"])
+            subprocess.check_call(
+                ["sudo", "unzip", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"])
+            subprocess.check_call(
+                ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
+        except subprocess.CalledProcessError:
+            print(Fore.RED + "Exception occured while unzipping ovpn.zip, is unzip installed?" +
+                  Style.RESET_ALL)
+            sys.exit()
 
 
 # Lists information abouts servers under the given criteria.
@@ -642,6 +688,7 @@ def get_vpn_server_ip(server, port):
 
 
 def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
+    detected_os = sys.platform
     if server_provider == "nordvpn":
         if port == "tcp":
             folder = "ovpn_tcp/"
@@ -679,13 +726,12 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
 
     if not silent:
         # notifications Don't work with 'sudo'
-        if root.running_with_sudo():
+        if detected_os == "linux" and root.running_with_sudo():
             print(Fore.RED + "Desktop notifications don't work when using 'sudo', run without it, "
                   + "when asked, provide the sudo credentials" + Fore.BLUE)
         else:
             subprocess.Popen("openpyn-management".split())
 
-    detected_os = sys.platform
     if detected_os == "linux":
         resolvconf_exists = os.path.isfile("/sbin/resolvconf")
         # resolvconf_exists = False
@@ -707,8 +753,8 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "update-resolv-conf.sh"]
+                     "--up", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh"]
                     + openvpn_options.split(), check=True)
             else:
                 # print(openvpn_options)
@@ -716,8 +762,8 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "update-resolv-conf.sh",
+                     "--up", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
+                     "--down", __basefilepath__ + "openpyn/scripts/update-resolv-conf.sh",
                      "--management", "127.0.0.1", "7015", "--management-up-down"]
                     + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
@@ -742,7 +788,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                   "' /etc/resolv.conf'")
             print(Style.RESET_ALL)
             apply_dns_patch = subprocess.call(
-                ["sudo", __basefilepath__ + "manual-dns-patch.sh"])
+                ["sudo", __basefilepath__ + "openpyn/scripts/manual-dns-patch.sh"])
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")

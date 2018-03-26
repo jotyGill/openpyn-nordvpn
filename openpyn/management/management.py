@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
 
-import gi
 import socket
 import os
 import sys
 from time import sleep
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+
+try:
+    import gi
+except ImportError:
+    print("Python3-gi not found, expected on a non-gui os")
+    sys.exit()
+try:
+    gi.require_version('Notify', '0.7')
+    from gi.repository import Notify
+except ValueError:
+    print("Notify 0.7 not found, , expected on a non-gui os")
+    sys.exit()
 
 
 def socket_connect(server, port):
@@ -39,6 +48,7 @@ def show():
             os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
         server_name = ""
         last_status_UP = False
+        #s.send(str.encode("state on"))
         while True:
             data = s.recv(1024)
             data_str = repr(data)
