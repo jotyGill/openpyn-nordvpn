@@ -1,9 +1,10 @@
-from openpyn import api
-import subprocess
-import os
-import sys
-import fileinput
 import argparse
+import fileinput
+import os
+import subprocess
+import sys
+
+from openpyn import api
 
 
 def install_service():

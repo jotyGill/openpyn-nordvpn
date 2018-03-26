@@ -1,8 +1,7 @@
-from openpyn import __version__
-from openpyn import __data_files__
-
 import sys
+
 import setuptools
+from openpyn import __data_files__, __version__
 
 if sys.version_info < (3, 5):
     sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +

@@ -1,6 +1,6 @@
-import subprocess
 import os
 import pwd
+import subprocess
 import sys
 
 
@@ -15,7 +15,7 @@ def verify_root_access(message):
     #        return False
 
     try:
-        check_root = subprocess.check_output(
+        subprocess.check_output(
             ["sudo", "-n", "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL)
     # -n 'non-interactive' mode used to, not prompt for password (if user not sudo) but throw err.
     except subprocess.CalledProcessError:
@@ -35,12 +35,12 @@ def verify_running_as_root():
 def obtain_root_access():
     # asks for sudo password to be cached
     try:    # try accessing root read only file "600" permission, ask for sudo pass
-        check_root = subprocess.call(
+        subprocess.call(
             ["sudo", "cat", "/etc/resolv.conf"],
             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         print("except occured while running obtain_root_access() 'sudo ls' command")
-    except (KeyboardInterrupt) as err:
+    except KeyboardInterrupt:
         print('\n(KeyboardInterrupt) Ctr+C received, Bye\n')
         sys.exit()
 
@@ -60,8 +60,7 @@ def running_with_sudo():
             logged_in_user = os.getlogin()
             if logged_in_user_is_root(logged_in_user):
                 return False    # when logged in as 'root' user notifications will work.
-            else:
-                return True     # 'sudo' is used notification won't work.
+            return True     # 'sudo' is used notification won't work.
         except FileNotFoundError:
             print("os.getlogin(), returned FileNotFoundError, \
 assuming 'openpyn' is running with 'SUDO'")
