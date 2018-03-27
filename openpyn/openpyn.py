@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 
-from openpyn import api
-from openpyn import filters
-from openpyn import locations
-from openpyn import firewall
-from openpyn import root
-from openpyn import credentials
-from openpyn import initd
-from openpyn import asus
-from openpyn import systemd
-from openpyn import __version__
-from openpyn import __basefilepath__
-
-from colorama import Fore, Style
-import subprocess
 import argparse
 import os
+import subprocess
 import sys
 import time
+
+from colorama import Fore, Style
+from openpyn import __basefilepath__  # pylint: disable=W0406
+from openpyn import __version__  # pylint: disable=W0406
+from openpyn import api  # pylint: disable=W0406
+from openpyn import asus  # pylint: disable=W0406
+from openpyn import credentials  # pylint: disable=W0406
+from openpyn import filters  # pylint: disable=W0406
+from openpyn import firewall  # pylint: disable=W0406
+from openpyn import initd  # pylint: disable=W0406
+from openpyn import locations  # pylint: disable=W0406
+from openpyn import root  # pylint: disable=W0406
+from openpyn import systemd  # pylint: disable=W0406
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="A python3 script/systemd service (GPLv3+) to easily connect to and switch between, OpenVPN \
-        servers hosted by NordVPN. Quickly Connect to the least busy servers (using current \
-        data from Nordvpn website) with lowest latency from you. Find Nordvpn servers in a given \
-        country or city. Tunnels DNS traffic through the VPN which normally (when using OpenVPN \
-        with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a thirdparty \
-        DNS servers) and completely compromises Privacy!")
+        description="A python3 script/systemd service (GPLv3+) to easily connect to and switch \
+        between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers \
+        (using current data from Nordvpn website) with lowest latency from you. Find Nordvpn \
+        servers in a given country or city. Tunnels DNS traffic through the VPN which normally \
+        (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if \
+        you use a thirdparty DNS servers) and completely compromises Privacy!")
     parser.add_argument(
         '-v', '--version', action='version', version="openpyn " + __version__)
     parser.add_argument(
@@ -129,9 +129,8 @@ def main():
         args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options)
 
 
-def run(
-    # run openpyn
-    init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
+# run openpyn
+def run(init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
         internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
@@ -293,7 +292,8 @@ def run(
             country_code = api.get_country_code(full_name=country_code)
         country_code = country_code.lower()
 
-        for tries in range(3):     # keep trying to connect to new servers
+        # keep trying to connect to new servers
+        for tries in range(3):  # pylint: disable=W0612
             better_servers_list = find_better_servers(
                 country_code, area, max_load, top_servers, tcp, p2p,
                 dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
@@ -313,7 +313,7 @@ def run(
                     sys.exit()
                 print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
                       (Fore.GREEN + aserver + Fore.BLUE))
-                connection = connect(aserver, port, silent, test, skip_dns_patch, openvpn_options)
+                connect(aserver, port, silent, test, skip_dns_patch, openvpn_options)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
         if not test:
@@ -331,8 +331,8 @@ def run(
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             sys.exit()
-        for i in range(20):
-            connection = connect(server, port, silent, test, skip_dns_patch, openvpn_options)
+        for i in range(20):  # pylint: disable=W0612
+            connect(server, port, silent, test, skip_dns_patch, openvpn_options)
     else:
         print('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
@@ -352,9 +352,8 @@ def initialise():
 
 
 # Filters servers based on the speficied criteria.
-def find_better_servers(
-    country_code, area, max_load, top_servers, tcp, p2p, dedicated,
-        double_vpn, tor_over_vpn, anti_ddos, netflix):
+def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, dedicated,
+                        double_vpn, tor_over_vpn, anti_ddos, netflix):
     if tcp:
         used_protocol = "OPENVPN-TCP"
     else:
@@ -404,7 +403,7 @@ def ping_servers(better_servers_list, pings):
     try:
         subprocess.check_output(["ping", "-n", "-i", ".2", "-c", "2", "8.8.8.8"],
                                 stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError as ce:
+    except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
         print("Your 'ping' command doesn't support '-i' or '-n', \
@@ -431,12 +430,12 @@ falling back to wait of 1 second between pings, pings will be slow\n")
                 print(Style.BRIGHT + Fore.RED + "Some packet loss while pinging",
                       i[0], "Skipping it\n" + Fore.BLUE)
                 continue
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             print(Style.BRIGHT + Fore.RED + "Ping Failed to:",
                   i[0], "Excluding it from the list\n" + Fore.BLUE)
             print(Style.RESET_ALL)
             continue
-        except (KeyboardInterrupt) as err:
+        except KeyboardInterrupt:
             print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
             print(Style.RESET_ALL)
             sys.exit()
@@ -473,13 +472,13 @@ def choose_best_servers(best_servers):
 
 def kill_vpn_processes():
     try:
-        openvpn_processes = subprocess.check_output(["pgrep", "openvpn"])
+        subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.call(["sudo", "killall", "openvpn"])
         print("Killed the running openvpn process")
         time.sleep(1)
-    except subprocess.CalledProcessError as ce:
+    except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
     return
@@ -489,7 +488,7 @@ def kill_openpyn_process():
     try:
         root.verify_root_access("Root access needed to kill openpyn process")
         subprocess.call(["sudo", "killall", "openpyn"])
-    except subprocess.CalledProcessError as ce:
+    except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
     return
@@ -501,7 +500,7 @@ def kill_management_client():
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
         subprocess.check_output(["sudo", "killall", "openpyn-management"],
                                 stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError as ce:
+    except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
     return
@@ -616,7 +615,7 @@ its config files (In which case run 'sudo openpyn --update')" + Style.RESET_ALL)
     for server in servers_in_files:
         if server not in server_set:
             new_servers.add(server)
-    if len(new_servers) > 0:
+    if new_servers:
         print("The following server have not even been listed on the nord's site yet",
               "they usally are the fastest or Dead.\n")
         print(new_servers)
@@ -772,7 +771,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                 print("Error opening configuration file", vpn_config_file,
                       "Make Sure it exists, run 'openpyn --update'")
                 sys.exit()
-        except (KeyboardInterrupt) as err:
+        except KeyboardInterrupt:
             print('\nShutting down safely, please wait until process exits\n')
             sys.exit()
         except PermissionError:     # needed cause complains when killing sudo process
@@ -787,20 +786,19 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                   "The VPN Tunnel By Modifying" + Fore.GREEN +
                   "' /etc/resolv.conf'")
             print(Style.RESET_ALL)
-            apply_dns_patch = subprocess.call(
-                ["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
+            subprocess.call(["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
             print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
                   "likely won't go through the encrypted tunnel")
             print(Style.RESET_ALL)
-        try:
+        try:   # pylint: disable=R1702
             if silent:
                 if detected_os == "linux":
                     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
                         # make sure module is loaded
-                        if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
+                        if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
                             subprocess.call("modprobe tun", shell=True)
-                            if (os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0'):
+                            if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
                                 print(Style.BRIGHT + Fore.RED +
                                       "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 print(Style.RESET_ALL)
@@ -823,7 +821,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                 print("Error opening configuration file", vpn_config_file,
                       "Make Sure it exists, run 'openpyn --update'")
                 sys.exit()
-        except (KeyboardInterrupt) as err:
+        except KeyboardInterrupt:
             print('\nShutting down safely, please wait until process exits\n')
             sys.exit()
         except PermissionError:     # needed cause complains when killing sudo process

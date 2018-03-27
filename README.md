@@ -54,10 +54,7 @@ sudo dpkg -i python3-openpyn_2.1.1-1_all.deb
 wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.2.0/openpyn-2.2-1.noarch.rpm
 sudo dnf install ./openpyn-2.2-1.noarch.rpm
 ```
-5. On macOS, /usr/share is protected by System Integrity Protection. In order to run "--init" or "--update" you need to temporarily disable it.
-To enable or disable System Integrity Protection, you must boot to Recovery OS by restarting your machine and
-holding down the Command and R keys at startup and run the csrutil command from the Terminal.
-After enabling or disabling System Integrity Protection on a machine, a reboot is required. (credit: [1951FDG](https://github.com/1951FDG))
+5. For macOS with Python=>3.6.4 (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 xcode-select --install
@@ -69,21 +66,10 @@ brew install openvpn
 sudo brew services start openvpn
 ```
 ``` bash
-# Boot to Recovery OS.
-# Launch Terminal from the Utilities menu.
-csrutil disable
-shutdown -r now
-```
-``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
-sudo python3 setup.py install
-```
-``` bash
-# Boot to Recovery OS.
-# Launch Terminal from the Utilities menu.
-csrutil enable
-shutdown -r now
+git pull
+sudo pip3 install --upgrade .
 ```
 6. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash

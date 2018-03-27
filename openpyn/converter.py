@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import base64
 import os
 import re
-import base64
 from itertools import islice
 
 # CONFIGURATION PLACEHOLDERS
@@ -379,10 +379,12 @@ class Converter(object):
             return True
         return False
 
-    def stringToBase64(self, s):
+    @staticmethod
+    def stringToBase64(s):
         return base64.b64encode(bytes(s, 'utf-8'))
 
-    def base64ToString(self, b):
+    @staticmethod
+    def base64ToString(b):
         return base64.b64decode(b).decode('utf-8')
 
     def _extract_vpn_description(self):
@@ -426,7 +428,7 @@ class Converter(object):
         if match_string is not None:
             self._static = match_string.group(1)
 
-    def _write_certificates(self, client):
+    def write_certificates(self, client):
         # write keys
         if self._ca is not None:
             cert_name = "vpn_crt_client" + client + "_ca"

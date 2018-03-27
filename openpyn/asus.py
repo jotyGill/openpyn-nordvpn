@@ -1,7 +1,7 @@
-from openpyn import __basefilepath__
-from openpyn import api
 import subprocess
-from openpyn.converter import Converter, T_CLIENT
+
+from openpyn import __basefilepath__, api
+from openpyn.converter import T_CLIENT, Converter
 
 
 def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
@@ -46,7 +46,7 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
 
     extracted_info = c.extract_information(vpn_config_file)
     if not test:
-        c._write_certificates(client)
+        c.write_certificates(client)
 
     c.pprint(extracted_info)
 
@@ -57,7 +57,7 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
     service = "client"
 
     for key, value in extracted_info.items():
-        set(c, key, value, unit, service, test)
+        write(c, key, value, unit, service, test)
 
     extracted_info = dict(extracted_info)
     if T_CLIENT in extracted_info:
@@ -72,7 +72,7 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
     service = "client"
 
     for key, value in extracted_info.items():
-        set(c, key, value, unit, service, test)
+        write(c, key, value, unit, service, test)
 
     # 'vpn_upload_unit'
     key = T_CLIENT
@@ -80,10 +80,10 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
     unit = ""
     service = "upload"
 
-    set(c, key, value, unit, service, test)
+    write(c, key, value, unit, service, test)
 
 
-def set(c, key, value, unit, service, test=False):
+def write(c, key, value, unit, service, test=False):
     argument1 = "vpn" + "_" + service + unit + "_" + key
     argument2 = argument1 + "=" + value
     try:
@@ -96,6 +96,5 @@ def set(c, key, value, unit, service, test=False):
         c.pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
             subprocess.run(["sudo", "/bin/nvram", "set", argument2], check=True)
-            pass
     except subprocess.CalledProcessError as e:
         print(e.output)

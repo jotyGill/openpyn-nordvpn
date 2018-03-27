@@ -1,7 +1,8 @@
-from openpyn import filters
-from colorama import Fore, Style
-import requests
 import sys
+
+import requests
+from colorama import Fore, Style
+from openpyn import filters
 
 
 # Using requests, GETs and returns json from a url.
@@ -35,9 +36,8 @@ def get_data_from_api(
         type_country_filtered = filters.filter_by_country(country_code, type_filtered_servers)
         if area is None:
             return type_country_filtered
-        else:
-            type_country_area_filtered = filters.filter_by_area(area, type_country_filtered)
-            return type_country_area_filtered
+        type_country_area_filtered = filters.filter_by_area(area, type_country_filtered)
+        return type_country_area_filtered
     return type_filtered_servers
 
 
@@ -48,8 +48,8 @@ def list_all_countries():
     for res in json_response:
         if res["domain"][:2] not in countries_mapping:
             countries_mapping.update({res["domain"][:2]: res["country"]})
-    for key in countries_mapping.keys():
-        print("Full Name : " + countries_mapping[key] + "      Country Code : " + key + '\n')
+    for key, val in countries_mapping.items():
+        print("Full Name : " + val + "      Country Code : " + key + '\n')
     sys.exit()
 
 

@@ -1,7 +1,8 @@
-import requests
-import sys
 import random
+import sys
 import time
+
+import requests
 
 
 # takes server list outputs locations (each only once) the servers are in.
@@ -43,7 +44,7 @@ def get_location_name(location_dic):
         print("IndexError: Looks like you have reached Google maps API's daily \
 request limit. No location data for you :( you could restart your router to get a new IP.")
         sys.exit()
-    country = town = None
+    country = None
     geo_address_list.append(location_dic)
     for c in results:
         if "administrative_area_level_2" in c['types']:

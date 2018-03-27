@@ -1,5 +1,6 @@
-from openpyn import __basefilepath__
 import subprocess
+
+from openpyn import __basefilepath__
 
 
 def install_service():

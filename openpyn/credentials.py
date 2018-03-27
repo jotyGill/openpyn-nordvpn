@@ -1,20 +1,15 @@
-from openpyn import __basefilepath__
-from openpyn import root
+import os
 import subprocess
 import sys
 
+from openpyn import __basefilepath__, root
 
 credentials_file_path = __basefilepath__ + "credentials"
 print("credentials file ", credentials_file_path)
 
 
 def check_credentials():
-    try:
-        serverFiles = subprocess.check_output(
-            "ls " + credentials_file_path, shell=True, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        return False
-    return True
+    return os.path.exists(credentials_file_path)
 
 
 def save_credentials():
@@ -38,6 +33,6 @@ def save_credentials():
 
             print("Awesome, the credentials have been saved in " +
                   "'" + credentials_file_path + "'" + "\n")
-        except (IOError, OSError) as e:
+        except (IOError, OSError):
             print("IOError while creating 'credentials' file.")
     return

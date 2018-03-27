@@ -13,7 +13,3 @@ if sys.platform == "linux":
         __data_files__ = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
     elif os.path.exists("/etc/openwrt_release"):
         __data_files__ = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
-    else:
-        __data_files__ = [(__basefilepath__[:-1],
-                           ['./scripts/manual-dns-patch.sh',
-                            './scripts/update-resolv-conf.sh', './config.json'])]
