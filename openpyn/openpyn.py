@@ -686,6 +686,40 @@ def get_vpn_server_ip(server, port):
         return vpn_server_ip
 
 
+def uses_systemd_resolved():
+    # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
+
+    systemd_resolved_running = subprocess.call(
+        ["systemctl",  "is-active", "systemd-resolved"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ) == 0
+
+    if not systemd_resolved_running:
+        return False
+
+    # systemd-resolved is running, good
+    # however it's not enough, /etc/resolv.conf might be misconfigured and point at wrong place
+    # better safe than sorry!
+
+    stub_systemd_resolver = "127.0.0.53" # seems to be hardcoded in systemd
+    dns_servers = []
+    with open('/etc/resolv.conf', 'r') as f:
+        import re
+        ns_rgx = re.compile("nameserver (.*)")
+        for line in f:
+            m = ns_rgx.match(line)
+            if m and len(m.groups()) > 0:
+                dns_servers.append(m.group(1))
+    resolv_conf_managed = dns_servers == [stub_systemd_resolver]
+
+    if resolv_conf_managed:
+        return True
+
+    # otherwise, something must be broken.. why is systemd-resolved running yet resolv.conf still pointing somewhere else?
+    raise RuntimeError("Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
+
+
 def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
     detected_os = sys.platform
     if server_provider == "nordvpn":
@@ -730,41 +764,62 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                   + "when asked, provide the sudo credentials" + Fore.BLUE)
         else:
             subprocess.Popen("openpyn-management".split())
-
+    print(Style.RESET_ALL)
     if detected_os == "linux":
-        resolvconf_exists = os.path.isfile("/sbin/resolvconf")
-        # resolvconf_exists = False
+        use_systemd_resolved = uses_systemd_resolved()
+        use_resolvconf = os.path.isfile("/sbin/resolvconf")
     else:
-        resolvconf_exists = False
+        use_systemd_resolved = False
+        use_resolvconf = False
         skip_dns_patch = True
     if not openvpn_options:
         openvpn_options = ""
-    if resolvconf_exists is True and skip_dns_patch is False:  # Debian Based OS + do DNS patching
-        # tunnel dns throught vpn by changing /etc/resolv.conf using
-        # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
+    if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         try:
-            print("Your OS'" + Fore.GREEN + detected_os + Fore.BLUE +
-                  "' Does have '/sbin/resolvconf'",
-                  "using it to update DNS Resolver Entries")
-            print(Style.RESET_ALL)
-            if silent:
-                subprocess.run(
-                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                     __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "scripts/update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "scripts/update-resolv-conf.sh"]
-                    + openvpn_options.split(), check=True)
+            if use_systemd_resolved:
+                up_down_script = "/etc/openvpn/scripts/update-systemd-resolved"
+                print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
+                      "' has systemd-resolve running ",
+                      "using it to update DNS Resolver Entries")
+                if not os.path.lexists(up_down_script):
+                    print(Fore.RED + "Expected {} to exist. ".format(up_down_script) +
+                          "Please install it from https://github.com/jonathanio/update-systemd-resolved")
+                    print(Style.RESET_ALL)
+                    sys.exit(1)
+            elif use_resolvconf:
+                # tunnel dns throught vpn by changing /etc/resolv.conf using
+                # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
+
+                up_down_script = __basefilepath__ + "scripts/update-resolv-conf.sh"
+                print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
+                      "' Does have '/sbin/resolvconf'",
+                      "using it to update DNS Resolver Entries")
+                print(Style.RESET_ALL)
             else:
-                # print(openvpn_options)
-                subprocess.run(
-                    ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
-                     "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                     __basefilepath__ + "credentials", "--script-security", "2",
-                     "--up", __basefilepath__ + "scripts/update-resolv-conf.sh",
-                     "--down", __basefilepath__ + "scripts/update-resolv-conf.sh",
-                     "--management", "127.0.0.1", "7015", "--management-up-down"]
-                    + openvpn_options.split(), check=True)
+                raise RuntimeError("Should not happen")
+
+            def run_openvpn(*args):
+                cmdline = [
+                    "sudo", "openvpn",
+                    "--redirect-gateway",
+                    "--auth-retry", "nointeract",
+                    "--config", vpn_config_file,
+                    "--auth-user-pass", __basefilepath__ + "credentials",
+                    "--script-security", "2",
+                    "--up", up_down_script,
+                    "--down", up_down_script,
+                    "--down-pre",
+                    *args,
+                ] + openvpn_options.split()
+                subprocess.run(cmdline, check=True)
+
+            if silent:
+                run_openvpn()
+            else:
+                run_openvpn(
+                    "--management", "127.0.0.1", "7015",
+                    "--management-up-down",
+                )
         except subprocess.CalledProcessError as openvpn_err:
             # print(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
