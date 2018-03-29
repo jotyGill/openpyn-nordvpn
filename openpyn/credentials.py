@@ -1,21 +1,18 @@
-from openpyn import __basefilepath__
-from openpyn import root
+import os
 import subprocess
 import sys
 
+from openpyn import __basefilepath__, root
+
+credentials_file_path = __basefilepath__ + "credentials"
+print("credentials file ", credentials_file_path)
+
 
 def check_credentials():
-    credentials_file_path = __basefilepath__ + "credentials"
-    try:
-        serverFiles = subprocess.check_output(
-            "ls " + credentials_file_path, shell=True, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        return False
-    return True
+    return os.path.exists(credentials_file_path)
 
 
 def save_credentials():
-    credentials_file_path = __basefilepath__ + "credentials"
     if root.verify_running_as_root() is False:
         print("Please run as 'sudo openpyn --init' the first time. Root access is",
               "needed to store credentials in " + "'" + credentials_file_path + "'" + ".")
@@ -31,15 +28,11 @@ def save_credentials():
                 creds.write(username + "\n")
                 creds.write(password + "\n")
             creds.close()
-            subprocess.call(["sudo", "mkdir", "-p", __basefilepath__])
             # Change file permission to 600
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
             print("Awesome, the credentials have been saved in " +
                   "'" + credentials_file_path + "'" + "\n")
-        except subprocess.CalledProcessError:
-            print("Your OS is not letting modify " + "'" + credentials_file_path + "'",
-                  "Please run with 'sudo' to store credentials")
-            subprocess.call(["sudo", "rm", credentials_file_path])
-            sys.exit()
+        except (IOError, OSError):
+            print("IOError while creating 'credentials' file.")
     return

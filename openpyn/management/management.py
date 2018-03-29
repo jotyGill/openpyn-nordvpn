@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 
-import gi
-import socket
 import os
+import socket
 import sys
 from time import sleep
-from openpyn import root
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+
+try:
+    import gi
+except ImportError:
+    print("Python3-gi not found, expected on a non-gui os")
+    sys.exit()
+try:
+    gi.require_version('Notify', '0.7')
+    from gi.repository import Notify
+except ValueError:
+    print("Notify 0.7 not found, , expected on a non-gui os")
+    sys.exit()
 
 
 def socket_connect(server, port):
@@ -37,9 +45,11 @@ def show():
             notification = Notify.Notification.new(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         server_name = ""
         last_status_UP = False
+        # s.send(str.encode("state on"))
         while True:
             data = s.recv(1024)
             data_str = repr(data)
@@ -59,8 +69,8 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    os.system(
-                        """osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+                    notification = "\"{}\" with title \"{}\"".format(body, summary)
+                    os.system("""osascript -e 'display notification {}'""".format(notification))
 
             server_name_location = data_str.find("common_name=")
             # print(server_name_location)
@@ -74,20 +84,21 @@ def show():
                     # Show again
                     notification.show()
                 elif detected_os == "darwin":
-                    os.system(
-                        """osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+                    notification = "\"{}\" with title \"{}\"".format(body, summary)
+                    os.system("""osascript -e 'display notification {}'""".format(notification))
 
             # break of data stream is empty
             if not data:
                 break
 
-    except (KeyboardInterrupt) as err:
+    except KeyboardInterrupt:
         body = "Disconnected, Bye."
         if detected_os == "linux":
             notification.update(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         print('\nShutting down safely, please wait until process exits\n')
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
@@ -95,7 +106,8 @@ def show():
             notification.update(summary, body)
             notification.show()
         elif detected_os == "darwin":
-            os.system("""osascript -e 'display notification "{}" with title "{}"'""".format(body, summary))
+            notification = "\"{}\" with title \"{}\"".format(body, summary)
+            os.system("""osascript -e 'display notification {}'""".format(notification))
         sys.exit()
 
     s.close()
