@@ -1,12 +1,12 @@
 # openpyn
-A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers (using current data from Nordvpn's website) with lowest latency from you. Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party) and completely compromises Privacy!
+A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party dns) and compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
-* Systemd inegration, easy to check VPN status, autostart at startup.
+* Systemd integration, easy to check VPN status, autostart at startup.
 * Find and connect to servers in a specific city or state.
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
-* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental).
+* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental), ie KILL SWITCH.
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Downloads and Updates (modifications) the latest config files from NordVPN.
 * Option to run the script in background (openvpn daemon mode).
@@ -28,14 +28,14 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 1. Install dependencies if they are not already present.
 ``` bash
 # common dependencies
-sudo apt install openvpn unzip wget
+sudo apt install openvpn unzip wget python3-setuptools
 ```
 ### Installation Methods
-1. Install openpyn with pip3. (Python=>3.5, Don't use on Debian, use method 2 instead).
+1. Install openpyn with pip3 (Python=>3.5)
 **Recommended method to get the latest version and receive frequent updates.**
 ``` bash
 sudo apt install python3-pip
-sudo pip3 install openpyn --upgrade   # DO NOT USE "sudo -H"
+sudo python3 -m pip install openpyn --upgrade
 ```
 2. Alternatively clone and install.
 ``` bash
@@ -43,26 +43,13 @@ git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 sudo python3 setup.py install
 ```
-3. For Ubuntu / Kali / Debian / based OS's with Python=>3.5 (Old Release)
-```bash
-sudo apt install python3-colorama python3-requests python3-setuptools  #dependencies
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.1.0/python3-openpyn_2.1.1-1_all.deb
-sudo dpkg -i python3-openpyn_2.1.1-1_all.deb
-```
-4. For Fedora, all dependencies should be auto installed. (Old Release)
-```bash
-wget https://github.com/jotyGill/openpyn-nordvpn/releases/download/2.2.0/openpyn-2.2-1.noarch.rpm
-sudo dnf install ./openpyn-2.2-1.noarch.rpm
-```
-5. For macOS with Python=>3.6.4 (credit: [1951FDG](https://github.com/1951FDG))
+5. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 xcode-select --install
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
-brew install python3
-brew install wget
-brew install openvpn
+brew install python3 wget openvpn
 sudo brew services start openvpn
 ```
 ``` bash
@@ -74,15 +61,8 @@ sudo pip3 install --upgrade .
 6. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
-opkg install git
-opkg install git-http
-opkg install iputils-ping
-opkg install procps-ng-pgrep
-opkg install python3
-opkg install python3-pip
-opkg install sudo
-opkg install unzip
-opkg install wget
+opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget
+
 ```
 ``` bash
 cd /tmp/share/
@@ -99,11 +79,14 @@ Initialise the script with "--init" (store credentials, install Systemd service,
 ``` bash
 sudo openpyn --init
 ```
+Note: if you get ' openpyn: command not found' when using sudo on Fedora, create a symbolic link.
+`sudo ln -s /usr/local/bin/openpyn /bin/openpyn`
+
 That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
 * At minimum, you only need to specify the country-code, default port is UDP-1194, If you want to use
-TCP-443 instead, use "--tcp" switch. ON NON GUI OSs USE SWITCH '--silent'
+TCP-443 instead, use "--tcp" switch.
 ``` bash
 openpyn us
 ```
@@ -113,9 +96,9 @@ account if you try to login from an IP that resides in a different physical loca
 openpyn us -a ny
 openpyn us --area "new york"
 ```
-* To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks.
+* To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks. i.e KILL SWITCH
 ``` bash
-openpyn us -f # (Highly Experimental!) Warning, clears IPtables rules!
+openpyn us -f # Experimental!, Warning, clears IPtables rules!
               # (changes are non persistent, simply reboot if having networking issues)
 ```
 * When using "-f", To allow custom ports (from internal ip ranges, i.e 192.168 or 10.) through the firewall.
