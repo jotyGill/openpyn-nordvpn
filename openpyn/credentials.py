@@ -5,7 +5,7 @@ import sys
 from openpyn import __basefilepath__, root
 
 credentials_file_path = __basefilepath__ + "credentials"
-print("credentials file ", credentials_file_path)
+# print("credentials file ", credentials_file_path)
 
 
 def check_credentials():
