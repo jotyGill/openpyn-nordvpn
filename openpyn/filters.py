@@ -8,8 +8,10 @@ def filter_by_area(area, type_country_filtered):
     resolved_locations = locations.get_unique_locations(list_of_servers=type_country_filtered)
     for aServer in type_country_filtered:
         for item in resolved_locations:
+            lower_case_areas = [x.lower() for x in item[2]]
             if aServer["location"]["lat"] == item[1]["lat"] and \
-                    aServer["location"]["long"] == item[1]["long"] and area in item[2]:
+                    aServer["location"]["long"] == item[1]["long"] and \
+                    area.lower() in lower_case_areas:
                 aServer["location_names"] = item[2]  # add location info to server
                 # print(aServer)
                 remaining_servers.append(aServer)
