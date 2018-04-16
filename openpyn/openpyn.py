@@ -181,7 +181,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             openpyn_options += country_code
 
         elif server:
-            openpyn_options += server
+            openpyn_options += " --server " + server
 
         if area:
             openpyn_options += " --area " + area
@@ -702,7 +702,7 @@ def uses_systemd_resolved():
     # however it's not enough, /etc/resolv.conf might be misconfigured and point at wrong place
     # better safe than sorry!
 
-    stub_systemd_resolver = "127.0.0.53" # seems to be hardcoded in systemd
+    stub_systemd_resolver = "127.0.0.53"  # seems to be hardcoded in systemd
     dns_servers = []
     with open('/etc/resolv.conf', 'r') as f:
         import re
@@ -717,7 +717,8 @@ def uses_systemd_resolved():
         return True
 
     # otherwise, something must be broken.. why is systemd-resolved running yet resolv.conf still pointing somewhere else?
-    raise RuntimeError("Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
+    raise RuntimeError(
+        "Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
 
 
 def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
