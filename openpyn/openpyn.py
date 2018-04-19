@@ -181,7 +181,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             openpyn_options += country_code
 
         elif server:
-            openpyn_options += server
+            openpyn_options += " --server " + server
 
         if area:
             openpyn_options += " --area " + area
