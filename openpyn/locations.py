@@ -22,7 +22,7 @@ def get_unique_locations(list_of_servers):
         latLongDic = {"lat": aServer["location"]["lat"], "long": aServer["location"]["long"]}
         if latLongDic not in unique_locations:
             unique_locations.append(latLongDic)
-        # print(unique_locations)
+    # print(unique_locations)
     for eachLocation in unique_locations:
         user_agent = {'User-Agent': user_agents[locations_count % 6],
                       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
@@ -30,9 +30,8 @@ def get_unique_locations(list_of_servers):
         time.sleep(random.randrange(1, 5, 1) * 0.1)
         # geo_address_list = get_location_name(latitude=latitude, longitude=longitude)
         resolved_locations.append(geo_address_list)
-        # print(resolved_locations)
         locations_count += 1
-    print("resolved_locations", resolved_locations)
+    # print("resolved_locations", resolved_locations)
     return resolved_locations
 
 
@@ -46,7 +45,7 @@ def get_locations(location_dic, req_headers):
         lon=longitude
     )
     final_url = url + params
-    print("req_headers", req_headers)
+    # print("req_headers", req_headers)
     r = requests.get(final_url, headers=req_headers)
     geo_address_list = []
     name_list = []
