@@ -778,15 +778,10 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
     if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         try:
             if use_systemd_resolved:
-                up_down_script = "/etc/openvpn/scripts/update-systemd-resolved"
+                up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' has systemd-resolve running ",
                       "using it to update DNS Resolver Entries")
-                if not os.path.lexists(up_down_script):
-                    print(Fore.RED + "Expected {} to exist. ".format(up_down_script) +
-                          "Please install it from https://github.com/jonathanio/update-systemd-resolved")
-                    print(Style.RESET_ALL)
-                    sys.exit(1)
             elif use_resolvconf:
                 # tunnel dns throught vpn by changing /etc/resolv.conf using
                 # "update-resolv-conf.sh" to change the dns servers to NordVPN's.

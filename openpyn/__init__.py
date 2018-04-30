@@ -2,7 +2,7 @@ import sys
 import os.path
 import subprocess
 
-__version__ = "2.6.0.dev1"
+__version__ = "2.6.0.dev2"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __data_files__ = []
 
