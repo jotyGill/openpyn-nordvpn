@@ -578,7 +578,7 @@ def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
 
     if not area:
         locations_in_country = locations.get_unique_locations(list_of_servers=json_res_list)
-        print("The available Locations in country", list_servers.upper(), "are :")
+        print("\nThe available Locations in country", list_servers.upper(), "are :")
         for location in locations_in_country:
             print(location[2])
 
