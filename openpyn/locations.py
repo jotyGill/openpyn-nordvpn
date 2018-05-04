@@ -1,8 +1,8 @@
 import random
 import sys
 import time
-import requests
 
+import requests
 
 user_agents = ['Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0',
                'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0',
@@ -28,7 +28,6 @@ def get_unique_locations(list_of_servers):
                       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
         geo_address_list = get_locations(eachLocation, user_agent)
         time.sleep(random.randrange(1, 5, 1) * 0.1)
-        # geo_address_list = get_location_name(latitude=latitude, longitude=longitude)
         resolved_locations.append(geo_address_list)
         locations_count += 1
     # print("resolved_locations", resolved_locations)
@@ -78,48 +77,4 @@ request limit. No location data for you :( you could restart your router to get 
             name_list.append(results["state_district"])
     geo_address_list.insert(2, name_list)
     print(geo_address_list)
-    return geo_address_list
-
-
-def get_location_name(location_dic):
-    latitude = location_dic["lat"]
-    longitude = location_dic["long"]
-    url = 'https://maps.googleapis.com/maps/api/geocode/json'
-    params = "latlng={lat},{lon}&sensor={sen}".format(
-        lat=latitude,
-        lon=longitude,
-        sen='false'
-    )
-    final_url = url + "?" + params
-    r = requests.get(final_url)
-    geo_address_list = []
-    name_list = []
-    try:
-        response = r.json()
-        results = response['results'][0]['address_components']
-        # print(results)
-    except IndexError:
-        print("IndexError: Looks like you have reached Google maps API's daily \
-request limit. No location data for you :( you could restart your router to get a new IP.")
-        sys.exit()
-    country = None
-    geo_address_list.append(location_dic)
-    for c in results:
-        if "administrative_area_level_2" in c['types']:
-            city_name1 = c['short_name']
-            name_list.append(city_name1.lower())
-        if "locality" in c['types']:
-            city_name2 = c['long_name']
-            name_list.append(city_name2.lower())
-        if "administrative_area_level_1" in c['types']:
-            area_name = c['long_name']
-            name_list.append(area_name.lower())
-        if "administrative_area_level_1" in c['types']:
-            area_name_short = c['short_name']
-            name_list.append(area_name_short.lower())
-        if "country" in c['types']:
-            country = c['short_name']
-            geo_address_list.insert(0, country.lower().split(" "))
-    geo_address_list.insert(2, name_list)
-    # print(geo_address_list)
     return geo_address_list
