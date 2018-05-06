@@ -40,10 +40,13 @@ sudo python3 -m pip install openpyn --upgrade
 2. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
-cd openpyn-nordvpn
-sudo python3 setup.py install
+cd openpyn-nordvpn && sudo python3 setup.py install
 ```
-5. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
+For the latest/ in development features, try the 'test' branch instead
+```bash
+ git clone --branch test https://github.com/jotyGill/openpyn-nordvpn.git
+```
+3. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 xcode-select --install
@@ -58,7 +61,7 @@ cd openpyn-nordvpn
 git pull
 sudo pip3 install --upgrade .
 ```
-6. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
+4. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget

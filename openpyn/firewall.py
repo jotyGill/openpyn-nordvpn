@@ -41,7 +41,7 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
     for interface in interfaces_details:
         if skip_dns_patch is False:
             # if interface is active with an IP in it, don't send DNS requests to it
-            if len(interface) == 3 and "tun" not in interface[0]:
+            if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
                 subprocess.call(
                     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
                         "udp", "--destination-port", "53", "-j", "DROP"])

@@ -1,17 +1,17 @@
 #!/bin/bash
-# 
+
 # Parses DHCP options from openvpn to update resolv.conf
 # To use set as 'up' and 'down' script in your openvpn *.conf:
 # up /etc/openvpn/update-resolv-conf
 # down /etc/openvpn/update-resolv-conf
 #
 # Used snippets of resolvconf script by Thomas Hood and Chris Hanson.
-# Licensed under the GNU GPL.  See /usr/share/common-licenses/GPL. 
-# 
+# Licensed under the GNU GPL.  See /usr/share/common-licenses/GPL.
+#
 # NordVPN DNS IPs:
 #
-     foreign_option_1='dhcp-option DNS 162.242.211.137'
-     foreign_option_2='dhcp-option DNS 78.46.223.24'
+     foreign_option_1='dhcp-option DNS 103.86.99.100'
+     foreign_option_2='dhcp-option DNS 103.86.96.100'
      foreign_option_3='dhcp-option DNS 208.67.222.220'  #opendns
 #
 
@@ -55,4 +55,3 @@ case "$script_type" in
 	/sbin/resolvconf -d "${dev}.openvpn"
 	;;
 esac
-
