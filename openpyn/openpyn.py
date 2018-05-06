@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -151,6 +152,12 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             nvram = None
     elif detected_os == "win32":
         print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
+        print(Style.RESET_ALL)
+        sys.exit()
+
+    # check if dependencies are installed
+    if shutil.which("openvpn") is None or shutil.which("wget") is None or shutil.which("unzip") is None:
+        print(Fore.RED + "Please Install 'openvpn' 'wget' 'unzip' first")
         print(Style.RESET_ALL)
         sys.exit()
 
@@ -635,7 +642,7 @@ def check_config_files():
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
         print(Fore.GREEN + "\nRunning openpyn for the first time? running \
-'openpyn --update' for you :) \n" + Fore.RESET)
+'openpyn --update' for you :) \n")
         time.sleep(5)
         # download the config files
         update_config_files()
@@ -781,7 +788,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                 up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' has systemd-resolve running ",
-                      "using it to update DNS Resolver Entries")
+                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
             elif use_resolvconf:
                 # tunnel dns throught vpn by changing /etc/resolv.conf using
                 # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -789,8 +796,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                 up_down_script = __basefilepath__ + "scripts/update-resolv-conf.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' Does have '/sbin/resolvconf'",
-                      "using it to update DNS Resolver Entries")
-                print(Style.RESET_ALL)
+                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
             else:
                 raise RuntimeError("Should not happen")
 

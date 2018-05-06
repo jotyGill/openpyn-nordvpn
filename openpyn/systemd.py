@@ -4,7 +4,7 @@ from openpyn import __basefilepath__
 
 
 def install_service():
-    openpyn_options = input("Enter Openpyn options to be stored in systemd \
+    openpyn_options = input("\nEnter Openpyn options to be stored in systemd \
 service file (/etc/systemd/system/openpyn.service, \
 Default(Just Press Enter) is, uk : ") or "uk"
     update_service(openpyn_options)
