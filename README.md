@@ -1,12 +1,12 @@
 # openpyn
-A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party dns) and compromises Privacy!
+A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN) goes through your ISP's DNS (unencrypted) and compromises Privacy! (warning: at present, OS's using 'systemd-resolved' i.e latest Ubuntu versions are still leaking DNS traffic unless option '-f' is used)
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
 * Systemd integration, easy to check VPN status, autostart at startup.
 * Find and connect to servers in a specific city or state.
 * Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
-* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental), ie KILL SWITCH.
+* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental, atm inconsistent behaviour), ie KILL SWITCH.
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Downloads and Updates (modifications) the latest config files from NordVPN.
 * Option to run the script in background (openvpn daemon mode).
@@ -17,7 +17,7 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 * Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \
 "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
-* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
+* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies.
 * NVRAM write support for Asuswrt-merlin
 * Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
 
@@ -40,10 +40,13 @@ sudo python3 -m pip install openpyn --upgrade
 2. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
-cd openpyn-nordvpn
-sudo python3 setup.py install
+cd openpyn-nordvpn && sudo python3 setup.py install
 ```
-5. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
+For the latest/ in development features, try the 'test' branch instead
+```bash
+ git clone --branch test https://github.com/jotyGill/openpyn-nordvpn.git
+```
+3. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 xcode-select --install
@@ -58,7 +61,7 @@ cd openpyn-nordvpn
 git pull
 sudo pip3 install --upgrade .
 ```
-6. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
+4. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
 # common dependencies
 opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget

@@ -2,10 +2,10 @@ import os
 import subprocess
 import sys
 
+from colorama import Fore, Style
 from openpyn import __basefilepath__, root
 
 credentials_file_path = __basefilepath__ + "credentials"
-# print("credentials file ", credentials_file_path)
 
 
 def check_credentials():
@@ -14,11 +14,11 @@ def check_credentials():
 
 def save_credentials():
     if root.verify_running_as_root() is False:
-        print("Please run as 'sudo openpyn --init' the first time. Root access is",
-              "needed to store credentials in " + "'" + credentials_file_path + "'" + ".")
+        print(Fore.RED + "\nPlease run as 'sudo openpyn --init' the first time. Root access is",
+              "needed to store credentials in " + "'" + credentials_file_path + "'" + "." + Style.RESET_ALL)
         sys.exit()
     else:
-        print("Storing credentials in " + "'" + credentials_file_path + "'" + " with openvpn",
+        print(Fore.BLUE + "Storing credentials in " + "'" + credentials_file_path + "'" + " with openvpn",
               "compatible 'auth-user-pass' file format\n")
 
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
@@ -32,7 +32,7 @@ def save_credentials():
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
             print("Awesome, the credentials have been saved in " +
-                  "'" + credentials_file_path + "'" + "\n")
+                  "'" + credentials_file_path + "'" + "\n" + Style.RESET_ALL)
         except (IOError, OSError):
             print("IOError while creating 'credentials' file.")
     return

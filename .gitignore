@@ -6,3 +6,5 @@ deb_dist
 .*
 .python-version
 openpyn/test.py
+openpyn/credentials
+files

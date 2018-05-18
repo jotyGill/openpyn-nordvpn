@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -154,6 +155,12 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         print(Style.RESET_ALL)
         sys.exit()
 
+    # check if dependencies are installed
+    if shutil.which("openvpn") is None or shutil.which("wget") is None or shutil.which("unzip") is None:
+        print(Fore.RED + "Please Install 'openvpn' 'wget' 'unzip' first")
+        print(Style.RESET_ALL)
+        sys.exit()
+
     if init:
         initialise()
     elif daemon:
@@ -181,7 +188,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             openpyn_options += country_code
 
         elif server:
-            openpyn_options += server
+            openpyn_options += " --server " + server
 
         if area:
             openpyn_options += " --area " + area
@@ -578,7 +585,7 @@ def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
 
     if not area:
         locations_in_country = locations.get_unique_locations(list_of_servers=json_res_list)
-        print("The available Locations in country", list_servers.upper(), "are :")
+        print("\nThe available Locations in country", list_servers.upper(), "are :")
         for location in locations_in_country:
             print(location[2])
 
@@ -635,7 +642,7 @@ def check_config_files():
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
         print(Fore.GREEN + "\nRunning openpyn for the first time? running \
-'openpyn --update' for you :) \n" + Fore.RESET)
+'openpyn --update' for you :) \n")
         time.sleep(5)
         # download the config files
         update_config_files()
@@ -702,7 +709,7 @@ def uses_systemd_resolved():
     # however it's not enough, /etc/resolv.conf might be misconfigured and point at wrong place
     # better safe than sorry!
 
-    stub_systemd_resolver = "127.0.0.53" # seems to be hardcoded in systemd
+    stub_systemd_resolver = "127.0.0.53"  # seems to be hardcoded in systemd
     dns_servers = []
     with open('/etc/resolv.conf', 'r') as f:
         import re
@@ -717,7 +724,8 @@ def uses_systemd_resolved():
         return True
 
     # otherwise, something must be broken.. why is systemd-resolved running yet resolv.conf still pointing somewhere else?
-    raise RuntimeError("Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
+    raise RuntimeError(
+        "Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
 
 
 def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_provider="nordvpn"):
@@ -777,15 +785,10 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
     if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         try:
             if use_systemd_resolved:
-                up_down_script = "/etc/openvpn/scripts/update-systemd-resolved"
+                up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' has systemd-resolve running ",
-                      "using it to update DNS Resolver Entries")
-                if not os.path.lexists(up_down_script):
-                    print(Fore.RED + "Expected {} to exist. ".format(up_down_script) +
-                          "Please install it from https://github.com/jonathanio/update-systemd-resolved")
-                    print(Style.RESET_ALL)
-                    sys.exit(1)
+                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
             elif use_resolvconf:
                 # tunnel dns throught vpn by changing /etc/resolv.conf using
                 # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
@@ -793,8 +796,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                 up_down_script = __basefilepath__ + "scripts/update-resolv-conf.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' Does have '/sbin/resolvconf'",
-                      "using it to update DNS Resolver Entries")
-                print(Style.RESET_ALL)
+                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
             else:
                 raise RuntimeError("Should not happen")
 
