@@ -142,9 +142,11 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     detected_os = sys.platform
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            force_fw_rules = False
             silent = True
             skip_dns_patch = True
         elif os.path.exists("/etc/openwrt_release"):
+            force_fw_rules = False
             silent = True
             skip_dns_patch = True
             nvram = None
