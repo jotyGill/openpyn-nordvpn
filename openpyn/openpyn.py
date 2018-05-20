@@ -763,7 +763,7 @@ def uses_systemd_resolved():
         ns_rgx = re.compile("nameserver (.*)")
         for line in f:
             m = ns_rgx.match(line)
-            if m and len(m.groups()) > 0:
+            if m and m.groups:
                 dns_servers.append(m.group(1))
     resolv_conf_managed = dns_servers == [stub_systemd_resolver]
 
@@ -796,8 +796,8 @@ don't worry running 'openpyn --update' for you :)", vpn_config_file)
         # logger.debug("ipvanish")
 
     if test:
-        logger.verbose("Simulation end reached, \
-openpyn would have connected to Server: " + server + " on port: " + port + " with 'silent' mode: " + str(silent))
+        logger.success("Simulation end reached, \
+openpyn would have connected to server: " + server + " on port: " + port + " with 'silent' mode: " + str(silent).lower())
         sys.exit(1)
 
     kill_vpn_processes()   # kill existing OpenVPN processes
