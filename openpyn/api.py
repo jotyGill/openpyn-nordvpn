@@ -52,7 +52,7 @@ def list_all_countries():
         if res["domain"][:2] not in countries_mapping:
             countries_mapping.update({res["domain"][:2]: res["country"]})
     for key, val in countries_mapping.items():
-        logger.verbose("Full Name : " + val + "      Country Code : " + key)
+        print("Full Name : " + val + "      Country Code : " + key)
     sys.exit()
 
 
