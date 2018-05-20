@@ -9,7 +9,7 @@ logger = logging.getLogger(__package__)
 # Clears Firewall rules, applies basic rules.
 def clear_fw_rules():
     root.verify_root_access("Root access needed to modify 'iptables' rules")
-    logger.verbose("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
+    logger.info("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
     subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
     # allow all outgoing traffic
     subprocess.call("sudo iptables -P OUTPUT ACCEPT".split())

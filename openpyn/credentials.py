@@ -24,7 +24,7 @@ def save_credentials():
 Root access is needed to store credentials in '%s'.", credentials_file_path)
         sys.exit()
     else:
-        logger.verbose("Storing credentials in '%s' with openvpn \
+        logger.info("Storing credentials in '%s' with openvpn \
 compatible 'auth-user-pass' file format", credentials_file_path)
 
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
@@ -37,7 +37,7 @@ compatible 'auth-user-pass' file format", credentials_file_path)
             # Change file permission to 600
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
-            logger.verbose("Awesome, the credentials have been saved in '%s'", credentials_file_path)
+            logger.info("Awesome, the credentials have been saved in '%s'", credentials_file_path)
         except (IOError, OSError):
             logger.error("IOError while creating 'credentials' file.")
     return

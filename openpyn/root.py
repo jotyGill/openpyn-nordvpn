@@ -22,7 +22,7 @@ def verify_root_access(message):
             ["sudo", "-n", "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL)
     # -n 'non-interactive' mode used to, not prompt for password (if user not sudo) but throw err.
     except subprocess.CalledProcessError:
-        logger.error(message)
+        logger.notice(message)
         return False
     return True
 

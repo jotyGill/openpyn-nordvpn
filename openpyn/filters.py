@@ -102,6 +102,6 @@ def filter_by_load(server_list, max_load, top_servers):
             remaining_servers.append(server)
 
     if len(remaining_servers) < 1:    # if no servers under search criteria
-        logger.verbose("There are no servers that satisfy your criteria, please broaden your search.")
+        logger.error("There are no servers that satisfy your criteria, please broaden your search.")
         sys.exit()
     return remaining_servers
