@@ -577,7 +577,7 @@ is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
         sys.exit()
     try:
         subprocess.check_call(
-            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
+            ["sudo", "unzip", "-q", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
             stderr=subprocess.DEVNULL)
         subprocess.check_call(
             ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
