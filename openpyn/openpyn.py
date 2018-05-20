@@ -182,6 +182,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         logger.debug("Interactive")
     else:
         logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.NOTICE)
         logger.debug("Non-Interactive")
         stats = False
 
