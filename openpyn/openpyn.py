@@ -9,7 +9,6 @@ import sys
 import time
 
 import coloredlogs
-import verboselogs
 from colorama import Fore, Style
 from openpyn import __basefilepath__  # pylint: disable=W0406
 from openpyn import __version__  # pylint: disable=W0406
@@ -23,7 +22,7 @@ from openpyn import locations  # pylint: disable=W0406
 from openpyn import root  # pylint: disable=W0406
 from openpyn import systemd  # pylint: disable=W0406
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def main():
@@ -140,14 +139,6 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
         internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
-
-    stats = True
-    if sys.__stdin__.isatty():
-        logger.debug("Interactive")
-    else:
-        logger.debug("Non-Interactive")
-        stats = False
-
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -169,7 +160,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     logformat = '%(levelname)s %(message)s'
 
     # Create a logger object.
-    # logger = verboselogs.VerboseLogger(__name__)
+    # logger = logging.getLogger(__package__)
     logger.addHandler(logging.StreamHandler())
 
     # In this case only log messages originating from this logger will show up on the terminal.
@@ -185,6 +176,13 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     # logger.success(__version__)
     # logger.error(__version__)
     # logger.critical(__version__)
+
+    stats = True
+    if sys.__stdin__.isatty():
+        logger.debug("Interactive")
+    else:
+        logger.debug("Non-Interactive")
+        stats = False
 
     port = "udp"
     if tcp:

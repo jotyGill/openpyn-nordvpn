@@ -1,10 +1,9 @@
+import logging
 import subprocess
 
-import coloredlogs
-import verboselogs
 from openpyn import root
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 # Clears Firewall rules, applies basic rules.

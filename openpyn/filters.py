@@ -1,11 +1,10 @@
+import logging
 import operator
 import sys
 
-import coloredlogs
-import verboselogs
 from openpyn import locations
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def filter_by_area(area, type_country_filtered):

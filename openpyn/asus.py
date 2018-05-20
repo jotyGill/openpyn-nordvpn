@@ -1,11 +1,10 @@
+import logging
 import subprocess
 
-import coloredlogs
-import verboselogs
 from openpyn import __basefilepath__, api
 from openpyn.converter import T_CLIENT, Converter
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):

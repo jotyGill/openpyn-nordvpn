@@ -1,11 +1,10 @@
+import logging
 import sys
 
 import requests
-import coloredlogs
-import verboselogs
 from openpyn import filters
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 # Using requests, GETs and returns json from a url.

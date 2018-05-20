@@ -1,12 +1,10 @@
+import logging
 import os
 import pwd
 import subprocess
 import sys
 
-import coloredlogs
-import verboselogs
-
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def verify_root_access(message):

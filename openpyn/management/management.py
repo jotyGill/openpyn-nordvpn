@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import logging
 import os
 import socket
 import sys
 from time import sleep
 
-import coloredlogs
-import verboselogs
+logger = logging.getLogger(__package__)
 
 try:
     import gi

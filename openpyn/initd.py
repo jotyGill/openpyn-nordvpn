@@ -1,14 +1,13 @@
 import argparse
 import fileinput
+import logging
 import os
 import subprocess
 import sys
 
-import coloredlogs
-import verboselogs
 from openpyn import api
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def install_service():

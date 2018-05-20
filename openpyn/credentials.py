@@ -1,14 +1,13 @@
+import logging
 import os
 import subprocess
 import sys
 
-import coloredlogs
-import verboselogs
 from openpyn import __basefilepath__, root
 
 credentials_file_path = __basefilepath__ + "credentials"
 
-logger = verboselogs.VerboseLogger(__name__)
+logger = logging.getLogger(__package__)
 
 
 def check_credentials():
