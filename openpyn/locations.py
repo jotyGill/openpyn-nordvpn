@@ -34,7 +34,7 @@ def get_unique_locations(list_of_servers):
         time.sleep(random.randrange(1, 5, 1) * 0.1)
         resolved_locations.append(geo_address_list)
         locations_count += 1
-    # logger.debug("resolved_locations", resolved_locations)
+    # logger.debug("resolved_locations %s", resolved_locations)
     return resolved_locations
 
 
@@ -48,7 +48,7 @@ def get_locations(location_dic, req_headers):
         lon=longitude
     )
     final_url = url + params
-    # logger.debug("req_headers", req_headers)
+    # logger.debug("req_headers %s", req_headers)
     r = requests.get(final_url, headers=req_headers)
     geo_address_list = []
     name_list = []

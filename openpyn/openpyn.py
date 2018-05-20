@@ -475,10 +475,10 @@ falling back to wait of 1 second between pings, pings will be slow")
             ping_string = str(ping_output)
             # logger.debug(ping_string)
             if "0%" not in ping_string:
-                logger.error("Some packet loss while pinging", i[0], "Skipping it")
+                logger.error("Some packet loss while pinging %s, skipping it", i[0])
                 continue
         except subprocess.CalledProcessError:
-            logger.error("Ping Failed to:", i[0], "Excluding it from the list")
+            logger.error("Ping Failed to: %s, excluding it from the list", i[0])
             continue
         except KeyboardInterrupt:
             logger.info('KeyboardInterrupt; Shutting down')
@@ -771,10 +771,10 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
 
         vpn_config_file = __basefilepath__ + "files/" + folder + server +\
             ".nordvpn.com." + port + ".ovpn"
-        # logger.debug("CONFIG FILE", vpn_config_file)
+        # logger.debug("CONFIG FILE %s", vpn_config_file)
         if os.path.isfile(vpn_config_file) is False:
-            logger.notice("VPN configuration file" + vpn_config_file + "doesn't exist, \
-don't worry running 'openpyn --update' for you :)")
+            logger.notice("VPN configuration file %s doesn't exist, \
+don't worry running 'openpyn --update' for you :)", vpn_config_file)
             time.sleep(6)
             update_config_files()
     elif server_provider == "ipvanish":
@@ -814,15 +814,15 @@ when asked, provide the sudo credentials")
         try:
             if use_systemd_resolved:
                 up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
-                logger.success("Your OS '" + detected_os + "' has systemd-resolve running, \
-using it to update DNS Resolver Entries")
+                logger.success("Your OS '%s' has systemd-resolve running, \
+using it to update DNS Resolver Entries", detected_os)
             elif use_resolvconf:
                 # tunnel DNS through VPN by changing /etc/resolv.conf using
                 # "update-resolv-conf.sh" to change the DNS servers to NordVPN's.
 
                 up_down_script = __basefilepath__ + "scripts/update-resolv-conf.sh"
-                logger.success("Your OS '" + detected_os + "' Does have '/sbin/resolvconf', \
-using it to update DNS Resolver Entries")
+                logger.success("Your OS '%s' Does have '/sbin/resolvconf', \
+using it to update DNS Resolver Entries", detected_os)
             else:
                 raise RuntimeError("Should not happen")
 
@@ -851,8 +851,7 @@ using it to update DNS Resolver Entries")
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                logger.error("Error opening configuration file" + vpn_config_file + "Make Sure it exists, \
-run 'openpyn --update'")
+                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
             logger.info("Shutting down safely, please wait until process exits")
@@ -863,7 +862,7 @@ run 'openpyn --update'")
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
-            logger.warning("Your OS '" + detected_os + "' Does not have '/sbin/resolvconf'")
+            logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)
             logger.notice("Manually applying patch to tunnel DNS through the VPN tunnel by modifying '/etc/resolv.conf'")
             subprocess.call(["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
@@ -893,7 +892,7 @@ run 'openpyn --update'")
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
-                logger.error("Error opening config file" + vpn_config_file + "Make Sure it exists, run 'openpyn --update'")
+                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
             logger.info('Shutting down safely, please wait until process exits')

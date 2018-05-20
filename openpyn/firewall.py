@@ -48,31 +48,27 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
             if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
                 subprocess.call(
                     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                        "udp", "--destination-port", "53", "-j", "DROP"])
+                     "udp", "--destination-port", "53", "-j", "DROP"])
                 # subprocess.call(
                 #     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                #         "tcp", "--destination-port", "53", "-j", "DROP"])
+                #      "tcp", "--destination-port", "53", "-j", "DROP"])
 
         if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
             # allow access to vpn_server_ip
             subprocess.call(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0],
-                    "-d", vpn_server_ip, "-j", "ACCEPT"])
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d", vpn_server_ip, "-j", "ACCEPT"])
             # talk to the vpnServer ip to connect to it
             subprocess.call(
                 ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                    "-s", vpn_server_ip, "-j", "ACCEPT"])
+                 "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0], "-s", vpn_server_ip, "-j", "ACCEPT"])
 
             # allow access to internal ip range
-            # logger.debug("internal ip with range", interface[2])
+            # logger.debug("internal ip with range %s", interface[2])
             subprocess.call(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
-                    interface[2], "-j", "ACCEPT"])
+                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d", interface[2], "-j", "ACCEPT"])
             subprocess.call(
                 ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                    "-s", interface[2], "-j", "ACCEPT"])
+                 "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0], "-s", interface[2], "-j", "ACCEPT"])
 
     # Allow loopback traffic
     subprocess.call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
@@ -95,5 +91,5 @@ def internally_allow_ports(interfaces_details, internally_allowed):
             # Allow the specified ports on internal network
             for port in internally_allowed:
                 subprocess.call(
-                    ("sudo iptables -A INPUT -p tcp --dport " + port + " -i " +
-                        interface[0] + " -s " + interface[2] + " -j ACCEPT").split())
+                    ["sudo", "iptables", "-A", "INPUT", "-p", "tcp",
+                     "--dport", port, "-i", interface[0], "-s", interface[2], "-j", "ACCEPT"])

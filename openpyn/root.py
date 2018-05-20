@@ -53,7 +53,7 @@ def obtain_root_access():
 def logged_in_user_is_root(username):
     user_record = pwd.getpwnam(username)
     user_id = user_record.pw_gid
-    # logger.debug(user_record, user_id)
+    # logger.debug("user_record %s", user_id)
     if user_id == 0:
         return True
     return False

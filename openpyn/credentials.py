@@ -17,12 +17,12 @@ def check_credentials():
 
 def save_credentials():
     if root.verify_running_as_root() is False:
-        logger.error("\nPlease run as 'sudo openpyn --init' the first time. \
-Root access is needed to store credentials in " + "'" + credentials_file_path + "'" + ".")
+        logger.error("Please run as 'sudo openpyn --init' the first time. \
+Root access is needed to store credentials in '%s'.", credentials_file_path)
         sys.exit()
     else:
-        logger.verbose("Storing credentials in " + "'" + credentials_file_path + "'" + " with openvpn \
-compatible 'auth-user-pass' file format")
+        logger.verbose("Storing credentials in '%s' with openvpn \
+compatible 'auth-user-pass' file format", credentials_file_path)
 
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
         password = input("Enter the password for NordVPN: ")
@@ -34,7 +34,7 @@ compatible 'auth-user-pass' file format")
             # Change file permission to 600
             subprocess.check_call(["sudo", "chmod", "600", credentials_file_path])
 
-            logger.verbose("Awesome, the credentials have been saved in " + "'" + credentials_file_path + "'")
+            logger.verbose("Awesome, the credentials have been saved in '%s'", credentials_file_path)
         except (IOError, OSError):
             logger.error("IOError while creating 'credentials' file.")
     return

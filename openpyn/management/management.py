@@ -80,7 +80,7 @@ def show():
             if server_name_location != -1 and last_status_UP is True:
                 server_name_start = data_str[server_name_location + 12:]
                 server_name = server_name_start[:server_name_start.find(".com") + 4]
-                # logger.debug("Both True and server_name" + server_name)
+                # logger.debug("Both True and server_name %s", server_name)
                 body = "Connected! to " + server_name
                 if detected_os == "linux":
                     notification.update(summary, body)
