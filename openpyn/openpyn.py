@@ -818,12 +818,17 @@ openpyn would have connected to server: " + server + " on port: " + port + " wit
 when asked, provide the sudo credentials")
         else:
             subprocess.Popen("openpyn-management".split())
+    use_systemd_resolved = False
+    use_resolvconf = False
     if detected_os == "linux":
-        use_systemd_resolved = uses_systemd_resolved()
-        use_resolvconf = os.path.isfile("/sbin/resolvconf")
+        if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            skip_dns_patch = True
+        elif os.path.exists("/etc/openwrt_release"):
+            skip_dns_patch = True
+        else:
+            use_systemd_resolved = uses_systemd_resolved()
+            use_resolvconf = os.path.isfile("/sbin/resolvconf")
     else:
-        use_systemd_resolved = False
-        use_resolvconf = False
         skip_dns_patch = True
     if not openvpn_options:
         openvpn_options = ""
