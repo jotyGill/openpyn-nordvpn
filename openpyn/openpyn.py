@@ -181,6 +181,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     if sys.__stdin__.isatty():
         logger.debug("Interactive")
     else:
+        logger.addHandler(logging.StreamHandler(sys.stdout))
         logger.debug("Non-Interactive")
         stats = False
 
