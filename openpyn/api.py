@@ -1,10 +1,9 @@
 import sys
 
 import requests
-from colorama import Fore, Style
-from openpyn import filters
 import coloredlogs
 import verboselogs
+from openpyn import filters
 
 logger = verboselogs.VerboseLogger(__name__)
 

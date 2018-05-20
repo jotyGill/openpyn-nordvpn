@@ -4,7 +4,6 @@ import sys
 
 import coloredlogs
 import verboselogs
-from colorama import Fore, Style
 from openpyn import __basefilepath__, root
 
 credentials_file_path = __basefilepath__ + "credentials"

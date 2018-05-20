@@ -1,8 +1,8 @@
 import subprocess
 
-from openpyn import root
 import coloredlogs
 import verboselogs
+from openpyn import root
 
 logger = verboselogs.VerboseLogger(__name__)
 
