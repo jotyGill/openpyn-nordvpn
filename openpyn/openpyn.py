@@ -371,8 +371,8 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 if nvram:
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
+                    logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM")
                     sys.exit()
-
                 if stats:
                     print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, \
 Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
@@ -393,6 +393,7 @@ Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
+            logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM")
             sys.exit()
         for i in range(20):  # pylint: disable=W0612
             connect(server, port, silent, test, skip_dns_patch, openvpn_options)
