@@ -1,6 +1,10 @@
 import subprocess
 
+import coloredlogs
+import verboselogs
 from openpyn import __basefilepath__
+
+logger = verboselogs.VerboseLogger(__name__)
 
 
 def install_service():
@@ -32,9 +36,9 @@ def update_service(openpyn_options, run=False):
         service_file.write(service_text)
         service_file.close()
 
-    print("\nThe Following config has been saved in openpyn.service.",
-          "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
-          "'sudo systemctl enable openpyn' \n\n", service_text)
+    logger.notice("The Following config has been saved in openpyn.service. \
+You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
+'sudo systemctl enable openpyn' \n" + service_text)
 
     subprocess.run(["systemctl", "daemon-reload"])
     if run:
@@ -45,10 +49,10 @@ def update_service(openpyn_options, run=False):
         ) == 0
 
         if daemon_running:
-            print("Restarting Openpyn by running 'systemctl restart openpyn'\n\
+            logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
             subprocess.Popen(["systemctl", "restart", "openpyn"])
         else:
-            print("Starting Openpyn by running 'systemctl start openpyn'\n\
+            logger.notice("Starting Openpyn by running 'systemctl start openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
             subprocess.Popen(["systemctl", "start", "openpyn"])

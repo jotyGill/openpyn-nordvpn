@@ -1,12 +1,16 @@
 import subprocess
 
 from openpyn import root
+import coloredlogs
+import verboselogs
+
+logger = verboselogs.VerboseLogger(__name__)
 
 
 # Clears Firewall rules, applies basic rules.
 def clear_fw_rules():
     root.verify_root_access("Root access needed to modify 'iptables' rules")
-    print("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
+    logger.verbose("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
     subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
     # allow all outgoing traffic
     subprocess.call("sudo iptables -P OUTPUT ACCEPT".split())
@@ -61,7 +65,7 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
                     "-s", vpn_server_ip, "-j", "ACCEPT"])
 
             # allow access to internal ip range
-            # print("internal ip with range", interface[2])
+            # logger.debug("internal ip with range", interface[2])
             subprocess.call(
                 ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
                     interface[2], "-j", "ACCEPT"])

@@ -4,7 +4,11 @@ import os
 import subprocess
 import sys
 
+import coloredlogs
+import verboselogs
 from openpyn import api
+
+logger = verboselogs.VerboseLogger(__name__)
 
 
 def install_service():
@@ -147,7 +151,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options, run=False):
-    print(openpyn_options)
+    logger.debug(openpyn_options)
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
@@ -155,13 +159,13 @@ def update_service(openpyn_options, run=False):
         if sline[0].startswith("ARGS"):
             sline[1] = "\"" + openpyn_options + "\""
         line = '='.join(sline)
-        print(line)
+        logger.debug(line)
 
-    print("\nThe Following config has been saved in S23openpyn.",
-          "You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start',",
-          "'/opt/etc/init.d/S23openpyn stop' \n\n")
+    logger.notice("The Following config has been saved in S23openpyn. \
+You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start', \
+'/opt/etc/init.d/S23openpyn stop' \n")
 
     if run:
-        print("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
+        logger.notice("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
 To check VPN status, run '/opt/etc/init.d/S23openpyn check'")
         subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])

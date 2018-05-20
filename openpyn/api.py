@@ -3,6 +3,10 @@ import sys
 import requests
 from colorama import Fore, Style
 from openpyn import filters
+import coloredlogs
+import verboselogs
+
+logger = verboselogs.VerboseLogger(__name__)
 
 
 # Using requests, GETs and returns json from a url.
@@ -13,12 +17,12 @@ def get_json(url):
     try:
         json_response = requests.get(url, headers=headers).json()
     except requests.exceptions.HTTPError:
-        print("Cannot GET the json from nordvpn.com, Manually Specify a Server\
-        using '-s' for example '-s au10'")
+        logger.error("Cannot GET the JSON from nordvpn.com, Manually Specify a Server \
+using '-s' for example '-s au10'")
         sys.exit()
     except requests.exceptions.RequestException:
-        print("There was an ambiguous exception, Check Your Network Connection.",
-              "forgot to flush iptables? (openpyn -x)")
+        logger.error("There was an ambiguous exception, Check Your Network Connection. \
+forgot to flush iptables? (openpyn -x)")
         sys.exit()
     return json_response
 
@@ -49,7 +53,7 @@ def list_all_countries():
         if res["domain"][:2] not in countries_mapping:
             countries_mapping.update({res["domain"][:2]: res["country"]})
     for key, val in countries_mapping.items():
-        print("Full Name : " + val + "      Country Code : " + key + '\n')
+        logger.verbose("Full Name : " + val + "      Country Code : " + key)
     sys.exit()
 
 
@@ -60,6 +64,5 @@ def get_country_code(full_name):
         if res["country"].lower() == full_name.lower():
             code = res["domain"][:2].lower()
             return code
-    print(Fore.RED + "Country Name Not Correct")
-    print(Style.RESET_ALL)
+    logger.error("Country Name Not Correct")
     sys.exit()

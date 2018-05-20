@@ -1,6 +1,11 @@
 import operator
 import sys
+
+import coloredlogs
+import verboselogs
 from openpyn import locations
+
+logger = verboselogs.VerboseLogger(__name__)
 
 
 def filter_by_area(area, type_country_filtered):
@@ -13,7 +18,7 @@ def filter_by_area(area, type_country_filtered):
                     aServer["location"]["long"] == item[1]["long"] and \
                     area.lower() in lower_case_areas:
                 aServer["location_names"] = item[2]  # add location info to server
-                # print(aServer)
+                # logger.debug(aServer)
                 remaining_servers.append(aServer)
     return remaining_servers
 
@@ -23,7 +28,7 @@ def filter_by_country(country_code, type_filtered_servers):
     for aServer in type_filtered_servers:
         if aServer["domain"][:2].lower() == country_code.lower():
             remaining_servers.append(aServer)
-            # print(aServer["domain"])
+            # logger.debug(aServer["domain"])
     return remaining_servers
 
 
@@ -46,13 +51,13 @@ def filter_by_type(json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti
         if netflix:
             for server in netflix_srv:
                 for number in range(server[0], server[1] + 1):
-                    # print(server[2]+str(number)+".")
-                    # print(eachServer["domain"])
+                    # logger.debug(server[2]+str(number)+".")
+                    # logger.debug(eachServer["domain"])
                     if server[2] + str(number) + "." in eachServer["domain"]:
                         remaining_servers.append(eachServer)
-                        # print(eachServer["domain"])
+                        # logger.debug(eachServer["domain"])
         for ServerType in eachServer["categories"]:
-            # print(eachServer["categories"])
+            # logger.debug(eachServer["categories"])
             if p2p and ServerType["name"] == "P2P":
                 remaining_servers.append(eachServer)
             if dedicated and ServerType["name"] == "Dedicated IP servers":
@@ -67,7 +72,7 @@ def filter_by_type(json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti
                     tor_over_vpn is False and anti_ddos is False and netflix is False:
                 if ServerType["name"] == "Standard VPN servers":
                     remaining_servers.append(eachServer)
-    # print("Total available servers = ", serverCount)
+    # logger.debug("Total available servers = ", serverCount)
     return remaining_servers
 
 
@@ -81,7 +86,7 @@ def filter_by_protocol(json_res_list, tcp):
         # when connecting using TCP only append if it supports OpenVPN-TCP
         elif tcp is False and res["features"]["openvpn_udp"] is True:
             remaining_servers.append([res["domain"][:res["domain"].find(".")], res["load"]])
-            # print("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
+            # logger.debug("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
     return remaining_servers
 
 
@@ -98,6 +103,6 @@ def filter_by_load(server_list, max_load, top_servers):
             remaining_servers.append(server)
 
     if len(remaining_servers) < 1:    # if no servers under search criteria
-        print("There are no servers that satisfy your criteria, please broaden your search.")
+        logger.verbose("There are no servers that satisfy your criteria, please broaden your search.")
         sys.exit()
     return remaining_servers
