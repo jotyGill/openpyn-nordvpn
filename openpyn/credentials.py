@@ -16,6 +16,10 @@ def check_credentials():
 
 
 def save_credentials():
+    if not sys.__stdin__.isatty():
+        logger.critical("Please run %s in interactive mode", __name__)
+        sys.exit()
+
     if root.verify_running_as_root() is False:
         logger.error("Please run as 'sudo openpyn --init' the first time. \
 Root access is needed to store credentials in '%s'.", credentials_file_path)

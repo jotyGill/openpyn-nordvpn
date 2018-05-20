@@ -12,6 +12,10 @@ logger = verboselogs.VerboseLogger(__name__)
 
 
 def install_service():
+    if not sys.__stdin__.isatty():
+        logger.critical("Please run %s in interactive mode", __name__)
+        sys.exit()
+
     openpyn_options = input("Enter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"

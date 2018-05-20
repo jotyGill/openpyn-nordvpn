@@ -140,6 +140,14 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
         internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
+
+    stats = True
+    if sys.__stdin__.isatty():
+        logger.debug("Interactive")
+    else:
+        logger.debug("Non-Interactive")
+        stats = False
+
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -344,9 +352,9 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         for tries in range(3):  # pylint: disable=W0612
             better_servers_list = find_better_servers(
                 country_code, area, max_load, top_servers, tcp, p2p,
-                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
-            pinged_servers_list = ping_servers(better_servers_list, pings)
-            chosen_servers = choose_best_servers(pinged_servers_list)
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, stats)
+            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
+            chosen_servers = choose_best_servers(pinged_servers_list, stats)
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 # if "-f" used apply firewall rules
@@ -359,8 +367,10 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                 if nvram:
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     sys.exit()
-                print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
-                      (Fore.GREEN + aserver + Fore.BLUE) + "\n")
+
+                if stats:
+                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, \
+Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 connect(aserver, port, silent, test, skip_dns_patch, openvpn_options)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -401,7 +411,7 @@ def initialise():
 
 # Filters servers based on the specified criteria.
 def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, dedicated,
-                        double_vpn, tor_over_vpn, anti_ddos, netflix):
+                        double_vpn, tor_over_vpn, anti_ddos, netflix, stats):
     if tcp:
         used_protocol = "OPENVPN-TCP"
     else:
@@ -417,34 +427,35 @@ def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, ded
 
     better_servers_list = filters.filter_by_load(server_list, max_load, top_servers)
 
-    print(Style.BRIGHT + Fore.BLUE + "According to NordVPN, Least Busy " +
-          Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Servers, In",
-          Fore.GREEN + country_code.upper() + Fore.BLUE, end=" ")
-    if area:
-        print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
+    if stats:
+        print(Style.BRIGHT + Fore.BLUE + "According to NordVPN, \
+Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Servers in \
+" + Fore.GREEN + country_code.upper() + Fore.BLUE, end=" ")
+        if area:
+            print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
 
-    print(Fore.BLUE + "With 'Load' less than", Fore.GREEN + str(max_load) + Fore.BLUE,
-          "Which Support", Fore.GREEN + used_protocol, end=" ")
-    if p2p:
-        print(", p2p =", p2p, end=" ")
-    if dedicated:
-        print(", dedicated =", dedicated, end=" ")
-    if double_vpn:
-        print(", double_vpn =", double_vpn, end=" ")
-    if tor_over_vpn:
-        print(", tor_over_vpn =", tor_over_vpn, end=" ")
-    if anti_ddos:
-        print(", anti_ddos =", anti_ddos, end=" ")
-    if netflix:
-        print(", netflix =", netflix, end=" ")
+        print(Fore.BLUE + "With 'Load' Less Than", Fore.GREEN + str(max_load) + Fore.BLUE,
+              "Which Support", Fore.GREEN + used_protocol, end=" ")
+        if p2p:
+            print(", p2p =", p2p, end=" ")
+        if dedicated:
+            print(", dedicated =", dedicated, end=" ")
+        if double_vpn:
+            print(", double_vpn =", double_vpn, end=" ")
+        if tor_over_vpn:
+            print(", tor_over_vpn =", tor_over_vpn, end=" ")
+        if anti_ddos:
+            print(", anti_ddos =", anti_ddos, end=" ")
+        if netflix:
+            print(", netflix =", netflix, end=" ")
 
-    print(Fore.BLUE + "are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
+        print(Fore.BLUE + "Are: " + Fore.GREEN + str(better_servers_list) + Fore.BLUE + "\n")
     return better_servers_list
 
 
 # Pings servers with the specified no of "ping",
 # returns a sorted list by Ping Avg and Median Deviation
-def ping_servers(better_servers_list, pings):
+def ping_servers(better_servers_list, pings, stats):
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
@@ -489,8 +500,10 @@ falling back to wait of 1 second between pings, pings will be slow")
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = ",
-              Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
+
+        if stats:
+            print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = \
+" + Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
         # logger.debug(ping_result)
@@ -501,16 +514,17 @@ falling back to wait of 1 second between pings, pings will be slow")
 
 
 # Returns a list of servers (top servers) (e.g 5 best servers) to connect to.
-def choose_best_servers(best_servers):
+def choose_best_servers(best_servers, stats):
     best_servers_names = []
 
     # populate bestServerList
     for i in best_servers:
         best_servers_names.append(i[0][0])
 
-    print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with best Ping are:",
-          Fore.GREEN + str(best_servers_names) + Fore.BLUE)
-    print(Style.RESET_ALL)
+    if stats:
+        print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with Best Ping Are: \
+" + Fore.GREEN + str(best_servers_names) + Fore.BLUE)
+        print(Style.RESET_ALL)
     return best_servers_names
 
 
