@@ -194,6 +194,11 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             force_fw_rules = False
             silent = True
             skip_dns_patch = True
+            if openvpn_options:
+                openvpn_options += " " + "--syslog openpyn --verb 1"
+            else:
+                openvpn_options = "--syslog openpyn --verb 1"
+            logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
             force_fw_rules = False
             silent = True
