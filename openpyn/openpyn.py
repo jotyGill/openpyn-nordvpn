@@ -540,7 +540,7 @@ def kill_vpn_processes():
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.call(["sudo", "killall", "openvpn"])
-        logger.info("Killed the running openvpn process")
+        logger.success("Killed the running openvpn process")
         time.sleep(1)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
