@@ -292,6 +292,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         sys.exit()
 
     elif kill:
+        logger.warning("Killing the running processes")
         kill_management_client()
         kill_vpn_processes()  # don't touch iptable rules
         kill_openpyn_process()
