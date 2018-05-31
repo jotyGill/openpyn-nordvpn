@@ -38,6 +38,17 @@ def update_service(openpyn_options, run=False):
 
     subprocess.run(["systemctl", "daemon-reload"])
     if run:
-        print("Started Openpyn by running 'systemctl start openpyn'\n\
+        daemon_running = subprocess.call(  # subprocess.run behaves differently
+            ["systemctl", "is-active", "openpyn"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) == 0
+
+        if daemon_running:
+            print("Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
-        subprocess.Popen(["systemctl", "start", "openpyn"])
+            subprocess.Popen(["systemctl", "restart", "openpyn"])
+        else:
+            print("Starting Openpyn by running 'systemctl start openpyn'\n\
+To check VPN status, run 'systemctl status openpyn'")
+            subprocess.Popen(["systemctl", "start", "openpyn"])
