@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import getpass
 
 from colorama import Fore, Style
 from openpyn import __basefilepath__, root
@@ -22,7 +23,7 @@ def save_credentials():
               "compatible 'auth-user-pass' file format\n")
 
         username = input("Enter your username for NordVPN, i.e youremail@yourmail.com: ")
-        password = input("Enter the password for NordVPN: ")
+        password = getpass.getpass("Enter the password for NordVPN: ")
         try:
             with open(credentials_file_path, 'w') as creds:
                 creds.write(username + "\n")
