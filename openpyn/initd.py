@@ -52,6 +52,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--test', action='store_true')
     parser.add_argument('-n', '--nvram', type=str, default="5")
     parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
+    parser.add_argument('-loc', '--location', nargs=2, type=float)
 
     try:
         args = parser.parse_args(openpyn_options.split())
@@ -83,6 +84,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     silent = args.silent
     nvram = args.nvram
     openvpn_options = args.openvpn_options
+    location = args.location
 
     detected_os = sys.platform
     if detected_os == "linux":
@@ -149,6 +151,8 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --nvram " + str(nvram)
     if openvpn_options:
         openpyn_options += " --openvpn-options '" + openvpn_options + "'"
+    if location:
+        openpyn_options += " --location " + str(location[1]) + " " + str(location[2])
 
     update_service(openpyn_options)
 

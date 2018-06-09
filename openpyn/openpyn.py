@@ -122,6 +122,8 @@ def main():
     parser.add_argument(
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
+    parser.add_argument(
+        '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
 
     args = parser.parse_args()
 
@@ -131,14 +133,14 @@ def main():
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options)
+        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location)
 
 
 # run openpyn
 def run(init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
-        internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
+        internally_allowed, skip_dns_patch, silent, nvram, openvpn_options, location):
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -319,7 +321,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                 display_servers(
                     list_servers="all", port=port, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                    netflix=netflix)
+                    netflix=netflix, location=location)
             else:
                 api.list_all_countries()
         # if a country code is supplied give details about that country only.
@@ -330,7 +332,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             display_servers(
                 list_servers=list_servers, port=port, area=area, p2p=p2p, dedicated=dedicated,
                 double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                netflix=netflix)
+                netflix=netflix, location=location)
 
     # only clear/touch FW Rules if "-f" used
     elif force_fw_rules:
@@ -358,7 +360,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         for tries in range(3):  # pylint: disable=W0612
             better_servers_list = find_better_servers(
                 country_code, area, max_load, top_servers, tcp, p2p,
-                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, stats)
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
             pinged_servers_list = ping_servers(better_servers_list, pings, stats)
             chosen_servers = choose_best_servers(pinged_servers_list, stats)
             # connect to chosen_servers, if one fails go to next
@@ -418,7 +420,7 @@ def initialise():
 
 # Filters servers based on the specified criteria.
 def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, dedicated,
-                        double_vpn, tor_over_vpn, anti_ddos, netflix, stats):
+                        double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats):
     if tcp:
         used_protocol = "OPENVPN-TCP"
     else:
@@ -428,7 +430,7 @@ def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, ded
     json_res_list = api.get_data_from_api(
         country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
         double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-        netflix=netflix)
+        netflix=netflix, location=location)
 
     server_list = filters.filter_by_protocol(json_res_list=json_res_list, tcp=tcp)
 
@@ -605,14 +607,14 @@ is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
 
 # Lists information about servers under the given criteria.
 def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
-                    tor_over_vpn, anti_ddos, netflix):
+                    tor_over_vpn, anti_ddos, netflix, location):
     servers_on_web = set()      # servers shown on the website
 
     # if list_servers was not a specific country it would be "all"
     json_res_list = api.get_data_from_api(
         country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
         double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-        netflix=netflix)
+        netflix=netflix, location=location)
     # logger.debug(json_res_list)
 
     print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
@@ -642,8 +644,8 @@ def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
     if not area:
         locations_in_country = locations.get_unique_locations(list_of_servers=json_res_list)
         print("The available Locations in country", list_servers.upper(), "are :")
-        for location in locations_in_country:
-            print(location[2])
+        for eachLocation in locations_in_country:
+            print(eachLocation[2])
         print("")
 
     if list_servers != "all" and not p2p and not dedicated and not double_vpn \

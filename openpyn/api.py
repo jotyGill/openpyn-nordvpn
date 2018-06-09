@@ -27,13 +27,15 @@ forgot to flush iptables? (openpyn -x)")
 
 # Gets json data, from api.nordvpn.com. filter servers by type, country, area.
 def get_data_from_api(
-        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix):
-
+        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location):
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
 
     type_filtered_servers = filters.filter_by_type(
         json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
+    if location:
+        type_location_filtered = filters.filter_by_location(location, type_filtered_servers)
+        return type_location_filtered
     if country_code != "all":       # if "-l" had country code with it. e.g "-l au"
         type_country_filtered = filters.filter_by_country(country_code, type_filtered_servers)
         if area is None:

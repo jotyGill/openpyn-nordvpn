@@ -31,6 +31,17 @@ def filter_by_country(country_code, type_filtered_servers):
     return remaining_servers
 
 
+def filter_by_location(location, type_filtered_servers):
+    remaining_servers = []
+    for aServer in type_filtered_servers:
+        if aServer["location"]["lat"] == location[0] and \
+                aServer["location"]["long"] == location[1]:
+            # logger.debug(aServer)
+            remaining_servers.append(aServer)
+    logger.success("SAVED SERVER " + str(remaining_servers))
+    return remaining_servers
+
+
 def filter_by_type(json_response, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix):
     remaining_servers = []
     serverCount = 0
