@@ -93,10 +93,9 @@ def filter_by_protocol(json_res_list, tcp):
         # when connecting using TCP only append if it supports OpenVPN-TCP
         if tcp is True and res["features"]["openvpn_tcp"] is True:
             remaining_servers.append([res["domain"][:res["domain"].find(".")], res["load"]])
-        # when connecting using TCP only append if it supports OpenVPN-TCP
+        # when connecting using UDP only append if it supports OpenVPN-UDP
         elif tcp is False and res["features"]["openvpn_udp"] is True:
             remaining_servers.append([res["domain"][:res["domain"].find(".")], res["load"]])
-            # logger.debug("TCP SERVESR :", res["feature"], res["feature"]["openvpn_tcp"])
     return remaining_servers
 
 
