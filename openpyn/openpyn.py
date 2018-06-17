@@ -785,6 +785,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
     if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         try:
             if use_systemd_resolved:
+                openvpn_options += "--dhcp-option DOMAIN-ROUTE ."
                 up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
                 print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
                       "' has systemd-resolve running ",
