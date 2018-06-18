@@ -43,6 +43,7 @@ def do_dns(iface: str, dest: str, what: str):
             cmd.extend(["-o", iface])
         subprocess.check_call(cmd)
 
+# responsibility of update-systemd-resolved script now...
 def apply_dns_rules():
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     for ndns in NORDVPN_DNS:
@@ -58,7 +59,18 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
     subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
     # Allow all traffic out over the vpn tunnel
-    subprocess.check_call("sudo iptables -A OUTPUT -o tun+ -j ACCEPT".split())
+    # except for DNS, which is handled by systemd-resolved script
+    # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
+    # weird that ping ya.ru was showing "operation not permitted"
+    for prot in ("tcp", "udp"):
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "OUTPUT",
+            "-o", "tun+",
+            "-p", prot,
+            "-d", "0.0.0.0/0", "!", "--dport", "53",
+            "-j", "ACCEPT"
+           ])
     # accept traffic that comes through tun that you connect to
     subprocess.check_call(
         "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
