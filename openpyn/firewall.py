@@ -24,62 +24,98 @@ def clear_fw_rules():
     subprocess.call("sudo iptables -P INPUT DROP".split())
     return
 
+NORDVPN_DNS = [
+    "103.86.96.100",
+    "103.86.99.100",
+]
+
+
+def do_dns(iface: str, dest: str, what: str):
+    for pp in ("tcp", "udp"):
+        cmd = ["sudo",
+            "iptables",
+            "-A", "OUTPUT",
+            "-p", pp,
+            "-d", dest, "--destination-port", "53",
+            "-j", what,
+        ]
+        if iface is not None:
+            cmd.extend(["-o", iface])
+        subprocess.check_call(cmd)
+
+# responsibility of update-systemd-resolved script now...
+def apply_dns_rules():
+    root.verify_root_access("Root access needed to modify 'iptables' rules")
+    for ndns in NORDVPN_DNS:
+        do_dns("lo"  , ndns, "ACCEPT")
+        do_dns("tun+", ndns, "ACCEPT")
+    do_dns(None, "0.0.0.0/0", "DROP")
 
 def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
     # Empty the INPUT and OUTPUT chain of any current rules
-    subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
-    subprocess.call(["sudo", "iptables", "-F", "INPUT"])
+    subprocess.check_call(["sudo", "iptables", "-F", "OUTPUT"])
+    subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
     # Allow all traffic out over the vpn tunnel
-    subprocess.call("sudo iptables -A OUTPUT -o tun+ -j ACCEPT".split())
+    # except for DNS, which is handled by systemd-resolved script
+    # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
+    # weird that ping ya.ru was showing "operation not permitted"
+    for prot in ("tcp", "udp"):
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "OUTPUT",
+            "-o", "tun+",
+            "-p", prot,
+            "-d", "0.0.0.0/0", "!", "--dport", "53",
+            "-j", "ACCEPT"
+           ])
     # accept traffic that comes through tun that you connect to
-    subprocess.call(
+    subprocess.check_call(
         "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
          -i tun+ -j ACCEPT".split())
+
+
     for interface in interfaces_details:
-        if skip_dns_patch is False:
-            # if interface is active with an IP in it, don't send DNS requests to it
-            if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
-                subprocess.call(
-                    ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                        "udp", "--destination-port", "53", "-j", "DROP"])
-                # subprocess.call(
-                #     ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-p",
-                #         "tcp", "--destination-port", "53", "-j", "DROP"])
+        if len(interface) != 3:
+            continue # TODO what does that mean?
+        iname = interface[0]
 
-        if len(interface) == 3 and interface[0] != "lo" and "tun" not in interface[0]:
-            # allow access to vpn_server_ip
-            subprocess.call(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0],
-                    "-d", vpn_server_ip, "-j", "ACCEPT"])
-            # talk to the vpnServer ip to connect to it
-            subprocess.call(
-                ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                    "-s", vpn_server_ip, "-j", "ACCEPT"])
+        if len(iname) == 0:
+            print(f"WARNING: empty {interface}")
+            continue
 
-            # allow access to internal ip range
-            # print("internal ip with range", interface[2])
-            subprocess.call(
-                ["sudo", "iptables", "-A", "OUTPUT", "-o", interface[0], "-d",
-                    interface[2], "-j", "ACCEPT"])
-            subprocess.call(
-                ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                    "--ctstate", "ESTABLISHED,RELATED", "-i", interface[0],
-                    "-s", interface[2], "-j", "ACCEPT"])
+        # allow access to vpn_server_ip
+        subprocess.check_call(
+            ["sudo", "iptables", "-A", "OUTPUT", "-o", iname,
+                "-d", vpn_server_ip, "-j", "ACCEPT"])
+        # talk to the vpnServer ip to connect to it
+        subprocess.check_call(
+            ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                "--ctstate", "ESTABLISHED,RELATED", "-i", iname,
+                "-s", vpn_server_ip, "-j", "ACCEPT"])
+
+        # allow access to internal ip range
+        # print("internal ip with range", interface[2])
+        subprocess.check_call(
+            ["sudo", "iptables", "-A", "OUTPUT", "-o", iname, "-d",
+                interface[2], "-j", "ACCEPT"])
+        subprocess.check_call(
+            ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
+                "--ctstate", "ESTABLISHED,RELATED", "-i", iname,
+                "-s", interface[2], "-j", "ACCEPT"])
 
     # Allow loopback traffic
-    subprocess.call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
-    subprocess.call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
+    subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
+    subprocess.check_call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
 
     # best practice, stops spoofing
-    subprocess.call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
+    subprocess.check_call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
 
     # Default action if no other rules match
-    subprocess.call("sudo iptables -P OUTPUT DROP".split())
-    subprocess.call("sudo iptables -P INPUT DROP".split())
+    subprocess.check_call("sudo iptables -P OUTPUT DROP".split())
+    subprocess.check_call("sudo iptables -P INPUT DROP".split())
     return
 
 

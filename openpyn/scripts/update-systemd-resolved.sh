@@ -72,6 +72,20 @@ dhcp_settings() {
   done
 }
 
+do_dns() {
+    # TODO maybe, set -e
+    local iface="$1"
+    local dest="$2"
+    local what="$3"
+    for pp in "tcp" "udp"; do
+        args=( -A OUTPUT -p "$pp" -d "$dest" --destination-port 53 -j "$what" )
+        if [[ -n "$iface" ]]; then
+            args+=( "-o" "$iface")
+        fi
+        iptables "${args[@]}"
+     done
+}
+
 up() {
   local link="$1"
   shift
@@ -83,6 +97,7 @@ up() {
   # Preset values for processing -- will be altered in the various process_*
   # functions.
   local -a dns_servers=() dns_domain=() dns_search=() dns_routed=()
+  local -a dns_ips=()
   local -i dns_server_count=0 dns_domain_count=0 dns_search_count=0 dns_routed_count=0
   local dns_sec=""
 
@@ -100,10 +115,19 @@ up() {
     fi
   done < <(dhcp_settings)
 
+  # assert
   if [[ "${#dns_servers[*]}" -gt 0 ]]; then
     busctl_params=("$if_index" "$dns_server_count" "${dns_servers[@]}")
     info "SetLinkDNS(${busctl_params[*]})"
     busctl_call SetLinkDNS 'ia(iay)' "${busctl_params[@]}" || return $?
+    for dns_ip in "${dns_ips[@]}"; do
+        do_dns "lo"    "$dns_ip" "ACCEPT"
+        do_dns "$link" "$dns_ip" "ACCEPT"
+    done
+    do_dns "" "0.0.0.0/0" "DROP"
+  else
+    warning "WTF? No DNS servers"
+    exit 111
   fi
 
   if [[ "${#dns_domain[*]}" -gt 0 \
@@ -156,8 +180,10 @@ process_dns() {
   shift
 
   if looks_like_ipv6 "$address"; then
+    dns_ips+=( "$address" )
     process_dns_ipv6 "$address" || return $?
   elif looks_like_ipv4 "$address"; then
+    dns_ips+=( "$address" )
     process_dns_ipv4 "$address" || return $?
   else
     err "Not a valid IPv6 or IPv4 address: '$address'"
