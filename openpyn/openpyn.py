@@ -19,7 +19,7 @@ from openpyn import initd  # pylint: disable=W0406
 from openpyn import locations  # pylint: disable=W0406
 from openpyn import root  # pylint: disable=W0406
 from openpyn import systemd  # pylint: disable=W0406
-from pathlib import Path
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -517,11 +517,6 @@ def update_config_files():
     root.verify_root_access("Root access needed to write files in " +
                             "'" + __basefilepath__ + "files/" + "'")
     try:
-        _archive = Path(__basefilepath__ + "ovpn.zip")
-        if _archive.is_file():
-            print(Fore.BLUE + "Previous update file already exists, deleting..." + Style.RESET_ALL)
-            subprocess.run(["sudo", "rm", "-rf", _archive])
-
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
     except subprocess.CalledProcessError:
