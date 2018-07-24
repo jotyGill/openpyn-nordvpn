@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import time
 
+import coloredlogs
 from colorama import Fore, Style
 from openpyn import __basefilepath__  # pylint: disable=W0406
 from openpyn import __version__  # pylint: disable=W0406
@@ -20,6 +22,7 @@ from openpyn import locations  # pylint: disable=W0406
 from openpyn import root  # pylint: disable=W0406
 from openpyn import systemd  # pylint: disable=W0406
 from pathlib import Path
+logger = logging.getLogger(__package__)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -118,6 +121,8 @@ def main():
     parser.add_argument(
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
+    parser.add_argument(
+        '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
 
     args = parser.parse_args()
 
@@ -127,14 +132,61 @@ def main():
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options)
+        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location)
 
 
 # run openpyn
 def run(init, server, country_code, country, area, tcp, daemon, max_load, top_servers,
         pings, kill, kill_flush, update, list_servers, force_fw_rules,
         p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, test,
-        internally_allowed, skip_dns_patch, silent, nvram, openvpn_options):
+        internally_allowed, skip_dns_patch, silent, nvram, openvpn_options, location):
+    fieldstyles = {
+        'asctime': {'color': 'green'},
+        'hostname': {'color': 'magenta'},
+        'levelname': {'color': 'black', 'bold': True},
+        'name': {'color': 'blue'},
+        'programname': {'color': 'cyan'},
+    }
+    levelstyles = {
+        'spam': {'color': 'green', 'faint': True},
+        'debug': {'color': 'green', 'bold': True},
+        'verbose': {'color': 'blue', 'bold': True},
+        'info': {},
+        'notice': {'color': 'magenta', 'bold': True},
+        'warning': {'color': 'yellow', 'bold': True},
+        'success': {'color': 'green', 'bold': True},
+        'error': {'color': 'red', 'bold': True},
+        'critical': {'color': 'white', 'background': 'red', 'bold': True}
+    }
+    logformat = '%(levelname)s %(message)s'
+
+    # Create a logger object.
+    # logger = logging.getLogger(__package__)
+    logger.addHandler(logging.StreamHandler())
+
+    # In this case only log messages originating from this logger will show up on the terminal.
+    coloredlogs.install(level="verbose", logger=logger, fmt=logformat, level_styles=levelstyles, field_styles=fieldstyles)
+
+    # Some examples.
+    # logger.spam(__version__)
+    # logger.debug(__version__)
+    # logger.verbose(__version__)
+    # logger.info(__version__)
+    # logger.notice(__version__)
+    # logger.warning(__version__)
+    # logger.success(__version__)
+    # logger.error(__version__)
+    # logger.critical(__version__)
+
+    stats = True
+    if sys.__stdin__.isatty():
+        logger.debug("Interactive")
+    else:
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.WARNING)
+        logger.debug("Non-Interactive")
+        stats = False
+
     port = "udp"
     if tcp:
         port = "tcp"
@@ -142,36 +194,39 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     detected_os = sys.platform
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            force_fw_rules = False
             silent = True
             skip_dns_patch = True
+            if openvpn_options:
+                openvpn_options += " " + "--syslog openpyn"
+            else:
+                openvpn_options = "--syslog openpyn"
+            logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
+            force_fw_rules = False
             silent = True
             skip_dns_patch = True
             nvram = None
         else:
             nvram = None
     elif detected_os == "win32":
-        print(Fore.BLUE + "Are you even a l33t mate? Try GNU/Linux")
-        print(Style.RESET_ALL)
+        logger.error("Are you even a l33t mate? Try GNU/Linux")
         sys.exit()
 
     # check if dependencies are installed
     if shutil.which("openvpn") is None or shutil.which("wget") is None or shutil.which("unzip") is None:
-        print(Fore.RED + "Please Install 'openvpn' 'wget' 'unzip' first")
-        print(Style.RESET_ALL)
+        logger.error("Please Install 'openvpn' 'wget' 'unzip' first")
         sys.exit()
 
     if init:
         initialise()
     elif daemon:
         if detected_os != "linux":
-            print(Fore.RED + "Daemon mode is only available in GNU/Linux distros")
-            print(Style.RESET_ALL)
+            logger.error("Daemon mode is only available in GNU/Linux distros")
             sys.exit()
 
         if not root.verify_running_as_root():
-            print(Fore.RED + "Please run '--daemon' or '-d' mode with sudo")
-            print(Style.RESET_ALL)
+            logger.error("Please run '--daemon' or '-d' mode with sudo")
             sys.exit()
         openpyn_options = ""
 
@@ -228,7 +283,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         if openvpn_options:
             openpyn_options += " --openvpn-options '" + openvpn_options + "'"
         openpyn_options += " --silent"
-        # print(openpyn_options)
+        # logger.debug(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
         elif os.path.exists("/etc/openwrt_release"):
@@ -238,6 +293,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         sys.exit()
 
     elif kill:
+        logger.warning("Killing the running processes")
         kill_management_client()
         kill_vpn_processes()  # don't touch iptable rules
         kill_openpyn_process()
@@ -264,7 +320,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                 display_servers(
                     list_servers="all", port=port, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                    netflix=netflix)
+                    netflix=netflix, location=location)
             else:
                 api.list_all_countries()
         # if a country code is supplied give details about that country only.
@@ -275,7 +331,7 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
             display_servers(
                 list_servers=list_servers, port=port, area=area, p2p=p2p, dedicated=dedicated,
                 double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-                netflix=netflix)
+                netflix=netflix, location=location)
 
     # only clear/touch FW Rules if "-f" used
     elif force_fw_rules:
@@ -303,9 +359,9 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
         for tries in range(3):  # pylint: disable=W0612
             better_servers_list = find_better_servers(
                 country_code, area, max_load, top_servers, tcp, p2p,
-                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix)
-            pinged_servers_list = ping_servers(better_servers_list, pings)
-            chosen_servers = choose_best_servers(pinged_servers_list)
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
+            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
+            chosen_servers = choose_best_servers(pinged_servers_list, stats)
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 # if "-f" used apply firewall rules
@@ -317,9 +373,11 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                         firewall.internally_allow_ports(network_interfaces, internally_allowed)
                 if nvram:
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
+                    logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM")
                     sys.exit()
-                print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
-                      (Fore.GREEN + aserver + Fore.BLUE))
+                if stats:
+                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, \
+Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 connect(aserver, port, silent, test, skip_dns_patch, openvpn_options)
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -337,11 +395,12 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
+            logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM")
             sys.exit()
         for i in range(20):  # pylint: disable=W0612
             connect(server, port, silent, test, skip_dns_patch, openvpn_options)
     else:
-        print('To see usage options type: "openpyn -h" or "openpyn --help"')
+        logger.info('To see usage options type: "openpyn -h" or "openpyn --help"')
     sys.exit()
 
 
@@ -360,7 +419,7 @@ def initialise():
 
 # Filters servers based on the specified criteria.
 def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, dedicated,
-                        double_vpn, tor_over_vpn, anti_ddos, netflix):
+                        double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats):
     if tcp:
         used_protocol = "OPENVPN-TCP"
     else:
@@ -370,40 +429,41 @@ def find_better_servers(country_code, area, max_load, top_servers, tcp, p2p, ded
     json_res_list = api.get_data_from_api(
         country_code=country_code, area=area, p2p=p2p, dedicated=dedicated,
         double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-        netflix=netflix)
+        netflix=netflix, location=location)
 
     server_list = filters.filter_by_protocol(json_res_list=json_res_list, tcp=tcp)
 
     better_servers_list = filters.filter_by_load(server_list, max_load, top_servers)
 
-    print(Style.BRIGHT + Fore.BLUE + "According to NordVPN, Least Busy " +
-          Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Servers, In",
-          Fore.GREEN + country_code.upper() + Fore.BLUE, end=" ")
-    if area:
-        print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
+    if stats:
+        print(Style.BRIGHT + Fore.BLUE + "According to NordVPN, \
+Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Servers in \
+" + Fore.GREEN + country_code.upper() + Fore.BLUE, end=" ")
+        if area:
+            print("in Location" + Fore.GREEN, json_res_list[0]["location_names"], end=" ")
 
-    print(Fore.BLUE + "With 'Load' less than", Fore.GREEN + str(max_load) + Fore.BLUE,
-          "Which Support", Fore.GREEN + used_protocol, end=" ")
-    if p2p:
-        print(", p2p = ", p2p, end=" ")
-    if dedicated:
-        print(", dedicated =", dedicated, end=" ")
-    if double_vpn:
-        print(", double_vpn =", double_vpn, end=" ")
-    if tor_over_vpn:
-        print(", tor_over_vpn =", tor_over_vpn, end=" ")
-    if anti_ddos:
-        print(", anti_ddos =", anti_ddos, end=" ")
-    if netflix:
-        print(", netflix =", netflix, end=" ")
+        print(Fore.BLUE + "With 'Load' Less Than", Fore.GREEN + str(max_load) + Fore.BLUE,
+              "Which Support", Fore.GREEN + used_protocol, end=" ")
+        if p2p:
+            print(", p2p =", p2p, end=" ")
+        if dedicated:
+            print(", dedicated =", dedicated, end=" ")
+        if double_vpn:
+            print(", double_vpn =", double_vpn, end=" ")
+        if tor_over_vpn:
+            print(", tor_over_vpn =", tor_over_vpn, end=" ")
+        if anti_ddos:
+            print(", anti_ddos =", anti_ddos, end=" ")
+        if netflix:
+            print(", netflix =", netflix, end=" ")
 
-    print(Fore.BLUE + "are :" + Fore.GREEN, better_servers_list, Fore.BLUE + "\n")
+        print(Fore.BLUE + "Are: " + Fore.GREEN + str(better_servers_list) + Fore.BLUE + "\n")
     return better_servers_list
 
 
 # Pings servers with the specified no of "ping",
 # returns a sorted list by Ping Avg and Median Deviation
-def ping_servers(better_servers_list, pings):
+def ping_servers(better_servers_list, pings, stats):
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
@@ -413,8 +473,8 @@ def ping_servers(better_servers_list, pings):
     except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
-        print("Your 'ping' command doesn't support '-i' or '-n', \
-falling back to wait of 1 second between pings, pings will be slow\n")
+        logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
+falling back to wait of 1 second between pings, pings will be slow")
     for i in better_servers_list:
         # ping_result to append 2  lists into it
         ping_result = []
@@ -432,19 +492,15 @@ falling back to wait of 1 second between pings, pings will be slow\n")
                 ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
 
             ping_string = str(ping_output)
-            # print(ping_string)
+            # logger.debug(ping_string)
             if "0%" not in ping_string:
-                print(Style.BRIGHT + Fore.RED + "Some packet loss while pinging",
-                      i[0], "Skipping it\n" + Fore.BLUE)
+                logger.error("Some packet loss while pinging %s, skipping it", i[0])
                 continue
         except subprocess.CalledProcessError:
-            print(Style.BRIGHT + Fore.RED + "Ping Failed to:",
-                  i[0], "Excluding it from the list\n" + Fore.BLUE)
-            print(Style.RESET_ALL)
+            logger.error("Ping Failed to: %s, excluding it from the list", i[0])
             continue
         except KeyboardInterrupt:
-            print(Style.BRIGHT + Fore.RED + '\nKeyboardInterrupt; Shutting down\n')
-            print(Style.RESET_ALL)
+            logger.info('KeyboardInterrupt; Shutting down')
             sys.exit()
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
@@ -452,11 +508,13 @@ falling back to wait of 1 second between pings, pings will be slow\n")
         # change str values in ping_list to ints
         ping_list = list(map(float, ping_list))
         ping_list = list(map(int, ping_list))
-        print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = ",
-              Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
+
+        if stats:
+            print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = \
+" + Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
         ping_result.append(i)
         ping_result.append(ping_list)
-        # print(ping_result)
+        # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
     # sort by Ping Avg and Median Deviation
     pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
@@ -464,16 +522,17 @@ falling back to wait of 1 second between pings, pings will be slow\n")
 
 
 # Returns a list of servers (top servers) (e.g 5 best servers) to connect to.
-def choose_best_servers(best_servers):
+def choose_best_servers(best_servers, stats):
     best_servers_names = []
 
     # populate bestServerList
     for i in best_servers:
         best_servers_names.append(i[0][0])
 
-    print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with best Ping are:",
-          Fore.GREEN + str(best_servers_names) + Fore.BLUE + "\n")
-    print(Style.RESET_ALL)
+    if stats:
+        print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with Best Ping Are: \
+" + Fore.GREEN + str(best_servers_names) + Fore.BLUE)
+        print(Style.RESET_ALL)
     return best_servers_names
 
 
@@ -483,7 +542,7 @@ def kill_vpn_processes():
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.call(["sudo", "killall", "openvpn"])
-        print("Killed the running openvpn process")
+        logger.success("Killed the running openvpn process")
         time.sleep(1)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -525,14 +584,13 @@ def update_config_files():
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
     except subprocess.CalledProcessError:
-        print(
-            Fore.RED + "Exception occured while wgetting zip, is the internet working? \
+        logger.error("Exception occurred while wgetting zip, is the internet working? \
 is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
-[https://github.com/jotyGill/openpyn-nordvpn/issues/109]" + Style.RESET_ALL)
+[https://github.com/jotyGill/openpyn-nordvpn/issues/109]")
         sys.exit()
     try:
         subprocess.check_call(
-            ["sudo", "unzip", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
+            ["sudo", "unzip", "-q", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
             stderr=subprocess.DEVNULL)
         subprocess.check_call(
             ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
@@ -547,24 +605,23 @@ is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
             subprocess.check_call(
                 ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
         except subprocess.CalledProcessError:
-            print(Fore.RED + "Exception occured while unzipping ovpn.zip, is unzip installed?" +
-                  Style.RESET_ALL)
+            logger.error("Exception occured while unzipping ovpn.zip, is unzip installed?")
             sys.exit()
 
 
 # Lists information about servers under the given criteria.
 def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
-                    tor_over_vpn, anti_ddos, netflix):
+                    tor_over_vpn, anti_ddos, netflix, location):
     servers_on_web = set()      # servers shown on the website
 
     # if list_servers was not a specific country it would be "all"
     json_res_list = api.get_data_from_api(
         country_code=list_servers, area=area, p2p=p2p, dedicated=dedicated,
         double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
-        netflix=netflix)
-    # print(json_res_list)
+        netflix=netflix, location=location)
+    # logger.debug(json_res_list)
 
-    print(Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
+    print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
           list_servers.upper() + Fore.BLUE, end=" ")
     if area:
         print("Area ", Fore.GREEN + area + Fore.BLUE, end=" ")
@@ -585,14 +642,15 @@ def display_servers(list_servers, port, area, p2p, dedicated, double_vpn,
     # add server names to "servers_on_web" set
     for res in json_res_list:
         print("Server =", res["domain"][:res["domain"].find(".")], ", Load =", res["load"],
-              ", Country =", res["country"], ", Features", res["categories"], '\n')
+              ", Country =", res["country"], ", Features", res["categories"], "\n")
         servers_on_web.add(res["domain"][:res["domain"].find(".")])
 
     if not area:
         locations_in_country = locations.get_unique_locations(list_of_servers=json_res_list)
-        print("\nThe available Locations in country", list_servers.upper(), "are :")
-        for location in locations_in_country:
-            print(location[2])
+        print("The available Locations in country", list_servers.upper(), "are :")
+        for eachLocation in locations_in_country:
+            print(eachLocation[2])
+        print("")
 
     if list_servers != "all" and not p2p and not dedicated and not double_vpn \
             and not tor_over_vpn and not anti_ddos and not netflix and not area:
@@ -613,8 +671,8 @@ def print_latest_servers(list_servers, port, server_set):
         serverFiles = subprocess.check_output(
             "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
     except subprocess.CalledProcessError:
-        print(Fore.RED + "The supplied Contry Code is likely wrong or you just don't have \
-its config files (In which case run 'sudo openpyn --update')" + Style.RESET_ALL)
+        logger.error("The supplied Country Code is likely wrong or you just don't have \
+its config files (In which case run 'sudo openpyn --update')")
         sys.exit()
     openvpn_files_str = str(serverFiles)
     openvpn_files_str = openvpn_files_str[2:-3]
@@ -628,8 +686,7 @@ its config files (In which case run 'sudo openpyn --update')" + Style.RESET_ALL)
         if server not in server_set:
             new_servers.add(server)
     if new_servers:
-        print("The following server have not even been listed on the nord's site yet",
-              "they usally are the fastest or Dead.\n")
+        print("The following servers have not been listed on the nord's site yet, they usually are the fastest or dead.")
         print(new_servers)
     return
 
@@ -646,8 +703,7 @@ def check_config_files():
         openvpn_files_str = str(serverFiles)
 
     if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
-        print(Fore.GREEN + "\nRunning openpyn for the first time? running \
-'openpyn --update' for you :) \n")
+        logger.notice("Running openpyn for the first time? running 'openpyn --update' for you :)")
         time.sleep(5)
         # download the config files
         update_config_files()
@@ -687,8 +743,7 @@ def get_vpn_server_ip(server, port):
     else:
         folder = "ovpn_udp/"
 
-    vpn_config_file = __basefilepath__ + "files/" + folder + server + \
-        ".nordvpn.com." + port + ".ovpn"
+    vpn_config_file = __basefilepath__ + "files/" + folder + server + ".nordvpn.com." + port + ".ovpn"
     with open(vpn_config_file, 'r') as openvpn_file:
         for line in openvpn_file:
             if "remote " in line:
@@ -702,7 +757,7 @@ def uses_systemd_resolved():
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
 
     systemd_resolved_running = subprocess.call(
-        ["systemctl",  "is-active", "systemd-resolved"],
+        ["systemctl", "is-active", "systemd-resolved"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     ) == 0
@@ -721,7 +776,7 @@ def uses_systemd_resolved():
         ns_rgx = re.compile("nameserver (.*)")
         for line in f:
             m = ns_rgx.match(line)
-            if m and len(m.groups()) > 0:
+            if m and m.groups:
                 dns_servers.append(m.group(1))
     resolv_conf_managed = dns_servers == [stub_systemd_resolver]
 
@@ -743,44 +798,46 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
 
         vpn_config_file = __basefilepath__ + "files/" + folder + server +\
             ".nordvpn.com." + port + ".ovpn"
-        # print("CONFIG FILE", vpn_config_file)
+        # logger.debug("CONFIG FILE %s", vpn_config_file)
         if os.path.isfile(vpn_config_file) is False:
-            print(Fore.RED + "VPN configuration file", vpn_config_file,
-                  "doesn't exist, don't worry running 'openpyn --update' for you :)" + Fore.BLUE)
+            logger.notice("VPN configuration file %s doesn't exist, \
+don't worry running 'openpyn --update' for you :)", vpn_config_file)
             time.sleep(6)
             update_config_files()
     elif server_provider == "ipvanish":
         vpn_config_file = __basefilepath__ + "files/" + "ipvanish/" + server
-        # print("ipvanish")
+        # logger.debug("ipvanish")
 
     if test:
-        print("Simulation end reached, openpyn would have connected to Server:" +
-              Fore.GREEN, server, Fore.BLUE + "on port:" + Fore.GREEN, port,
-              Fore.BLUE + "with 'silent' mode:" + Fore.GREEN, silent)
-        print(Style.RESET_ALL)
+        logger.success("Simulation end reached, \
+openpyn would have connected to server: " + server + " on port: " + port + " with 'silent' mode: " + str(silent).lower())
         sys.exit(1)
 
     kill_vpn_processes()   # kill existing OpenVPN processes
     # kill_management_client()
-    print(Fore.BLUE + "CONNECTING TO SERVER" + Fore.GREEN, server,
-          Fore.BLUE + "ON PORT", Fore.GREEN + port + Fore.BLUE)
+    logger.success("CONNECTING TO SERVER " + server + " ON PORT " + port)
 
-    root_access = root.verify_root_access(
-        Fore.GREEN + "Sudo credentials required to run 'openvpn'" + Fore.BLUE)
+    root_access = root.verify_root_access("Sudo credentials required to run 'openvpn'")
     if root_access is False:
         root.obtain_root_access()
 
     if not silent:
         # notifications Don't work with 'sudo'
         if detected_os == "linux" and root.running_with_sudo():
-            print(Fore.RED + "Desktop notifications don't work when using 'sudo', run without it, "
-                  + "when asked, provide the sudo credentials" + Fore.BLUE)
+            logger.warning("Desktop notifications don't work when using 'sudo', run without it, \
+when asked, provide the sudo credentials")
         else:
             subprocess.Popen("openpyn-management".split())
-    print(Style.RESET_ALL)
+    use_systemd_resolved = False
+    use_resolvconf = False
     if detected_os == "linux":
-        use_systemd_resolved = uses_systemd_resolved()
-        use_resolvconf = os.path.isfile("/sbin/resolvconf")
+        if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            skip_dns_patch = True
+        elif os.path.exists("/etc/openwrt_release"):
+            skip_dns_patch = True
+        else:
+            use_systemd_resolved = uses_systemd_resolved()
+            use_resolvconf = os.path.isfile("/sbin/resolvconf")
     else:
         use_systemd_resolved = False
         use_resolvconf = False
@@ -792,17 +849,15 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
             if use_systemd_resolved:
                 openvpn_options += "--dhcp-option DOMAIN-ROUTE ."
                 up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
-                print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
-                      "' has systemd-resolve running ",
-                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
+                logger.success("Your OS '%s' has systemd-resolve running, \
+using it to update DNS Resolver Entries", detected_os)
             elif use_resolvconf:
-                # tunnel dns throught vpn by changing /etc/resolv.conf using
-                # "update-resolv-conf.sh" to change the dns servers to NordVPN's.
+                # tunnel DNS through VPN by changing /etc/resolv.conf using
+                # "update-resolv-conf.sh" to change the DNS servers to NordVPN's.
 
                 up_down_script = __basefilepath__ + "scripts/update-resolv-conf.sh"
-                print("Your OS' " + Fore.GREEN + detected_os + Fore.BLUE +
-                      "' Does have '/sbin/resolvconf'",
-                      "using it to update DNS Resolver Entries" + Style.RESET_ALL)
+                logger.success("Your OS '%s' Does have '/sbin/resolvconf', \
+using it to update DNS Resolver Entries", detected_os)
             else:
                 raise RuntimeError("Should not happen")
 
@@ -829,13 +884,12 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                     "--management-up-down",
                 )
         except subprocess.CalledProcessError as openvpn_err:
-            # print(openvpn_err.output)
-            if 'Error opening configuration file' in str(openvpn_err.output):
-                print("Error opening configuration file", vpn_config_file,
-                      "Make Sure it exists, run 'openpyn --update'")
+            # logger.debug(openvpn_err.output)
+            if "Error opening configuration file" in str(openvpn_err.output):
+                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
-            print('\nShutting down safely, please wait until process exits\n')
+            logger.info("Shutting down safely, please wait until process exits")
             sys.exit()
         except PermissionError:     # needed cause complains when killing sudo process
             sys.exit()
@@ -843,17 +897,11 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
     else:       # If not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
-            print("Your OS", Fore.GREEN + detected_os + Fore.BLUE,
-                  "Does not have" + Fore.GREEN + " '/sbin/resolvconf':\n" +
-                  Fore.BLUE + "Manually Applying Patch to Tunnel DNS Through" +
-                  "The VPN Tunnel By Modifying" + Fore.GREEN +
-                  "' /etc/resolv.conf'")
-            print(Style.RESET_ALL)
+            logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)
+            logger.notice("Manually applying patch to tunnel DNS through the VPN tunnel by modifying '/etc/resolv.conf'")
             subprocess.call(["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
-            print(Fore.RED + "Not Modifying /etc/resolv.conf, DNS traffic",
-                  "likely won't go through the encrypted tunnel")
-            print(Style.RESET_ALL)
+            logger.warning("Not modifying '/etc/resolv.conf', DNS traffic likely won't go through the encrypted tunnel")
         try:   # pylint: disable=R1702
             if silent:
                 if detected_os == "linux":
@@ -862,9 +910,7 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                         if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
                             subprocess.call("modprobe tun", shell=True)
                             if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
-                                print(Style.BRIGHT + Fore.RED +
-                                      "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
-                                print(Style.RESET_ALL)
+                                logger.error("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 sys.exit(0)
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
@@ -879,13 +925,12 @@ def connect(server, port, silent, test, skip_dns_patch, openvpn_options, server_
                      "--management", "127.0.0.1", "7015", "--management-up-down"]
                     + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
-            # print(openvpn_err.output)
+            # logger.debug(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
-                print("Error opening configuration file", vpn_config_file,
-                      "Make Sure it exists, run 'openpyn --update'")
+                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
-            print('\nShutting down safely, please wait until process exits\n')
+            logger.info('Shutting down safely, please wait until process exits')
             sys.exit()
         except PermissionError:     # needed cause complains when killing sudo process
             sys.exit()

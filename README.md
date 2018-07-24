@@ -75,7 +75,12 @@ git pull
 pip3 install --upgrade setuptools
 pip3 install --upgrade .
 ```
-
+5. If you which to route a particular subnet into a VPN tunnel
+``` bash
+iptables -A FORWARD -i eth0 -o tun0 -s 192.168.1.0/24 -m conntrack --ctstate NEW -j ACCEPT
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A POSTROUTING -t nat -o tun0 -j MASQUERADE
+```
 
 ## Setup
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)

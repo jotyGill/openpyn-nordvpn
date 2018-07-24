@@ -1,9 +1,17 @@
+import logging
 import subprocess
+import sys
 
 from openpyn import __basefilepath__
 
+logger = logging.getLogger(__package__)
+
 
 def install_service():
+    if not sys.__stdin__.isatty():
+        logger.critical("Please run %s in interactive mode", __name__)
+        sys.exit()
+
     openpyn_options = input("\nEnter Openpyn options to be stored in systemd \
 service file (/etc/systemd/system/openpyn.service, \
 Default(Just Press Enter) is, uk : ") or "uk"
@@ -32,9 +40,9 @@ def update_service(openpyn_options, run=False):
         service_file.write(service_text)
         service_file.close()
 
-    print("\nThe Following config has been saved in openpyn.service.",
-          "You can Run it or/and Enable it with: 'sudo systemctl start openpyn',",
-          "'sudo systemctl enable openpyn' \n\n", service_text)
+    logger.notice("The Following config has been saved in openpyn.service. \
+You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
+'sudo systemctl enable openpyn' \n" + service_text)
 
     subprocess.run(["systemctl", "daemon-reload"])
     if run:
@@ -45,10 +53,10 @@ def update_service(openpyn_options, run=False):
         ) == 0
 
         if daemon_running:
-            print("Restarting Openpyn by running 'systemctl restart openpyn'\n\
+            logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
             subprocess.Popen(["systemctl", "restart", "openpyn"])
         else:
-            print("Starting Openpyn by running 'systemctl start openpyn'\n\
+            logger.notice("Starting Openpyn by running 'systemctl start openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
             subprocess.Popen(["systemctl", "start", "openpyn"])

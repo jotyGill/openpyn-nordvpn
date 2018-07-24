@@ -1,7 +1,10 @@
+import logging
 import subprocess
 
 from openpyn import __basefilepath__, api
 from openpyn.converter import T_CLIENT, Converter
+
+logger = logging.getLogger(__package__)
 
 
 def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
@@ -97,4 +100,4 @@ def write(c, key, value, unit, service, test=False):
         if not test:
             subprocess.run(["sudo", "/bin/nvram", "set", argument2], check=True)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        logger.error(e.output)

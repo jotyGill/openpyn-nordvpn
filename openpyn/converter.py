@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import logging
 import os
 import re
 from itertools import islice
@@ -35,6 +36,8 @@ T_USERAUTH = 'userauth'
 T_USERNAME = 'username'
 T_USERONLY = 'useronly'
 T_LOG_VERBOSITY = 'verb'
+
+logger = logging.getLogger(__package__)
 
 
 class Converter(object):
@@ -204,15 +207,16 @@ class Converter(object):
 
     def extract_information(self, input_file):
         """Extracts the needed information from the source configuration files"""
-        self.pprint("Processing file {}".format(input_file))
+        self.pprint("Processing file {}".format(input_file), True)
 
         input_file_full = os.path.join(self._source_folder, input_file)
         with open(input_file_full, 'r') as lines:
             data = ""
-            for line in islice(lines, 10):
-                pass
+            # for line in islice(lines, 10):
+            # pass
 
-            for line in islice(lines, 40):
+            # for line in islice(lines, 40):
+            for line in islice(lines, 30):
                 if line.startswith("#"):
                     continue
                 # print(line, end="")
@@ -469,8 +473,8 @@ class Converter(object):
         debug messages are printed out based on the value of debugMode flag
         """
         if appmsg:
-            print(msg)
+            logger.verbose(msg)
             return
 
         if self.debug_mode:
-            print(msg)
+            logger.debug(msg)
