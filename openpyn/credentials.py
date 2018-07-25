@@ -1,8 +1,8 @@
+import getpass
 import logging
 import os
 import subprocess
 import sys
-import getpass
 
 from openpyn import __basefilepath__, root
 

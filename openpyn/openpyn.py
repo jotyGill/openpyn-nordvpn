@@ -7,9 +7,11 @@ import shutil
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import coloredlogs
 from colorama import Fore, Style
+
 from openpyn import __basefilepath__  # pylint: disable=W0406
 from openpyn import __version__  # pylint: disable=W0406
 from openpyn import api  # pylint: disable=W0406
@@ -21,8 +23,9 @@ from openpyn import initd  # pylint: disable=W0406
 from openpyn import locations  # pylint: disable=W0406
 from openpyn import root  # pylint: disable=W0406
 from openpyn import systemd  # pylint: disable=W0406
-from pathlib import Path
+
 logger = logging.getLogger(__package__)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -165,7 +168,8 @@ def run(init, server, country_code, country, area, tcp, daemon, max_load, top_se
     logger.addHandler(logging.StreamHandler())
 
     # In this case only log messages originating from this logger will show up on the terminal.
-    coloredlogs.install(level="verbose", logger=logger, fmt=logformat, level_styles=levelstyles, field_styles=fieldstyles)
+    coloredlogs.install(level="verbose", logger=logger, fmt=logformat,
+                        level_styles=levelstyles, field_styles=fieldstyles)
 
     # Some examples.
     # logger.spam(__version__)
@@ -590,7 +594,8 @@ is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
         sys.exit()
     try:
         subprocess.check_call(
-            ["sudo", "unzip", "-q", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
+            ["sudo", "unzip", "-q", "-u", "-o", __basefilepath__ +
+                "ovpn", "-d", __basefilepath__ + "files/"],
             stderr=subprocess.DEVNULL)
         subprocess.check_call(
             ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
@@ -886,7 +891,8 @@ using it to update DNS Resolver Entries", detected_os)
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
+                logger.error(
+                    "Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
             logger.info("Shutting down safely, please wait until process exits")
@@ -898,10 +904,12 @@ using it to update DNS Resolver Entries", detected_os)
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
             logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)
-            logger.notice("Manually applying patch to tunnel DNS through the VPN tunnel by modifying '/etc/resolv.conf'")
+            logger.notice(
+                "Manually applying patch to tunnel DNS through the VPN tunnel by modifying '/etc/resolv.conf'")
             subprocess.call(["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
-            logger.warning("Not modifying '/etc/resolv.conf', DNS traffic likely won't go through the encrypted tunnel")
+            logger.warning(
+                "Not modifying '/etc/resolv.conf', DNS traffic likely won't go through the encrypted tunnel")
         try:   # pylint: disable=R1702
             if silent:
                 if detected_os == "linux":
@@ -910,7 +918,8 @@ using it to update DNS Resolver Entries", detected_os)
                         if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
                             subprocess.call("modprobe tun", shell=True)
                             if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
-                                logger.error("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
+                                logger.error(
+                                    "Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
                                 sys.exit(0)
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
@@ -927,7 +936,8 @@ using it to update DNS Resolver Entries", detected_os)
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if 'Error opening configuration file' in str(openvpn_err.output):
-                logger.error("Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
+                logger.error(
+                    "Error opening config file %s, make sure it exists, run 'openpyn --update'", vpn_config_file)
                 sys.exit()
         except KeyboardInterrupt:
             logger.info('Shutting down safely, please wait until process exits')

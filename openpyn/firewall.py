@@ -27,6 +27,7 @@ def clear_fw_rules():
     subprocess.call("sudo iptables -P INPUT DROP".split())
     return
 
+
 NORDVPN_DNS = [
     "103.86.96.100",
     "103.86.99.100",
@@ -36,23 +37,26 @@ NORDVPN_DNS = [
 def do_dns(iface: str, dest: str, what: str):
     for pp in ("tcp", "udp"):
         cmd = ["sudo",
-            "iptables",
-            "-A", "OUTPUT",
-            "-p", pp,
-            "-d", dest, "--destination-port", "53",
-            "-j", what,
-        ]
+               "iptables",
+               "-A", "OUTPUT",
+               "-p", pp,
+               "-d", dest, "--destination-port", "53",
+               "-j", what,
+               ]
         if iface is not None:
             cmd.extend(["-o", iface])
         subprocess.check_call(cmd)
 
 # responsibility of update-systemd-resolved script now...
+
+
 def apply_dns_rules():
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     for ndns in NORDVPN_DNS:
-        do_dns("lo"  , ndns, "ACCEPT")
+        do_dns("lo", ndns, "ACCEPT")
         do_dns("tun+", ndns, "ACCEPT")
     do_dns(None, "0.0.0.0/0", "DROP")
+
 
 def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
     root.verify_root_access("Root access needed to modify 'iptables' rules")
@@ -73,16 +77,15 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
             "-p", prot,
             "-d", "0.0.0.0/0", "!", "--dport", "53",
             "-j", "ACCEPT"
-           ])
+        ])
     # accept traffic that comes through tun that you connect to
     subprocess.check_call(
         "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
          -i tun+ -j ACCEPT".split())
 
-
     for interface in interfaces_details:
         if len(interface) != 3:
-            continue # TODO what does that mean?
+            continue  # TODO what does that mean?
         iname = interface[0]
 
         if len(iname) == 0:

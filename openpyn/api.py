@@ -2,6 +2,7 @@ import logging
 import sys
 
 import requests
+
 from openpyn import filters
 
 logger = logging.getLogger(__package__)
