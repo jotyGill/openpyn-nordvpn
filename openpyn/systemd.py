@@ -7,18 +7,19 @@ from openpyn import __basefilepath__
 logger = logging.getLogger(__package__)
 
 
-def install_service():
+def install_service() -> int:
     if not sys.__stdin__.isatty():
         logger.critical("Please run %s in interactive mode", __name__)
-        sys.exit()
+        return 1
 
     openpyn_options = input("\nEnter Openpyn options to be stored in systemd \
 service file (/etc/systemd/system/openpyn.service, \
 Default(Just Press Enter) is, uk : ") or "uk"
     update_service(openpyn_options)
+    return 0
 
 
-def update_service(openpyn_options, run=False):
+def update_service(openpyn_options: str, run=False):
     if "--silent" not in openpyn_options:
         openpyn_options += " --silent "
     if "-f" in openpyn_options or "--force-fw-rules" in openpyn_options:
