@@ -411,8 +411,10 @@ def initialise():
             return initd.install_service()
         elif os.path.exists("/etc/openwrt_release"):
             return initd.install_service()
-        else:   # TODO only run if systemd present
+        elif subprocess.check_output(["cat", "/proc/1/comm"]).decode(sys.stdout.encoding).strip() == "systemd":
             return systemd.install_service()
+        logger.warning("systemd not found, skipping systemd integration")
+        return 1
 
 
 # Filters servers based on the specified criteria.
