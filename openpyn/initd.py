@@ -13,7 +13,7 @@ logger = logging.getLogger(__package__)
 def install_service():
     if not sys.__stdin__.isatty():
         logger.critical("Please run %s in interactive mode", __name__)
-        sys.exit()
+        return 1
 
     openpyn_options = input("Enter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
@@ -155,9 +155,10 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --location " + str(location[1]) + " " + str(location[2])
 
     update_service(openpyn_options)
+    return 0
 
 
-def update_service(openpyn_options, run=False):
+def update_service(openpyn_options: str, run=False):
     logger.debug(openpyn_options)
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
