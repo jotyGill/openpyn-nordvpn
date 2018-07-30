@@ -408,12 +408,11 @@ def initialise():
     update_config_files()
     if sys.platform == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-            initd.install_service()
+            return initd.install_service()
         elif os.path.exists("/etc/openwrt_release"):
-            initd.install_service()
-        else:
-            systemd.install_service()
-    return
+            return initd.install_service()
+        else:   # TODO only run if systemd present
+            return systemd.install_service()
 
 
 # Filters servers based on the specified criteria.
