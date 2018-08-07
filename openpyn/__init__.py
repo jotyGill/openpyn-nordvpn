@@ -4,7 +4,7 @@ import subprocess
 # import gc
 import verboselogs
 
-__version__ = "2.7.0"
+__version__ = "2.7.1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __data_files__ = []
 
