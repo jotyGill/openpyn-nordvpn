@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Dict, List
 
 import requests
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__package__)
 
 
 # Using requests, GETs and returns json from a url.
-def get_json(url):
+def get_json(url) -> Dict:
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
 
@@ -18,17 +19,19 @@ def get_json(url):
     except requests.exceptions.HTTPError:
         logger.error("Cannot GET the JSON from nordvpn.com, Manually Specify a Server \
 using '-s' for example '-s au10'")
-        sys.exit()
+        sys.exit(1)
     except requests.exceptions.RequestException:
         logger.error("There was an ambiguous exception, Check Your Network Connection. \
 forgot to flush iptables? (openpyn -x)")
-        sys.exit()
+        sys.exit(1)
     return json_response
 
 
 # Gets json data, from api.nordvpn.com. filter servers by type, country, area.
 def get_data_from_api(
-        country_code, area, p2p, dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location):
+        country_code: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
+        tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> List:
+
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
 
@@ -46,7 +49,7 @@ def get_data_from_api(
     return type_filtered_servers
 
 
-def list_all_countries():
+def list_all_countries() -> None:
     countries_mapping = {}
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
@@ -55,10 +58,9 @@ def list_all_countries():
             countries_mapping.update({res["domain"][:2]: res["country"]})
     for key, val in countries_mapping.items():
         print("Full Name : " + val + "      Country Code : " + key)
-    sys.exit()
 
 
-def get_country_code(full_name):
+def get_country_code(full_name: str) -> str:
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
     for res in json_response:
@@ -66,4 +68,4 @@ def get_country_code(full_name):
             code = res["domain"][:2].lower()
             return code
     logger.error("Country Name Not Correct")
-    sys.exit()
+    sys.exit(1)

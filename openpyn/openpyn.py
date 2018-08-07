@@ -403,7 +403,7 @@ Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
     return 0        # if everything went ok
 
 
-def initialise():
+def initialise() -> bool:
     credentials.save_credentials()
     update_config_files()
     if sys.platform == "linux":
@@ -537,7 +537,7 @@ def choose_best_servers(best_servers: List, stats: bool) -> List:
     return best_servers_names
 
 
-def kill_vpn_processes():
+def kill_vpn_processes() -> None:
     try:
         subprocess.check_output(["pgrep", "openvpn"])
         # When it returns "0", proceed
@@ -551,7 +551,7 @@ def kill_vpn_processes():
     return
 
 
-def kill_openpyn_process():
+def kill_openpyn_process() -> None:
     try:
         root.verify_root_access("Root access needed to kill openpyn process")
         subprocess.call(["sudo", "killall", "openpyn"])
@@ -561,7 +561,7 @@ def kill_openpyn_process():
     return
 
 
-def kill_management_client():
+def kill_management_client() -> None:
     # kill the management client if it is for some reason still alive
     try:
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
@@ -573,7 +573,7 @@ def kill_management_client():
     return
 
 
-def update_config_files():
+def update_config_files() -> None:
     root.verify_root_access("Root access needed to write files in " +
                             "'" + __basefilepath__ + "files/" + "'")
     try:
@@ -613,7 +613,7 @@ is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
 
 # Lists information about servers under the given criteria.
 def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
-                    tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float):
+                    tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> None:
     servers_on_web = set()      # servers shown on the website
 
     # if list_servers was not a specific country it would be "all"
@@ -660,7 +660,7 @@ def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicat
         print_latest_servers(list_servers=list_servers, port=port, server_set=servers_on_web)
 
 
-def print_latest_servers(list_servers: List, port: str, server_set: Set):
+def print_latest_servers(list_servers: List, port: str, server_set: Set) -> None:
     if port == "tcp":
         folder = "ovpn_tcp/"
     else:
@@ -692,7 +692,7 @@ its config files (In which case run 'sudo openpyn --update')")
     return
 
 
-def check_config_files():
+def check_config_files() -> None:
     try:
         serverFiles = subprocess.check_output(
             "ls " + __basefilepath__ + "files", shell=True, stderr=subprocess.DEVNULL)
@@ -753,7 +753,7 @@ def get_vpn_server_ip(server: str, port: str) -> str:
         return vpn_server_ip
 
 
-def uses_systemd_resolved():
+def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
 
     systemd_resolved_running = subprocess.call(

@@ -10,7 +10,7 @@ from openpyn import api
 logger = logging.getLogger(__package__)
 
 
-def install_service():
+def install_service() -> bool:
     if not sys.__stdin__.isatty():
         logger.critical("Please run %s in interactive mode", __name__)
         return 1
@@ -158,7 +158,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     return 0
 
 
-def update_service(openpyn_options: str, run=False):
+def update_service(openpyn_options: str, run=False) -> None:
     logger.debug(openpyn_options)
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)

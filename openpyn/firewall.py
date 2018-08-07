@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from typing import List
 
 from openpyn import root
 
@@ -7,7 +8,7 @@ logger = logging.getLogger(__package__)
 
 
 # Clears Firewall rules, applies basic rules.
-def clear_fw_rules():
+def clear_fw_rules() -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     logger.info("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
     subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
@@ -34,7 +35,7 @@ NORDVPN_DNS = [
 ]
 
 
-def do_dns(iface: str, dest: str, what: str):
+def do_dns(iface: str, dest: str, what: str) -> None:
     for pp in ("tcp", "udp"):
         cmd = ["sudo",
                "iptables",
@@ -58,7 +59,7 @@ def apply_dns_rules():
     do_dns(None, "0.0.0.0/0", "DROP")
 
 
-def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
+def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
     # Empty the INPUT and OUTPUT chain of any current rules
@@ -126,7 +127,7 @@ def apply_fw_rules(interfaces_details, vpn_server_ip, skip_dns_patch):
 
 
 # open sepecified ports for devices in the local network
-def internally_allow_ports(interfaces_details, internally_allowed):
+def internally_allow_ports(interfaces_details: List, internally_allowed: List) -> None:
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:

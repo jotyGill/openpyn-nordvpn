@@ -7,7 +7,7 @@ import sys
 logger = logging.getLogger(__package__)
 
 
-def verify_root_access(message):
+def verify_root_access(message: str) -> bool:
     # Check that user has root privileges. if not print message
     # in a case when starting openpyn without sudo then providing sudo privileges when asked,
     # sudo privileges get cached, os.getuid would say user not root and prints "root needed"
@@ -28,14 +28,14 @@ def verify_root_access(message):
 
 
 # check if openpyn itself has been started with root access.
-def verify_running_as_root():
+def verify_running_as_root() -> bool:
     if os.getuid() == 0:
         # logger.debug(message)
         return True
     return False
 
 
-def obtain_root_access():
+def obtain_root_access() -> None:
     # asks for sudo password to be cached
     try:    # try accessing root read only file "600" permission, ask for sudo pass
         subprocess.call(
@@ -48,7 +48,7 @@ def obtain_root_access():
         sys.exit()
 
 
-def logged_in_user_is_root(username):
+def logged_in_user_is_root(username: str) -> bool:
     user_record = pwd.getpwnam(username)
     user_id = user_record.pw_gid
     # logger.debug("user_record %s", user_id)
@@ -57,7 +57,7 @@ def logged_in_user_is_root(username):
     return False
 
 
-def running_with_sudo():
+def running_with_sudo() -> bool:
     if verify_running_as_root():
         try:
             logged_in_user = os.getlogin()

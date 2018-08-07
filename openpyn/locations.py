@@ -2,6 +2,7 @@ import logging
 import random
 import sys
 import time
+from typing import Dict, List, Set
 
 import requests
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__package__)
 
 
 # takes server list outputs locations (each only once) the servers are in.
-def get_unique_locations(list_of_servers):
+def get_unique_locations(list_of_servers: List) -> List:
     unique_locations = []
     resolved_locations = []
     locations_count = 0
@@ -37,7 +38,7 @@ def get_unique_locations(list_of_servers):
     return resolved_locations
 
 
-def get_locations(location_dic, req_headers):
+def get_locations(location_dic: Dict, req_headers: str) -> List:
     latitude = location_dic["lat"]
     longitude = location_dic["long"]
 

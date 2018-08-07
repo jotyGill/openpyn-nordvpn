@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import sys
+from typing import Dict, List, Set
 
 from openpyn import __basefilepath__, root
 
@@ -11,19 +12,19 @@ credentials_file_path = __basefilepath__ + "credentials"
 logger = logging.getLogger(__package__)
 
 
-def check_credentials():
+def check_credentials() -> bool:
     return os.path.exists(credentials_file_path)
 
 
-def save_credentials():
+def save_credentials() -> None:
     if not sys.__stdin__.isatty():
         logger.critical("Please run %s in interactive mode", __name__)
-        sys.exit()
+        sys.exit(1)
 
     if root.verify_running_as_root() is False:
         logger.error("Please run as 'sudo openpyn --init' the first time. \
 Root access is needed to store credentials in '%s'.", credentials_file_path)
-        sys.exit()
+        sys.exit(1)
     else:
         logger.info("Storing credentials in '%s' with openvpn \
 compatible 'auth-user-pass' file format", credentials_file_path)
