@@ -90,7 +90,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
         iname = interface[0]
 
         if len(iname) == 0:
-            print(f"WARNING: empty {interface}")
+            print("WARNING: empty {}".format(interface))
             continue
 
         # allow access to vpn_server_ip
