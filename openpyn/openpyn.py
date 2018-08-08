@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import logging.handlers
 import os
 import shutil
 import subprocess
@@ -168,11 +169,16 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         'error': {'color': 'red', 'bold': True},
         'critical': {'color': 'white', 'background': 'red', 'bold': True}
     }
-    logformat = '%(levelname)s %(message)s'
+    logformat = '%(asctime)s [%(levelname)s] %(message)s'
 
-    # Create a logger object.
-    # logger = logging.getLogger(__package__)
     logger.addHandler(logging.StreamHandler())
+
+    # Add another rotating handler to log to .log files
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        __basefilepath__ + 'openpyn.log', when='W0', interval=4)
+    file_handler_formatter = logging.Formatter(logformat)
+    file_handler.setFormatter(file_handler_formatter)
+    logger.addHandler(file_handler)
 
     # In this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=logformat,
