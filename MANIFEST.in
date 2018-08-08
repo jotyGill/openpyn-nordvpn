@@ -1,2 +1,12 @@
 recursive-include openpyn *.*
 include LICENSE.md README.md
+
+
+exclude openpyn/test.py
+
+prune openpyn/__pycache__
+prune openpyn/management/__pycache__
+prune test*
+prune .git
+prune openpyn.egg-info
+prune openpyn/files
