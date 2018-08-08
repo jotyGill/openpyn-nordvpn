@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 import time
-from pathlib import Path
 from typing import Dict, List, Set
 
 import coloredlogs
@@ -151,6 +150,12 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, skip_dns_patch: bool, silent: bool, nvram: str,
         openvpn_options: str, location: float) -> bool:
+
+    log_folder = "/var/log/openpyn"     # logs will be saved here
+
+    if init:
+        initialise(log_folder)
+
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -173,9 +178,15 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     logger.addHandler(logging.StreamHandler())
 
+    # if log folder doesnt exist, exit, "--init" creates it
+    if not os.path.exists(log_folder):
+        logger.error(
+            "Please initialise first by running 'sudo openpyn --init', then start using 'openpyn' without sudo")
+        return 1
+
     # Add another rotating handler to log to .log files
     file_handler = logging.handlers.TimedRotatingFileHandler(
-        __basefilepath__ + 'openpyn.log', when='W0', interval=4)
+        log_folder + '/openpyn.log', when='W0', interval=4)
     file_handler_formatter = logging.Formatter(logformat)
     file_handler.setFormatter(file_handler_formatter)
     logger.addHandler(file_handler)
@@ -224,8 +235,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         logger.error("Please Install 'openvpn' 'wget' 'unzip' first")
         return 1
 
-    if init:
-        initialise()
     elif daemon:
         if detected_os != "linux":
             logger.error("Daemon mode is only available in GNU/Linux distros")
@@ -409,9 +418,14 @@ Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
     return 0        # if everything went ok
 
 
-def initialise() -> bool:
+def initialise(log_folder: str) -> bool:
     credentials.save_credentials()
     update_config_files()
+    if not os.path.exists(log_folder):
+        os.mkdir(log_folder)
+        os.chmod(log_folder, mode=0o777)
+        open(log_folder + "/openpyn.log", "a").close()      # touch the log file
+        os.chmod(log_folder + "/openpyn.log", mode=0o777)
     if sys.platform == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             return initd.install_service()
@@ -583,10 +597,10 @@ def update_config_files() -> None:
     root.verify_root_access("Root access needed to write files in " +
                             "'" + __basefilepath__ + "files/" + "'")
     try:
-        _archive = Path(__basefilepath__ + "ovpn.zip")
-        if _archive.is_file():
+        zip_archive = __basefilepath__ + "ovpn.zip"
+        if os.exists(zip_archive):
             print(Fore.BLUE + "Previous update file already exists, deleting..." + Style.RESET_ALL)
-            subprocess.run(["sudo", "rm", "-rf", _archive])
+            os.remove(zip_archive)
 
         subprocess.check_call(
             ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
