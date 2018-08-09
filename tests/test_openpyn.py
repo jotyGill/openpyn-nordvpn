@@ -13,9 +13,8 @@ import pytest
 
 from openpyn import openpyn
 
-
-def test_version():
-    assert openpyn.__version__ == "2.7.0"
+# def test_version():
+#     assert openpyn.__version__ == "2.7.0"
 
 
 def test_list():
@@ -70,4 +69,9 @@ def test_connect_max_load():
 
 def test_connect_top_servers():
     with mock.patch('sys.argv', ['openpyn', 'au', '-t', '5', '--test']):
+        assert openpyn.main() == 0
+
+
+def test_connect_pings():
+    with mock.patch('sys.argv', ['openpyn', 'au', '-p', '5', '--test']):
         assert openpyn.main() == 0
