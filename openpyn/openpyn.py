@@ -8,22 +8,21 @@ import shutil
 import subprocess
 import sys
 import time
-from typing import Dict, List, Set
+from typing import List, Set
 
 import coloredlogs
 from colorama import Fore, Style
 
-from openpyn import __basefilepath__  # pylint: disable=W0406
-from openpyn import __version__  # pylint: disable=W0406
-from openpyn import api  # pylint: disable=W0406
-from openpyn import asus  # pylint: disable=W0406
-from openpyn import credentials  # pylint: disable=W0406
-from openpyn import filters  # pylint: disable=W0406
-from openpyn import firewall  # pylint: disable=W0406
-from openpyn import initd  # pylint: disable=W0406
-from openpyn import locations  # pylint: disable=W0406
-from openpyn import root  # pylint: disable=W0406
-from openpyn import systemd  # pylint: disable=W0406
+from openpyn import api
+from openpyn import asus
+from openpyn import credentials
+from openpyn import filters
+from openpyn import firewall
+from openpyn import initd
+from openpyn import locations
+from openpyn import root
+from openpyn import systemd
+from openpyn import __basefilepath__, __version__, log_folder, logformat    # variables
 
 logger = logging.getLogger(__package__)
 
@@ -151,8 +150,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         netflix: bool, test: bool, internally_allowed: List, skip_dns_patch: bool, silent: bool, nvram: str,
         openvpn_options: str, location: float) -> bool:
 
-    log_folder = "/var/log/openpyn"     # logs will be saved here
-
     if init:
         initialise(log_folder)
 
@@ -174,7 +171,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         'error': {'color': 'red', 'bold': True},
         'critical': {'color': 'white', 'background': 'red', 'bold': True}
     }
-    logformat = '%(asctime)s [%(levelname)s] %(message)s'
 
     logger.addHandler(logging.StreamHandler())
 
@@ -598,7 +594,7 @@ def update_config_files() -> None:
                             "'" + __basefilepath__ + "files/" + "'")
     try:
         zip_archive = __basefilepath__ + "ovpn.zip"
-        if os.exists(zip_archive):
+        if os.path.exists(zip_archive):
             print(Fore.BLUE + "Previous update file already exists, deleting..." + Style.RESET_ALL)
             os.remove(zip_archive)
 
