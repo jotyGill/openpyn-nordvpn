@@ -511,10 +511,10 @@ falling back to wait of 1 second between pings, pings will be slow")
             ping_string = str(ping_output)
             # logger.debug(ping_string)
             if "0%" not in ping_string:
-                logger.error("Some packet loss while pinging %s, skipping it", i[0])
+                logger.warning("Some packet loss while pinging %s, skipping it", i[0])
                 continue
         except subprocess.CalledProcessError:
-            logger.error("Ping Failed to: %s, excluding it from the list", i[0])
+            logger.warning("Ping Failed to: %s, excluding it from the list", i[0])
             continue
         except KeyboardInterrupt:
             logger.info('KeyboardInterrupt; Shutting down')
