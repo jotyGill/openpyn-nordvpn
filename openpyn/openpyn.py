@@ -22,7 +22,7 @@ from openpyn import initd
 from openpyn import locations
 from openpyn import root
 from openpyn import systemd
-from openpyn import __basefilepath__, __version__, log_folder, logformat    # variables
+from openpyn import __basefilepath__, __version__, log_folder, log_format    # variables
 
 logger = logging.getLogger(__package__)
 
@@ -183,12 +183,12 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     # Add another rotating handler to log to .log files
     file_handler = logging.handlers.TimedRotatingFileHandler(
         log_folder + '/openpyn.log', when='W0', interval=4)
-    file_handler_formatter = logging.Formatter(logformat)
+    file_handler_formatter = logging.Formatter(log_format)
     file_handler.setFormatter(file_handler_formatter)
     logger.addHandler(file_handler)
 
     # In this case only log messages originating from this logger will show up on the terminal.
-    coloredlogs.install(level="verbose", logger=logger, fmt=logformat,
+    coloredlogs.install(level="verbose", logger=logger, fmt=log_format,
                         level_styles=levelstyles, field_styles=fieldstyles)
 
     stats = True
