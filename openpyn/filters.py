@@ -75,7 +75,7 @@ def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool,
                 remaining_servers.append(eachServer)
             if double_vpn and ServerType["name"] == "Double VPN":
                 remaining_servers.append(eachServer)
-            if tor_over_vpn and ServerType["name"] == "Obfuscated Servers":
+            if tor_over_vpn and ServerType["name"] == "Onion Over VPN":
                 remaining_servers.append(eachServer)
             if anti_ddos and ServerType["name"] == "Anti DDoS":
                 remaining_servers.append(eachServer)
