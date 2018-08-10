@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 
 import logging
+import logging.handlers
 import os
 import socket
 import sys
 from time import sleep
 
+from openpyn import log_folder, log_format
+
 logger = logging.getLogger(__package__)
+
+logger.setLevel(logging.VERBOSE)
+
+# Add another rotating handler to log to .log files
+file_handler = logging.handlers.TimedRotatingFileHandler(
+    log_folder + '/openpyn-notifications.log', when='W0', interval=4)
+file_handler_formatter = logging.Formatter(log_format)
+file_handler.setFormatter(file_handler_formatter)
+logger.addHandler(file_handler)
+
 
 try:
     import gi
@@ -47,6 +60,7 @@ def show():
         if detected_os == "linux":
             notification = Notify.Notification.new(summary, body)
             notification.show()
+            logger.warning("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
         elif detected_os == "darwin":
             notification = "\"{}\" with title \"{}\"".format(body, summary)
             os.system("""osascript -e 'display notification {}'""".format(notification))
@@ -71,6 +85,7 @@ def show():
                     notification.update(summary, body)
                     # Show again
                     notification.show()
+                    logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
                 elif detected_os == "darwin":
                     notification = "\"{}\" with title \"{}\"".format(body, summary)
                     os.system("""osascript -e 'display notification {}'""".format(notification))
@@ -86,6 +101,7 @@ def show():
                     notification.update(summary, body)
                     # Show again
                     notification.show()
+                    logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
                 elif detected_os == "darwin":
                     notification = "\"{}\" with title \"{}\"".format(body, summary)
                     os.system("""osascript -e 'display notification {}'""".format(notification))
@@ -99,6 +115,7 @@ def show():
         if detected_os == "linux":
             notification.update(summary, body)
             notification.show()
+            logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
         elif detected_os == "darwin":
             notification = "\"{}\" with title \"{}\"".format(body, summary)
             os.system("""osascript -e 'display notification {}'""".format(notification))
@@ -108,6 +125,7 @@ def show():
         if detected_os == "linux":
             notification.update(summary, body)
             notification.show()
+            logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
         elif detected_os == "darwin":
             notification = "\"{}\" with title \"{}\"".format(body, summary)
             os.system("""osascript -e 'display notification {}'""".format(notification))
