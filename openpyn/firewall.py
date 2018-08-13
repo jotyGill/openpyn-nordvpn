@@ -76,7 +76,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
             "-A", "OUTPUT",
             "-o", "tun+",
             "-p", prot,
-            "-d", "0.0.0.0/0", "!", "--dport", "53",
+            "-d", "0.0.0.0/0",
             "-j", "ACCEPT"
         ])
     # accept traffic that comes through tun that you connect to
