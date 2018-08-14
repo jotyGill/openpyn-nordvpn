@@ -301,6 +301,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             initd.update_service(openpyn_options, run=True)
         else:
             systemd.update_service(openpyn_options, run=True)
+        return 0
 
     elif kill:
         logger.warning("Killing the running processes")
