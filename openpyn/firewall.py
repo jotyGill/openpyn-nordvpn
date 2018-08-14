@@ -36,17 +36,18 @@ NORDVPN_DNS = [
 
 
 def do_dns(iface: str, dest: str, what: str) -> None:
-    for pp in ("tcp", "udp"):
-        cmd = ["sudo",
-               "iptables",
-               "-A", "OUTPUT",
-               "-p", pp,
-               "-d", dest, "--destination-port", "53",
-               "-j", what,
-               ]
-        if iface is not None:
-            cmd.extend(["-o", iface])
-        subprocess.check_call(cmd)
+    # for pp in ("udp", "tcp"):
+    pp = "udp"
+    cmd = ["sudo",
+           "iptables",
+           "-A", "OUTPUT",
+           "-p", pp,
+           "-d", dest, "--destination-port", "53",
+           "-j", what,
+           ]
+    if iface is not None:
+        cmd.extend(["-o", iface])
+    subprocess.check_call(cmd)
 
 # responsibility of update-systemd-resolved script now...
 
@@ -56,7 +57,7 @@ def apply_dns_rules():
     for ndns in NORDVPN_DNS:
         do_dns("lo", ndns, "ACCEPT")
         do_dns("tun+", ndns, "ACCEPT")
-    do_dns(None, "0.0.0.0/0", "DROP")
+    # do_dns(None, "0.0.0.0/0", "DROP")
 
 
 def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
@@ -66,19 +67,20 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call(["sudo", "iptables", "-F", "OUTPUT"])
     subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
+    apply_dns_rules()
+
     # Allow all traffic out over the vpn tunnel
     # except for DNS, which is handled by systemd-resolved script
     # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
     # weird that ping ya.ru was showing "operation not permitted"
-    for prot in ("tcp", "udp"):
-        subprocess.check_call([
-            "sudo", "iptables",
-            "-A", "OUTPUT",
-            "-o", "tun+",
-            "-p", prot,
-            "-d", "0.0.0.0/0",
-            "-j", "ACCEPT"
-        ])
+    subprocess.check_call([
+        "sudo", "iptables",
+        "-A", "OUTPUT",
+        "-o", "tun+",
+        # "-p", "all", "-d", "0.0.0.0/0", "!", "--dport", "53",
+        "-p", "all", "-d", "0.0.0.0/0",
+        "-j", "ACCEPT"
+    ])
     # accept traffic that comes through tun that you connect to
     subprocess.check_call(
         "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
