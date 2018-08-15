@@ -293,7 +293,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --nvram " + str(nvram)
         if openvpn_options:
             openpyn_options += " --openvpn-options '" + openvpn_options + "'"
-        openpyn_options += " --silent"
+        openpyn_options += " --silent"      # always added in openpyn.service
         # logger.debug(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)

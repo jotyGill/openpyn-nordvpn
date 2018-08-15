@@ -20,8 +20,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options: str, run=False) -> None:
-    if "--silent" not in openpyn_options:
-        openpyn_options += " --silent "
     if "-f" in openpyn_options or "--force-fw-rules" in openpyn_options:
         kill_option = " --kill-flush"
     else:
