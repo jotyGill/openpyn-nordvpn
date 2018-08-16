@@ -801,8 +801,10 @@ def uses_systemd_resolved() -> bool:
         return True
 
     # otherwise, something must be broken.. why is systemd-resolved running yet resolv.conf still pointing somewhere else?
-    raise RuntimeError(
-        "Invalid configuration: systemd-resolved is running, but resolv.conf contains {}".format(dns_servers))
+    # TODO test implications
+    logger.warning(
+        "systemd-resolved is running, but resolv.conf contains {}, test if DNS leaks!".format(dns_servers))
+    return True
 
 
 def connect(server: str, port: str, silent: bool, test: bool, skip_dns_patch: bool, openvpn_options: str, server_provider="nordvpn") -> bool:
