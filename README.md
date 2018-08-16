@@ -1,5 +1,5 @@
 # openpyn
-A python3 script/systemd service, to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if you use a third party dns) and compromises Privacy!
+A python3 script (systemd service as well) to manage openvpn connections. Created to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN) goes through your ISP's DNS (unencrypted) and compromises Privacy!
 
 ## Features
 * Automatically connect to least busy, low latency servers in a given country.
@@ -9,17 +9,18 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 * Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental), ie KILL SWITCH.
 * Quickly Connect to any specific server. i.e au10 or us20.
 * Downloads and Updates (modifications) the latest config files from NordVPN.
-* Option to run the script in background (openvpn daemon mode).
+* Option to run the script in background (as a systemd service).
 * Options to finetune server selection based on "Server Load" or "Ping Latency".
-* Auto excludes the servers if ping to them fails or if they don't support OpenVPN \
-  (TCP or UDP depending upon which one you are trying to use).
+* Auto excludes the servers if a ping to them fails or some packets drops when pinging \
+or if they don't support OpenVPN \ (TCP or UDP depending upon which one you are trying to use).
 * Finds and displays nord vpn servers (with extra info) in a given country.
 * Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \
 "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 * Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
-* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies. (not in daemon mode)
+* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies.
 * NVRAM write support for Asuswrt-merlin
 * Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
+* Logs stored in '/var/log/openpyn/' for information and troubleshooting.
 
 ## Demo
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
@@ -28,23 +29,27 @@ A python3 script/systemd service, to easily connect to and switch between, OpenV
 1. Install dependencies if they are not already present.
 ``` bash
 # common dependencies
-sudo apt install openvpn unzip wget python3-setuptools
+sudo apt install openvpn unzip wget python3-setuptools python3-pip
+```
+2. The following python dependencies are needed and will be installed when using pip.
+``` bash
+'requests', 'colorama', 'coloredlogs', 'verboselogs'
 ```
 ### Installation Methods
 1. Install openpyn with pip3 (Python=>3.5)
 **Recommended method to get the latest version and receive frequent updates.**
 ``` bash
-sudo apt install python3-pip
-sudo python3 -m pip install openpyn --upgrade
+sudo python3 -m pip install --upgrade openpyn
 ```
 2. Alternatively clone and install.
 ``` bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
-cd openpyn-nordvpn && sudo python3 setup.py install
+cd openpyn-nordvpn && sudo python3 -m pip install --upgrade .
 ```
 For the latest/ in development features, try the 'test' branch instead
 ```bash
  git clone --branch test https://github.com/jotyGill/openpyn-nordvpn.git
+ cd openpyn-nordvpn && sudo python3 -m pip install --upgrade -e .
 ```
 3. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
 ``` bash
@@ -75,7 +80,6 @@ git pull
 pip3 install --upgrade setuptools
 pip3 install --upgrade .
 ```
-
 
 ## Setup
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)

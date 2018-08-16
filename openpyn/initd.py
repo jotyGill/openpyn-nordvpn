@@ -1,13 +1,20 @@
 import argparse
 import fileinput
+import logging
 import os
 import subprocess
 import sys
 
 from openpyn import api
 
+logger = logging.getLogger(__package__)
 
-def install_service():
+
+def install_service() -> bool:
+    if not sys.__stdin__.isatty():
+        logger.critical("Please run %s in interactive mode", __name__)
+        return 1
+
     openpyn_options = input("Enter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
@@ -45,6 +52,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--test', action='store_true')
     parser.add_argument('-n', '--nvram', type=str, default="5")
     parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
+    parser.add_argument('-loc', '--location', nargs=2, type=float)
 
     try:
         args = parser.parse_args(openpyn_options.split())
@@ -76,6 +84,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     silent = args.silent
     nvram = args.nvram
     openvpn_options = args.openvpn_options
+    location = args.location
 
     detected_os = sys.platform
     if detected_os == "linux":
@@ -101,7 +110,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += country_code
 
     elif server:
-        openpyn_options += server
+        openpyn_options += " --server " + server
 
     if area:
         openpyn_options += " --area " + area
@@ -142,12 +151,15 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --nvram " + str(nvram)
     if openvpn_options:
         openpyn_options += " --openvpn-options '" + openvpn_options + "'"
+    if location:
+        openpyn_options += " --location " + str(location[1]) + " " + str(location[2])
 
     update_service(openpyn_options)
+    return 0
 
 
-def update_service(openpyn_options, run=False):
-    print(openpyn_options)
+def update_service(openpyn_options: str, run=False) -> None:
+    logger.debug(openpyn_options)
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
@@ -155,13 +167,13 @@ def update_service(openpyn_options, run=False):
         if sline[0].startswith("ARGS"):
             sline[1] = "\"" + openpyn_options + "\""
         line = '='.join(sline)
-        print(line)
+        logger.debug(line)
 
-    print("\nThe Following config has been saved in S23openpyn.",
-          "You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start',",
-          "'/opt/etc/init.d/S23openpyn stop' \n\n")
+    logger.notice("The Following config has been saved in S23openpyn. \
+You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start', \
+'/opt/etc/init.d/S23openpyn stop' \n")
 
     if run:
-        print("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
+        logger.notice("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
 To check VPN status, run '/opt/etc/init.d/S23openpyn check'")
         subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])
