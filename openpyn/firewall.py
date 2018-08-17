@@ -60,6 +60,16 @@ def apply_dns_rules():
     # do_dns(None, "0.0.0.0/0", "DROP")
 
 
+def disbale_ipv6():
+    try:
+        logger.info("Temporarily disabling ipv6 to prevent leakage")
+        subprocess.check_call(
+            ["sudo", "sysctl", "-w", "net.ipv6.conf.all.disable_ipv6=1"],
+            stdout=subprocess.DEVNULL)
+    except subprocess.SubprocessError:      # in case systemd is not used
+        logger.warning("Cant disable ipv6 using sysctl, are you even using systemd?")
+
+
 def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
@@ -68,6 +78,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
     apply_dns_rules()
+    disbale_ipv6()
 
     # Allow all traffic out over the vpn tunnel
     # except for DNS, which is handled by systemd-resolved script
