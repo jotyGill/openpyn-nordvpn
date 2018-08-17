@@ -35,6 +35,7 @@ setuptools.setup(
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
     long_description=full_description,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: System Administrators',
