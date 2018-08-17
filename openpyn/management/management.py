@@ -148,10 +148,11 @@ def show(do_notify):
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Management interface for openpyn to display notifications ")
+        description="Management interface for openpyn to display notifications and log"
+        "them to /var/log/openpyn/openpyn-notifications.log ")
     parser.add_argument(
-        '--do-notify', dest='do_notify', help='try to show desktop notifications\
-        .', action='store_true')
+        '--do-notify', dest='do_notify', help='try to display desktop notifications.',
+        action='store_true')
 
     return parser.parse_args(argv[1:])
 
