@@ -30,7 +30,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'openpyn = openpyn.openpyn:main',
-            'openpyn-management = openpyn.management.management:show']},
+            'openpyn-management = openpyn.management.management:main']},
     data_files=__data_files__,
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
