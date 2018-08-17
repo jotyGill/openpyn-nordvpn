@@ -293,7 +293,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --nvram " + str(nvram)
         if openvpn_options:
             openpyn_options += " --openvpn-options '" + openvpn_options + "'"
-        openpyn_options += " --silent"      # always added in openpyn.service
         # logger.debug(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
@@ -312,6 +311,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     elif kill_flush:
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
+        logger.info("Re-enabling ipv6")
+        firewall.manage_ipv6(disable=False)
         if internally_allowed:
             network_interfaces = get_network_interfaces()
             firewall.internally_allow_ports(network_interfaces, internally_allowed)
@@ -845,8 +846,9 @@ openpyn would have connected to server: " + server + " on port: " + port + " wit
         if detected_os == "linux" and root.running_with_sudo():
             logger.warning("Desktop notifications don't work when using 'sudo', run without it, \
 when asked, provide the sudo credentials")
-        else:
             subprocess.Popen("openpyn-management".split())
+        else:
+            subprocess.Popen("openpyn-management --do-notify".split())
     use_systemd_resolved = False
     use_resolvconf = False
     if detected_os == "linux":
