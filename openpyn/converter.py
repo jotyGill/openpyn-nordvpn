@@ -5,6 +5,11 @@ import os
 import re
 from itertools import islice
 
+import verboselogs
+
+verboselogs.install()
+logger = logging.getLogger(__package__)
+
 # CONFIGURATION PLACEHOLDERS
 # spaces are intentionally let by the end of the word
 SERVER_ADDRESS = 'remote '
@@ -36,8 +41,6 @@ T_USERAUTH = 'userauth'
 T_USERNAME = 'username'
 T_USERONLY = 'useronly'
 T_LOG_VERBOSITY = 'verb'
-
-logger = logging.getLogger(__package__)
 
 
 class Converter(object):

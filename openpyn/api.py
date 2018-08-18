@@ -3,10 +3,12 @@ import sys
 from typing import Dict, List
 
 import requests
+import verboselogs
 
 from openpyn import filters
 
 logger = logging.getLogger(__package__)
+verboselogs.install()
 
 
 # Using requests, GETs and returns json from a url.

@@ -2,8 +2,11 @@ import logging
 import subprocess
 from typing import List
 
+import verboselogs
+
 from openpyn import root
 
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
