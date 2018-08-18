@@ -1,9 +1,12 @@
 import logging
 import subprocess
 
+import verboselogs
+
 from openpyn import __basefilepath__, api
 from openpyn.converter import T_CLIENT, Converter
 
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 

@@ -3,13 +3,15 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Dict, List, Set
+from typing import List
 
+import verboselogs
 from openpyn import __basefilepath__, root
 
-credentials_file_path = __basefilepath__ + "credentials"
-
+verboselogs.install()
 logger = logging.getLogger(__package__)
+
+credentials_file_path = __basefilepath__ + "credentials"
 
 
 def check_credentials() -> bool:

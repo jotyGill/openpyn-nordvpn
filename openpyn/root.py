@@ -4,6 +4,9 @@ import pwd
 import subprocess
 import sys
 
+import verboselogs
+
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 

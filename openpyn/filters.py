@@ -3,8 +3,11 @@ import operator
 import sys
 from typing import List
 
+import verboselogs
+
 from openpyn import locations
 
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 

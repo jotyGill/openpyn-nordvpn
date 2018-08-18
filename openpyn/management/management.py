@@ -9,8 +9,11 @@ import sys
 from time import sleep
 from typing import List
 
+import verboselogs
+
 from openpyn import log_folder, log_format
 
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 logger.setLevel(logging.VERBOSE)

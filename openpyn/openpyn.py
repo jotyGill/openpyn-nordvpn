@@ -11,6 +11,7 @@ import time
 from typing import List, Set
 
 import coloredlogs
+import verboselogs
 from colorama import Fore, Style
 
 from openpyn import api
@@ -24,6 +25,7 @@ from openpyn import root
 from openpyn import systemd
 from openpyn import __basefilepath__, __version__, log_folder, log_format    # variables
 
+verboselogs.install()
 logger = logging.getLogger(__package__)
 
 

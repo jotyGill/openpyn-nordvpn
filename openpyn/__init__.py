@@ -1,8 +1,6 @@
 import sys
 import os.path
 import subprocess
-# import gc
-import verboselogs
 
 __version__ = "2.7.3.dev1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
@@ -19,7 +17,6 @@ if sys.platform == "linux":
     elif os.path.exists("/etc/openwrt_release"):
         __data_files__ = [('/opt/etc/init.d', ['./openpyn/S23openpyn'])]
 
-verboselogs.install()
 
 # print("\n".join(sorted({attrname for item in gc.get_objects() for attrname in dir(item) if attrname.startswith("__")})))
 #
