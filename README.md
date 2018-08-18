@@ -21,6 +21,7 @@ or if they don't support OpenVPN \ (TCP or UDP depending upon which one you are 
 * NVRAM write support for Asuswrt-merlin
 * Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
 * Logs stored in '/var/log/openpyn/' for information and troubleshooting.
+* Temporarily disable ipv6 to prevent leakage (when using -f).
 
 ## Demo
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
@@ -33,7 +34,7 @@ sudo apt install openvpn unzip wget python3-setuptools python3-pip
 ```
 2. The following python dependencies are needed and will be installed when using pip.
 ``` bash
-'requests', 'colorama', 'coloredlogs', 'verboselogs'
+requests colorama coloredlogs verboselogs
 ```
 ### Installation Methods
 1. Install openpyn with pip3 (Python=>3.5)
@@ -104,6 +105,7 @@ openpyn us -a ny
 openpyn us --area "new york"
 ```
 * To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks. i.e KILL SWITCH
+also temporarily disables ipv6 by running "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1"
 ``` bash
 openpyn us -f # Experimental!, Warning, clears IPtables rules!
               # (changes are non persistent, simply reboot if having networking issues)
