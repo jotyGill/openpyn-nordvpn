@@ -810,7 +810,8 @@ def uses_systemd_resolved() -> bool:
     return True
 
 
-def connect(server: str, port: str, silent: bool, test: bool, skip_dns_patch: bool, openvpn_options: str, server_provider="nordvpn") -> bool:
+def connect(server: str, port: str, silent: bool, test: bool, skip_dns_patch: bool,
+            openvpn_options: str, server_provider="nordvpn") -> bool:
     detected_os = sys.platform
     if server_provider == "nordvpn":
         if port == "tcp":
