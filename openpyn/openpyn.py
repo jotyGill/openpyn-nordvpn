@@ -573,7 +573,7 @@ def kill_vpn_processes() -> None:
         # When it returns "0", proceed
         root.verify_root_access("Root access needed to kill openvpn process")
         subprocess.call(["sudo", "killall", "openvpn"])
-        logger.success("Killed the running openvpn process")
+        logger.notice("Killing the running openvpn process")
         time.sleep(1)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -597,6 +597,8 @@ def kill_management_client() -> None:
         root.verify_root_access("Root access needed to kill 'openpyn-management' process")
         subprocess.check_output(["sudo", "killall", "openpyn-management"],
                                 stderr=subprocess.DEVNULL)
+        logger.notice("Killing the running openvpn-management client")
+        time.sleep(3)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
         pass
@@ -847,7 +849,7 @@ openpyn would have connected to server: " + server + " on port: " + port + " wit
         return 0
 
     kill_vpn_processes()   # kill existing OpenVPN processes
-    # kill_management_client()
+    kill_management_client()
     logger.success("CONNECTING TO SERVER " + server + " ON PORT " + port)
 
     root_access = root.verify_root_access("Sudo credentials required to run 'openvpn'")
