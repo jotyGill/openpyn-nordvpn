@@ -388,6 +388,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
+                if stats:
+                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
+                          (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 # if "-f" used apply firewall rules
                 if force_fw_rules:
                     network_interfaces = get_network_interfaces()
@@ -399,9 +402,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     # TODO return 0 on success else 1 in asus.run()
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM")
-                if stats:
-                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, \
-Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 return(connect(aserver, port, silent, test, skip_dns_patch, openvpn_options))
     elif server:
         # ask for and store credentials if not present, skip if "--test"
