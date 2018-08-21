@@ -81,7 +81,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
     apply_dns_rules()
-    logger.info("Temporarily disabling ipv6 to prevent leakage")
+    logger.notice("Temporarily disabling ipv6 to prevent leakage")
     manage_ipv6(disable=True)
 
     # Allow all traffic out over the vpn tunnel
