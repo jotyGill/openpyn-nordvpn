@@ -183,11 +183,21 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         return 1
 
     # Add another rotating handler to log to .log files
-    file_handler = logging.handlers.TimedRotatingFileHandler(
-        log_folder + '/openpyn.log', when='W0', interval=4)
-    file_handler_formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(file_handler_formatter)
-    logger.addHandler(file_handler)
+    # fix permissions if needed
+    for attempt in range(2):
+        try:
+            file_handler = logging.handlers.TimedRotatingFileHandler(
+                log_folder + '/openpyn.log', when='W0', interval=4)
+            file_handler_formatter = logging.Formatter(log_format)
+            file_handler.setFormatter(file_handler_formatter)
+            logger.addHandler(file_handler)
+        except PermissionError:
+            root.verify_root_access(
+                "Root access needed to set permissions of {}/openpyn.log".format(log_folder))
+            subprocess.run("sudo chmod 777 {}/openpyn.log".format(log_folder).split())
+            subprocess.run("sudo chmod 777 {}/openpyn-notifications.log".format(log_folder).split())
+        else:
+            break
 
     # In this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format,
@@ -295,7 +305,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --nvram " + str(nvram)
         if openvpn_options:
             openpyn_options += " --openvpn-options '" + openvpn_options + "'"
-        openpyn_options += " --silent"      # always added in openpyn.service
         # logger.debug(openpyn_options)
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             initd.update_service(openpyn_options, run=True)
@@ -314,6 +323,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     elif kill_flush:
         firewall.clear_fw_rules()      # also clear iptable rules
         # if --allow present, allow those ports internally
+        logger.info("Re-enabling ipv6")
+        firewall.manage_ipv6(disable=False)
         if internally_allowed:
             network_interfaces = get_network_interfaces()
             firewall.internally_allow_ports(network_interfaces, internally_allowed)
@@ -377,6 +388,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
+                if stats:
+                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
+                          (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 # if "-f" used apply firewall rules
                 if force_fw_rules:
                     network_interfaces = get_network_interfaces()
@@ -388,9 +402,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     # TODO return 0 on success else 1 in asus.run()
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                     logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM")
-                if stats:
-                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, \
-Chose", (Fore.GREEN + aserver + Fore.BLUE) + "\n")
                 return(connect(aserver, port, silent, test, skip_dns_patch, openvpn_options))
     elif server:
         # ask for and store credentials if not present, skip if "--test"
@@ -809,7 +820,8 @@ def uses_systemd_resolved() -> bool:
     return True
 
 
-def connect(server: str, port: str, silent: bool, test: bool, skip_dns_patch: bool, openvpn_options: str, server_provider="nordvpn") -> bool:
+def connect(server: str, port: str, silent: bool, test: bool, skip_dns_patch: bool,
+            openvpn_options: str, server_provider="nordvpn") -> bool:
     detected_os = sys.platform
     if server_provider == "nordvpn":
         if port == "tcp":
@@ -847,8 +859,9 @@ openpyn would have connected to server: " + server + " on port: " + port + " wit
         if detected_os == "linux" and root.running_with_sudo():
             logger.warning("Desktop notifications don't work when using 'sudo', run without it, \
 when asked, provide the sudo credentials")
-        else:
             subprocess.Popen("openpyn-management".split())
+        else:
+            subprocess.Popen("openpyn-management --do-notify".split())
     use_systemd_resolved = False
     use_resolvconf = False
     if detected_os == "linux":

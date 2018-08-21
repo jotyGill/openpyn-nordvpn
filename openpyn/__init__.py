@@ -2,7 +2,8 @@ import sys
 import os.path
 import subprocess
 
-__version__ = "2.7.2"
+
+__version__ = "2.7.3"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __data_files__ = []
 __basefilepath__ = os.path.dirname(os.path.abspath(__file__)) + "/"

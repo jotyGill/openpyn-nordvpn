@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import argparse
 import logging
 import logging.handlers
 import os
 import socket
 import sys
 from time import sleep
+from typing import List
 
 import verboselogs
 
@@ -24,30 +26,30 @@ file_handler.setFormatter(file_handler_formatter)
 logger.addHandler(file_handler)
 
 
-try:
-    import gi
-except ImportError:
-    logger.error("Python3-gi not found, expected on a non-gui os")
-    sys.exit()
-try:
-    gi.require_version('Notify', '0.7')
-    from gi.repository import Notify
-except ValueError:
-    logger.error("Notify 0.7 not found, expected on a non-gui os")
-    sys.exit()
-
-
 def socket_connect(server, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((server, port))
     return s
 
 
-def show():
-    sleep(1)
+def show(do_notify):
     detected_os = sys.platform
-    if detected_os == "linux":
-        Notify.init("openpyn")
+    sleep(1)
+    if do_notify:
+        try:
+            import gi
+        except ImportError:
+            logger.error("Python3-gi not found, expected on a non-gui os")
+            sys.exit()
+        try:
+            gi.require_version('Notify', '0.7')
+            from gi.repository import Notify
+        except ValueError:
+            logger.error("Notify 0.7 not found, expected on a non-gui os")
+            sys.exit()
+
+        if detected_os == "linux":
+            Notify.init("openpyn")
 
     while True:
         try:
@@ -61,12 +63,14 @@ def show():
         summary = "Openpyn"
         body = "Initiating connection (If stuck here, try again)"
         if detected_os == "linux":
-            notification = Notify.Notification.new(summary, body)
-            notification.show()
-            logger.warning("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
+            if do_notify:
+                notification = Notify.Notification.new(summary, body)
+                notification.show()
+            logger.warning("{} {}".format(summary, body))
         elif detected_os == "darwin":
-            notification = "\"{}\" with title \"{}\"".format(body, summary)
-            os.system("""osascript -e 'display notification {}'""".format(notification))
+            if do_notify:
+                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                os.system("""osascript -e 'display notification {}'""".format(notification))
         server_name = ""
         last_status_UP = False
         # s.send(str.encode("state on"))
@@ -85,13 +89,15 @@ def show():
                 # logger.debug('Received A DOWN' + data_str)
                 body = "Connection Down, Disconnected."
                 if detected_os == "linux":
-                    notification.update(summary, body)
-                    # Show again
-                    notification.show()
-                    logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
+                    if do_notify:
+                        notification.update(summary, body)
+                        # Show again
+                        notification.show()
+                    logger.info("{} {}".format(summary, body))
                 elif detected_os == "darwin":
-                    notification = "\"{}\" with title \"{}\"".format(body, summary)
-                    os.system("""osascript -e 'display notification {}'""".format(notification))
+                    if do_notify:
+                        notification = "\"{}\" with title \"{}\"".format(body, summary)
+                        os.system("""osascript -e 'display notification {}'""".format(notification))
 
             server_name_location = data_str.find("common_name=")
             # logger.debug(server_name_location)
@@ -101,13 +107,14 @@ def show():
                 # logger.debug("Both True and server_name %s", server_name)
                 body = "Connected! to " + server_name
                 if detected_os == "linux":
-                    notification.update(summary, body)
-                    # Show again
-                    notification.show()
-                    logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
+                    if do_notify:
+                        notification.update(summary, body)
+                        notification.show()
+                    logger.info("{} {}".format(summary, body))
                 elif detected_os == "darwin":
-                    notification = "\"{}\" with title \"{}\"".format(body, summary)
-                    os.system("""osascript -e 'display notification {}'""".format(notification))
+                    if do_notify:
+                        notification = "\"{}\" with title \"{}\"".format(body, summary)
+                        os.system("""osascript -e 'display notification {}'""".format(notification))
 
             # break of data stream is empty
             if not data:
@@ -116,27 +123,48 @@ def show():
     except KeyboardInterrupt:
         body = "Disconnected, Bye."
         if detected_os == "linux":
-            notification.update(summary, body)
-            notification.show()
-            logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
+            if do_notify:
+                notification.update(summary, body)
+                notification.show()
+            logger.info("{} {}".format(summary, body))
         elif detected_os == "darwin":
-            notification = "\"{}\" with title \"{}\"".format(body, summary)
-            os.system("""osascript -e 'display notification {}'""".format(notification))
+            if do_notify:
+                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                os.system("""osascript -e 'display notification {}'""".format(notification))
         logger.info('Shutting down safely, please wait until process exits')
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
         if detected_os == "linux":
-            notification.update(summary, body)
-            notification.show()
-            logger.info("'MANAGEMENT-NOTIFICATION'{} {}".format(summary, body))
+            if do_notify:
+                notification.update(summary, body)
+                notification.show()
+            logger.info("{} {}".format(summary, body))
         elif detected_os == "darwin":
-            notification = "\"{}\" with title \"{}\"".format(body, summary)
-            os.system("""osascript -e 'display notification {}'""".format(notification))
+            if do_notify:
+                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                os.system("""osascript -e 'display notification {}'""".format(notification))
         sys.exit()
 
     s.close()
     return
 
 
+def parse_args(argv: List[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Management interface for openpyn to display notifications and log"
+        "them to /var/log/openpyn/openpyn-notifications.log ")
+    parser.add_argument(
+        '--do-notify', dest='do_notify', help='try to display desktop notifications.',
+        action='store_true')
+
+    return parser.parse_args(argv[1:])
+
+
+def main() -> bool:
+
+    args = parse_args(sys.argv)
+    return show(args.do_notify)
+
+
 if __name__ == '__main__':
-    show()
+    sys.exit(main())
