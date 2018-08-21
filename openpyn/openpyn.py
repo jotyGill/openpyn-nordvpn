@@ -183,11 +183,21 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         return 1
 
     # Add another rotating handler to log to .log files
-    file_handler = logging.handlers.TimedRotatingFileHandler(
-        log_folder + '/openpyn.log', when='W0', interval=4)
-    file_handler_formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(file_handler_formatter)
-    logger.addHandler(file_handler)
+    # fix permissions if needed
+    for attempt in range(2):
+        try:
+            file_handler = logging.handlers.TimedRotatingFileHandler(
+                log_folder + '/openpyn.log', when='W0', interval=4)
+            file_handler_formatter = logging.Formatter(log_format)
+            file_handler.setFormatter(file_handler_formatter)
+            logger.addHandler(file_handler)
+        except PermissionError:
+            root.verify_root_access(
+                "Root access needed to set permissions of {}/openpyn.log".format(log_folder))
+            subprocess.run("sudo chmod 777 {}/openpyn.log".format(log_folder).split())
+            subprocess.run("sudo chmod 777 {}/openpyn-notifications.log".format(log_folder).split())
+        else:
+            break
 
     # In this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format,
