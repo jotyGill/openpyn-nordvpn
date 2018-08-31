@@ -788,11 +788,14 @@ def get_vpn_server_ip(server: str, port: str) -> str:
 def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
 
-    systemd_resolved_running = subprocess.call(
-        ["systemctl", "is-active", "systemd-resolved"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    ) == 0
+    try:
+        systemd_resolved_running = subprocess.call(
+            ["systemctl", "is-active", "systemd-resolved"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) == 0
+    except FileNotFoundError:   # When OS doesn't find systemctl
+        return False
 
     if not systemd_resolved_running:
         return False
