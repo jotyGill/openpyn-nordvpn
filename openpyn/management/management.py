@@ -131,7 +131,7 @@ def show(do_notify):
             if do_notify:
                 notification = "\"{}\" with title \"{}\"".format(body, summary)
                 os.system("""osascript -e 'display notification {}'""".format(notification))
-        logger.info('Shutting down safely, please wait until process exits')
+        # logger.info('Shutting down safely, please wait until process exits')
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
         if detected_os == "linux":
