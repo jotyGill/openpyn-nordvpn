@@ -1,4 +1,6 @@
 # openpyn
+<p align="center">
+<a href="https://pepy.tech/project/openpyn"><img alt="Downloads" src="https://pepy.tech/badge/openpyn"></a> </p>
 A python3 script (systemd service as well) to manage openvpn connections. Created to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN) goes through your ISP's DNS (unencrypted) and compromises Privacy!
 
 ## Features
