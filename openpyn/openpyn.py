@@ -128,7 +128,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
     parser.add_argument(
         '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
-
+    parser.add_argument(
+        '--status', dest='last_status', help='Show last change in connection status', action='store_true')
     return parser.parse_args(argv[1:])
 
 
@@ -141,7 +142,8 @@ def main() -> bool:
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location)
+        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location,
+        args.last_status)
     return return_code
 
 
@@ -150,7 +152,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, skip_dns_patch: bool, silent: bool, nvram: str,
-        openvpn_options: str, location: float) -> bool:
+        openvpn_options: str, location: float, last_status: bool) -> bool:
 
     if init:
         initialise(log_folder)
@@ -334,6 +336,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     elif update:
         update_config_files()
+    elif last_status:
+        get_status()
 
     # a hack to list all countries and their codes when no arg supplied with "-l"
     elif list_servers != 'nope':      # means "-l" supplied
@@ -445,6 +449,10 @@ def initialise(log_folder: str) -> bool:
             return systemd.install_service()
         logger.warning("systemd not found, skipping systemd integration")
         return 1
+
+
+def get_status():
+    subprocess.run("tail -n 1 {}/openpyn-notifications.log".format(log_folder).split())
 
 
 # Filters servers based on the specified criteria.
@@ -787,12 +795,14 @@ def get_vpn_server_ip(server: str, port: str) -> str:
 
 def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
-
-    systemd_resolved_running = subprocess.call(
-        ["systemctl", "is-active", "systemd-resolved"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    ) == 0
+    try:
+        systemd_resolved_running = subprocess.call(
+            ["systemctl", "is-active", "systemd-resolved"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) == 0
+    except FileNotFoundError:
+        return False
 
     if not systemd_resolved_running:
         return False
