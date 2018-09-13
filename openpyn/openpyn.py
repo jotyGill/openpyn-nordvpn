@@ -240,8 +240,18 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     # check if dependencies are installed
     if shutil.which("openvpn") is None or shutil.which("wget") is None or shutil.which("unzip") is None:
-        logger.error("Please Install 'openvpn' 'wget' 'unzip' first")
-        return 1
+        # In case of Debian Sid where "openvpn" is only in root's PATH, don't error out
+        try:
+            root_access = root.verify_root_access(
+                "Sudo credentials required to check if 'openvpn' is available in root's PATH")
+            if root_access is False:
+                root.obtain_root_access()
+            subprocess.check_output(["sudo", "which", "wget"])
+            subprocess.check_output(["sudo", "which", "unzip"])
+            # subprocess.check_output(["sudo", "which", "openvpn"])
+        except subprocess.CalledProcessError:
+            logger.error("Please Install 'openvpn' 'wget' 'unzip' first")
+            return 1
 
     elif daemon:
         if detected_os != "linux":
@@ -788,11 +798,14 @@ def get_vpn_server_ip(server: str, port: str) -> str:
 def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
 
-    systemd_resolved_running = subprocess.call(
-        ["systemctl", "is-active", "systemd-resolved"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    ) == 0
+    try:
+        systemd_resolved_running = subprocess.call(
+            ["systemctl", "is-active", "systemd-resolved"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) == 0
+    except FileNotFoundError:   # When OS doesn't find systemctl
+        return False
 
     if not systemd_resolved_running:
         return False

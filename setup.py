@@ -25,6 +25,7 @@ setuptools.setup(
         'openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn',
         'vpn wrapper', 'private vpn', 'privacy'],
     install_requires=['requests', 'colorama', 'coloredlogs', 'verboselogs'],
+    tests_require=['pytest', 'mock'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
     packages=setuptools.find_packages(),
     entry_points={

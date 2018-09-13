@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-nordDNS1="162.242.211.137"
-nordDNS2="78.46.223.24"
+nordDNS1="103.86.99.100"
+nordDNS2="103.86.96.100"
 openDNS3="208.67.222.220"
 
 echo "Changing DNS servers to NordVPN's DNS Servers"
