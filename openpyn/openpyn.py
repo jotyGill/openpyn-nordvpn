@@ -530,7 +530,7 @@ falling back to wait of 1 second between pings, pings will be slow")
                     stdout=subprocess.PIPE)
             # pipe the output of ping to grep.
             ping_output = subprocess.check_output(
-                ["grep", "-B", "1", "min/avg/max/"], stdin=ping_proc.stdout)
+                ["grep", "-B", "1", "min/avg/max"], stdin=ping_proc.stdout)
 
             ping_string = str(ping_output)
             # logger.debug(ping_string)
@@ -557,8 +557,12 @@ falling back to wait of 1 second between pings, pings will be slow")
         ping_result.append(ping_list)
         # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
-    # sort by Ping Avg and Median Deviation
-    pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
+    if len(pinged_servers_list[0][1]) >= 4:
+        # sort by Ping Avg and Median Deviation
+        pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
+    else:
+        # sort by Ping Avg
+        pinged_servers_list = sorted(pinged_servers_list, key=lambda item: item[1][1])
     return pinged_servers_list
 
 
