@@ -900,7 +900,7 @@ when asked, provide the sudo credentials")
     if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
         try:
             if use_systemd_resolved:
-                openvpn_options += "--dhcp-option DOMAIN-ROUTE ."
+                openvpn_options += " " + "--dhcp-option DOMAIN-ROUTE ."
                 up_down_script = __basefilepath__ + "scripts/update-systemd-resolved.sh"
                 logger.success("Your OS '%s' has systemd-resolve running, \
 using it to update DNS Resolver Entries", detected_os)
