@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import logging.handlers
 import os
 import socket
 import sys
@@ -19,8 +18,8 @@ logger = logging.getLogger(__package__)
 logger.setLevel(logging.VERBOSE)
 
 # Add another rotating handler to log to .log files
-file_handler = logging.handlers.TimedRotatingFileHandler(
-    log_folder + '/openpyn-notifications.log', when='W0', interval=4)
+file_handler = logging.FileHandler(
+    log_folder + '/openpyn-notifications.log')
 file_handler_formatter = logging.Formatter(log_format)
 file_handler.setFormatter(file_handler_formatter)
 logger.addHandler(file_handler)
@@ -131,7 +130,7 @@ def show(do_notify):
             if do_notify:
                 notification = "\"{}\" with title \"{}\"".format(body, summary)
                 os.system("""osascript -e 'display notification {}'""".format(notification))
-        logger.info('Shutting down safely, please wait until process exits')
+        # logger.info('Shutting down safely, please wait until process exits')
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
         if detected_os == "linux":
