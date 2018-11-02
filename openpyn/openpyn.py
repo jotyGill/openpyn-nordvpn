@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import logging.handlers
 import os
 import shutil
 import subprocess
@@ -188,16 +187,16 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     # fix permissions if needed
     for attempt in range(2):
         try:
-            file_handler = logging.handlers.TimedRotatingFileHandler(
-                log_folder + '/openpyn.log', when='W0', interval=4)
+            file_handler = logging.FileHandler(
+                log_folder + '/openpyn.log')
             file_handler_formatter = logging.Formatter(log_format)
             file_handler.setFormatter(file_handler_formatter)
             logger.addHandler(file_handler)
         except PermissionError:
-            root.verify_root_access(
-                "Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run("sudo chmod 777 {}/openpyn.log".format(log_folder).split())
-            subprocess.run("sudo chmod 777 {}/openpyn-notifications.log".format(log_folder).split())
+            logger.error(
+                "PermissionError: To reset file permissions of '/var/log/openpyn/'\
+                please run 'sudo openpyn --init'")
+            return 1
         else:
             break
 
@@ -432,14 +431,26 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     return 0        # if everything went ok
 
 
+def set_file_permissions(log_folder: str) -> None:
+    if not os.path.exists(log_folder):
+        os.mkdir(log_folder)
+    os.chmod(log_folder, mode=0o755)
+    # os.chmod(log_folder + "/openpyn.log", mode=0o666)
+
+    log_files = ['openpyn.log', 'openpyn-notifications.log', 'status', 'openvpn-status']
+    for file in log_files:
+        open(log_folder + "/" + file, "a").close()      # touch the log file
+    for dirpath, dirnames, files in os.walk(log_folder):
+        for file in files:
+            path = os.path.join(dirpath, file)
+            print(path)
+            os.chmod(path, mode=0o666)
+
+
 def initialise(log_folder: str) -> bool:
     credentials.save_credentials()
     update_config_files()
-    if not os.path.exists(log_folder):
-        os.mkdir(log_folder)
-        os.chmod(log_folder, mode=0o777)
-        open(log_folder + "/openpyn.log", "a").close()      # touch the log file
-        os.chmod(log_folder + "/openpyn.log", mode=0o777)
+    set_file_permissions(log_folder)
     if sys.platform == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
             return initd.install_service()
@@ -452,7 +463,9 @@ def initialise(log_folder: str) -> bool:
 
 
 def get_status():
-    subprocess.run("tail -n 1 {}/openpyn-notifications.log".format(log_folder).split())
+    with open("/var/log/openpyn/status", "r") as status_file:
+        print(status_file.readline().rstrip())
+    sys.exit(0)
 
 
 # Filters servers based on the specified criteria.
@@ -784,13 +797,17 @@ def get_vpn_server_ip(server: str, port: str) -> str:
         folder = "ovpn_udp/"
 
     vpn_config_file = __basefilepath__ + "files/" + folder + server + ".nordvpn.com." + port + ".ovpn"
-    with open(vpn_config_file, 'r') as openvpn_file:
-        for line in openvpn_file:
-            if "remote " in line:
-                vpn_server_ip = line[7:]
-                vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
-        openvpn_file.close()
+    try:
+        with open(vpn_config_file, 'r') as openvpn_file:
+            for line in openvpn_file:
+                if "remote " in line:
+                    vpn_server_ip = line[7:]
+                    vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
+            openvpn_file.close()
         return vpn_server_ip
+    except FileNotFoundError:
+        logger.error("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
+        sys.exit(1)
 
 
 def uses_systemd_resolved() -> bool:
@@ -911,6 +928,7 @@ using it to update DNS Resolver Entries", detected_os)
                 cmdline = [
                     "sudo", "openvpn",
                     "--redirect-gateway",
+                    "--status", "/var/log/openpyn/openvpn-status", "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
                     "--auth-user-pass", __basefilepath__ + "credentials",
@@ -965,14 +983,15 @@ using it to update DNS Resolver Entries", detected_os)
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
-                     __basefilepath__ + "credentials"]
+                     __basefilepath__ + "credentials", "--status", "/var/log/openpyn/openvpn-status", "30"]
                     + openvpn_options.split(), check=True)
             else:
                 subprocess.run(
                     ["sudo", "openvpn", "--redirect-gateway", "--auth-retry",
                      "nointeract", "--config", vpn_config_file, "--auth-user-pass",
                      __basefilepath__ + "credentials",
-                     "--management", "127.0.0.1", "7015", "--management-up-down"]
+                     "--management", "127.0.0.1", "7015", "--management-up-down", "--status",
+                     "/var/log/openpyn/openvpn-status", "30"]
                     + openvpn_options.split(), check=True)
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
