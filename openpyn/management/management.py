@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import logging.handlers
 import os
 import socket
 import sys
@@ -19,8 +18,8 @@ logger = logging.getLogger(__package__)
 logger.setLevel(logging.VERBOSE)
 
 # Add another rotating handler to log to .log files
-file_handler = logging.handlers.TimedRotatingFileHandler(
-    log_folder + '/openpyn-notifications.log', when='W0', interval=4)
+file_handler = logging.FileHandler(
+    log_folder + '/openpyn-notifications.log')
 file_handler_formatter = logging.Formatter(log_format)
 file_handler.setFormatter(file_handler_formatter)
 logger.addHandler(file_handler)
