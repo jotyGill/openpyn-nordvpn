@@ -3,7 +3,6 @@ import subprocess
 from typing import List
 
 import verboselogs
-
 from openpyn import root
 
 verboselogs.install()
@@ -39,7 +38,6 @@ def clear_fw_rules() -> None:
     subprocess.call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
     # drop anything else incoming
     subprocess.call("sudo iptables -P INPUT DROP".split())
-    return
 
 
 NORDVPN_DNS = [
@@ -106,29 +104,49 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
             continue  # TODO what does that mean?
         iname = interface[0]
 
-        if len(iname) == 0:
+        if not iname:
             print("WARNING: empty {}".format(interface))
             continue
 
         # allow access to vpn_server_ip
-        subprocess.check_call(
-            ["sudo", "iptables", "-A", "OUTPUT", "-o", iname,
-                "-d", vpn_server_ip, "-j", "ACCEPT"])
-        # talk to the vpnServer ip to connect to it
-        subprocess.check_call(
-            ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                "--ctstate", "ESTABLISHED,RELATED", "-i", iname,
-                "-s", vpn_server_ip, "-j", "ACCEPT"])
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "OUTPUT",
+            "-o", iname,
+            "-d", vpn_server_ip,
+            "-j", "ACCEPT"
+        ])
+
+        # talk to the vpn_server_ip to connect to it
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "INPUT",
+            "-m", "conntrack",
+            "--ctstate", "ESTABLISHED,RELATED",
+            "-i", iname,
+            "-s", vpn_server_ip,
+            "-j", "ACCEPT"
+        ])
 
         # allow access to internal ip range
         # print("internal ip with range", interface[2])
-        subprocess.check_call(
-            ["sudo", "iptables", "-A", "OUTPUT", "-o", iname, "-d",
-                interface[2], "-j", "ACCEPT"])
-        subprocess.check_call(
-            ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack",
-                "--ctstate", "ESTABLISHED,RELATED", "-i", iname,
-                "-s", interface[2], "-j", "ACCEPT"])
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "OUTPUT",
+            "-o", iname,
+            "-d", interface[2],
+            "-j", "ACCEPT"
+        ])
+
+        subprocess.check_call([
+            "sudo", "iptables",
+            "-A", "INPUT",
+            "-m", "conntrack",
+            "--ctstate", "ESTABLISHED,RELATED",
+            "-i", iname,
+            "-s", interface[2],
+            "-j", "ACCEPT"
+        ])
 
     # Allow loopback traffic
     subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
@@ -140,16 +158,21 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     # Default action if no other rules match
     subprocess.check_call("sudo iptables -P OUTPUT DROP".split())
     subprocess.check_call("sudo iptables -P INPUT DROP".split())
-    return
 
 
-# open sepecified ports for devices in the local network
+# open specified ports for devices in the local network
 def internally_allow_ports(interfaces_details: List, internally_allowed: List) -> None:
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:
             # Allow the specified ports on internal network
             for port in internally_allowed:
-                subprocess.call(
-                    ("sudo iptables -A INPUT -p tcp --dport " + port + " -i " +
-                        interface[0] + " -s " + interface[2] + " -j ACCEPT").split())
+                subprocess.call([
+                    "sudo", "iptables",
+                    "-A", "INPUT",
+                    "-p", "tcp",
+                    "--dport", port,
+                    "-i", interface[0],
+                    "-s", interface[2],
+                    "-j", "ACCEPT"
+                ])

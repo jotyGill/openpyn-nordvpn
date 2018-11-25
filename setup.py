@@ -8,7 +8,7 @@ if sys.version_info < (3, 5):
                      "Install using 'pip3' instead of just 'pip' \n")
     sys.exit(1)
 
-with open('README.md', encoding='utf-8') as readme_file:
+with open("README.md", encoding="utf-8") as readme_file:
     full_description = readme_file.read()
     readme_file.close()
 

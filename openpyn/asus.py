@@ -2,7 +2,6 @@ import logging
 import subprocess
 
 import verboselogs
-
 from openpyn import __basefilepath__, api
 from openpyn.converter import T_CLIENT, Converter
 
@@ -95,12 +94,11 @@ def write(c, key, value, unit, service, test=False):
     try:
         c.pprint("/bin/nvram" + " " + "get" + " " + argument1)
         if not test:
-            current = subprocess.run(["/bin/nvram", "get", argument1],
-                                     check=True, stdout=subprocess.PIPE).stdout
-            if current.decode('utf-8').strip() == value:
+            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            if current.decode("utf-8").strip() == value:
                 return
         c.pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
             subprocess.run(["sudo", "/bin/nvram", "set", argument2], check=True)
     except subprocess.CalledProcessError as e:
-        logger.error(e.output)
+        raise RuntimeError(e.output)

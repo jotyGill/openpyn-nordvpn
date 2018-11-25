@@ -3,23 +3,20 @@ import subprocess
 import sys
 
 import verboselogs
-
 from openpyn import __basefilepath__
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
-def install_service() -> int:
+def install_service() -> None:
     if not sys.__stdin__.isatty():
-        logger.critical("Please run %s in interactive mode", __name__)
-        return 1
+        raise RuntimeError("Please run %s in interactive mode" % __name__)
 
     openpyn_options = input("\nEnter Openpyn options to be stored in systemd \
 service file (/etc/systemd/system/openpyn.service, \
 Default(Just Press Enter) is, uk : ") or "uk"
     update_service(openpyn_options)
-    return 0
 
 
 def update_service(openpyn_options: str, run=False) -> None:
