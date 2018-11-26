@@ -30,7 +30,7 @@ def socket_connect(server, port):
     return s
 
 
-def show(do_notify):
+def show(do_notify) -> bool:
     detected_os = sys.platform
     sleep(1)
     if do_notify:
@@ -56,6 +56,7 @@ def show(do_notify):
             sleep(3)
             continue
         break
+
     try:
         # Create the notification object and show once
         summary = "Openpyn"
