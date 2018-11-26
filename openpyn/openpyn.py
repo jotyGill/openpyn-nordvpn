@@ -406,8 +406,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             use_resolvconf = False
             if detected_os == "linux":
                 if asuswrt_os or openwrt_os:
-                    # make sure module is loaded
-                    load_tun_module()
+                    if not nvram:
+                        # make sure module is loaded
+                        load_tun_module()
                 else:
                     use_systemd_resolved = uses_systemd_resolved()
                     use_resolvconf = os.path.isfile("/sbin/resolvconf")
@@ -425,7 +426,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
                 # if no servers under search criteria
                 if not better_servers_list:
-                    logger.error("There are no servers that satisfy your criteria, please broaden your search.")
+                    logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
                     return 1
                 pinged_servers_list = ping_servers(better_servers_list, pings, stats)
                 chosen_servers = choose_best_servers(pinged_servers_list, stats)
@@ -477,8 +478,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             use_resolvconf = False
             if detected_os == "linux":
                 if asuswrt_os or openwrt_os:
-                    # make sure module is loaded
-                    load_tun_module()
+                    if not nvram:
+                        # make sure module is loaded
+                        load_tun_module()
                 else:
                     use_systemd_resolved = uses_systemd_resolved()
                     use_resolvconf = os.path.isfile("/sbin/resolvconf")
@@ -784,6 +786,9 @@ def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicat
         double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
         netflix=netflix, location=location)
     # logger.debug(json_res_list)
+
+    if not json_res_list:
+        raise RuntimeError("There are no servers that satisfy your criteria, please broaden your search.")
 
     print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
           list_servers.upper() + Fore.BLUE, end=" ")

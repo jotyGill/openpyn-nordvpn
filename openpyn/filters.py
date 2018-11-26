@@ -43,8 +43,7 @@ def filter_by_location(location: float, type_filtered_servers: List) -> List:
     return remaining_servers
 
 
-def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool,
-                   tor_over_vpn: bool, anti_ddos: bool, netflix: bool) -> List:
+def filter_by_netflix(json_response, country_code: str) -> List:
     remaining_servers = []
     server_count = 0
     netflix_us = [[585, 592, "us"], [603, 604, "us"], [609, 617, "us"], [625, 632, "us"], [645, 680, "us"],
@@ -88,19 +87,49 @@ def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool,
 
     netflix_mx = [[3, 9, "mx"], [11, 11, "mx"]]
 
-    netflix_srv = netflix_us + netflix_ca + netflix_nl + netflix_jp + netflix_uk + netflix_gr + netflix_mx
+    netflix_srv = []
 
     # Google Sheets Formula
     # =CONCATENATE("[",IF(ISERR(FIND("-", A1)),CONCATENATE(A1,", ",A1),SUBSTITUTE(A1,"-",", ")), ", ""us""", "]")
 
+    if country_code == "us":
+        netflix_srv = netflix_us
+    elif country_code == "ca":
+        netflix_srv = netflix_ca
+    elif country_code == "nl":
+        netflix_srv = netflix_nl
+    elif country_code == "jp":
+        netflix_srv = netflix_jp
+    elif country_code == "uk":
+        netflix_srv = netflix_uk
+    elif country_code == "gr":
+        netflix_srv = netflix_gr
+    elif country_code == "mx":
+        netflix_srv = netflix_mx
+    elif country_code == "all":
+        netflix_srv = netflix_us + netflix_ca + netflix_nl + netflix_jp + netflix_uk + netflix_gr + netflix_mx
+
     for eachServer in json_response:
         server_count += 1
-        if netflix:
-            for server in netflix_srv:
-                for number in range(server[0], server[1] + 1):
-                    if server[2] + str(number) + "." in eachServer["domain"]:
-                        remaining_servers.append(eachServer)
-                        # logger.debug(eachServer["domain"])
+        for server in netflix_srv:
+            for number in range(server[0], server[1] + 1):
+                if server[2] + str(number) + "." in eachServer["domain"]:
+                    remaining_servers.append(eachServer)
+                    # logger.debug(eachServer["domain"])
+    # logger.debug("Total available servers = ", serverCount)
+    return remaining_servers
+
+
+def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool) -> List:
+    remaining_servers = []
+    server_count = 0
+    standard_vpn = False
+
+    if p2p is False and dedicated is False and double_vpn is False and tor_over_vpn is False and anti_ddos is False:
+        standard_vpn = True
+
+    for eachServer in json_response:
+        server_count += 1
         for ServerType in eachServer["categories"]:
             if p2p and ServerType["name"] == "P2P":
                 remaining_servers.append(eachServer)
@@ -112,10 +141,8 @@ def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool,
                 remaining_servers.append(eachServer)
             if anti_ddos and ServerType["name"] == "Obfuscated Servers":
                 remaining_servers.append(eachServer)
-            if p2p is False and dedicated is False and double_vpn is False and \
-                    tor_over_vpn is False and anti_ddos is False and netflix is False:
-                if ServerType["name"] == "Standard VPN servers":
-                    remaining_servers.append(eachServer)
+            if standard_vpn and ServerType["name"] == "Standard VPN servers":
+                remaining_servers.append(eachServer)
     # logger.debug("Total available servers = ", serverCount)
     return remaining_servers
 
