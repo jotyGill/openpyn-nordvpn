@@ -364,7 +364,11 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             return 1
 
     elif last_status:
-        get_status()
+        try:
+            print_status()
+        except RuntimeError as e:
+            logger.critical(e)
+            return 1
 
     # a hack to list all countries and their codes when no arg supplied with "-l"
     elif list_servers != 'nope':      # means "-l" supplied
@@ -554,9 +558,15 @@ def initialise(log_folder: str, detected_os: str, asuswrt_os: bool, openwrt_os: 
             logger.warning("systemd not found, skipping systemd integration")
 
 
-def get_status():
-    with open("/var/log/openpyn/status", "r") as status_file:
-        print(status_file.readline().rstrip())
+def print_status():
+    try:
+        subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
+        # When it returns "0", proceed
+        with open("/var/log/openpyn/status", "r") as status_file:
+            print(status_file.readline().rstrip())
+    except subprocess.CalledProcessError:
+        # when Exception, the openpyn-management_processes issued non 0 result, "not found"
+        raise RuntimeError("'openpyn-management' is not running")
 
 
 def load_tun_module():
