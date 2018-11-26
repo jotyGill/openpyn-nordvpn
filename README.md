@@ -1,62 +1,78 @@
 # openpyn
+
 <p align="center">
 <a href="https://pypi.python.org/pypi/openpyn"><img alt="Downloads" src="https://img.shields.io/pypi/v/openpyn.svg"></a>
 <a href="https://pepy.tech/project/openpyn"><img alt="Downloads" src="https://pepy.tech/badge/openpyn"></a> </p>
 A python3 script (systemd service as well) to manage openvpn connections. Created to easily connect to and switch between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy servers with lowest latency from you (using current data from Nordvpn's API). Find servers in a specific country or even a city. It Tunnels DNS traffic through the VPN which normally (when using OpenVPN) goes through your ISP's DNS (unencrypted) and compromises Privacy!
 
 ## Features
-* Automatically connect to least busy, low latency servers in a given country.
-* Systemd integration, easy to check VPN status, autostart at startup.
-* Find and connect to servers in a specific city or state.
-* Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
-* Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental), ie KILL SWITCH.
-* Quickly Connect to any specific server. i.e au10 or us20.
-* Downloads and Updates (modifications) the latest config files from NordVPN.
-* Option to run the script in background (as a systemd service).
-* Options to finetune server selection based on "Server Load" or "Ping Latency".
-* Auto excludes the servers if a ping to them fails or some packets drops when pinging \
-or if they don't support OpenVPN \ (TCP or UDP depending upon which one you are trying to use).
-* Finds and displays nord vpn servers (with extra info) in a given country.
-* Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \
-"Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
-* Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
-* Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies.
-* NVRAM write support for Asuswrt-merlin
-* Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
-* Logs stored in '/var/log/openpyn/' for information and troubleshooting.
-* Temporarily disable ipv6 to prevent leakage (when using -f).
+
+-   Automatically connect to least busy, low latency servers in a given country.
+-   Systemd integration, easy to check VPN status, autostart at startup.
+-   Find and connect to servers in a specific city or state.
+-   Uses NordVPN's DNS servers and tunnels DNS queries through the VPN Tunnel.
+-   Use Iptables rules to prevent IP leakage if tunnel breaks (Experimental), ie KILL SWITCH.
+-   Quickly Connect to any specific server. i.e au10 or us20.
+-   Downloads and Updates (modifications) the latest config files from NordVPN.
+-   Option to run the script in background (as a systemd service).
+-   Options to finetune server selection based on "Server Load" or "Ping Latency".
+-   Auto excludes the servers if a ping to them fails or some packets drops when pinging \\
+    or if they don't support OpenVPN \\ (TCP or UDP depending upon which one you are trying to use).
+-   Finds and displays nord vpn servers (with extra info) in a given country.
+-   Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \\
+    "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
+-   Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
+-   Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies.
+-   NVRAM write support for Asuswrt-merlin
+-   Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
+-   Logs stored in '/var/log/openpyn/' for information and troubleshooting.
+-   Temporarily disable ipv6 to prevent leakage (when using -f).
 
 ## Demo
+
 ![connection](https://user-images.githubusercontent.com/8462091/29347697-0798a52a-823e-11e7-818f-4dad1582e173.gif)
 
 ## Instructions
-1. Install dependencies if they are not already present.
-``` bash
+
+1.  Install dependencies if they are not already present.
+
+```bash
 # common dependencies
 sudo apt install openvpn unzip wget python3-setuptools python3-pip
 ```
-2. The following python dependencies are needed and will be installed when using pip.
-``` bash
+
+2.  The following python dependencies are needed and will be installed when using pip.
+
+```bash
 requests colorama coloredlogs verboselogs
 ```
+
 ### Installation Methods
-1. Install openpyn with pip3 (Python=>3.5)
-**Recommended method to get the latest version and receive frequent updates.**
-``` bash
+
+1.  Install openpyn with pip3 (Python=>3.5)
+    **Recommended method to get the latest version and receive frequent updates.**
+
+```bash
 sudo python3 -m pip install --upgrade openpyn
 ```
-2. Alternatively clone and install.
-``` bash
+
+2.  Alternatively clone and install.
+
+```bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn && sudo python3 -m pip install --upgrade .
 ```
-For the latest/ in development features, try the 'test' branch instead
+
+For the latest in development features, try the 'test' branch instead
+
 ```bash
  git clone --branch test https://github.com/jotyGill/openpyn-nordvpn.git
  cd openpyn-nordvpn && sudo python3 -m pip install --upgrade -e .
 ```
-3. For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
-``` bash
+
+3.  For macOS with Python=>3.5 (credit: [1951FDG](https://github.com/1951FDG))
+
+```bash
 # common dependencies
 xcode-select --install
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -64,19 +80,22 @@ echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
 brew install python3 wget openvpn
 sudo brew services start openvpn
 ```
-``` bash
+
+```bash
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 git pull
 sudo pip3 install --upgrade .
 ```
-4. On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
-``` bash
+
+4.  On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
+
+```bash
 # common dependencies
 opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget
-
 ```
-``` bash
+
+```bash
 cd /tmp/share/
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn/
@@ -85,92 +104,134 @@ pip3 install --upgrade setuptools
 pip3 install --upgrade .
 ```
 
+```bash
+# steps not needed if using only nvram option
+modprobe tun
+iptables -A FORWARD -i eth0 -o tun0 -s 192.168.1.0/24 -m conntrack --ctstate NEW -j ACCEPT
+iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A POSTROUTING -t nat -o tun0 -j MASQUERADE
+# steps need to be done once after every reboot
+```
+
 ## Setup
+
 Initialise the script with "--init" (store credentials, install Systemd service, update/install vpn config files)
-``` bash
+
+```bash
 sudo openpyn --init
 ```
+
 Note: if you get ' openpyn: command not found' when using sudo on Fedora, create a symbolic link.
 `sudo ln -s /usr/local/bin/openpyn /bin/openpyn`
 
 That's it, run the script! when done with it, press "Ctr + C" to exit.
 
 ## Basic Usage
-* At minimum, you only need to specify the country-code, default port is UDP-1194, If you want to use
-TCP-443 instead, use "--tcp" switch.
-``` bash
+
+-   At minimum, you only need to specify the country-code, default port is UDP-1194, If you want to use
+    TCP-443 instead, use "--tcp" switch.
+
+```bash
 openpyn us
 ```
-* Now, you can also specify a city or state, useful when companies (like Google) lock your
-account if you try to login from an IP that resides in a different physical location.
-``` bash
+
+-   Now, you can also specify a city or state, useful when companies (like Google) lock your
+    account if you try to login from an IP that resides in a different physical location.
+
+```bash
 openpyn us -a ny
 openpyn us --area "new york"
 ```
-* To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks. i.e KILL SWITCH
-also temporarily disables ipv6 by running "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1"
-``` bash
+
+-   To enforce Firewall rules to prevent dns leakage, also from ip leakage if tunnel breaks. i.e KILL SWITCH
+    also temporarily disables ipv6 by running "sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1"
+
+```bash
 openpyn us -f # Experimental!, Warning, clears IPtables rules!
               # (changes are non persistent, simply reboot if having networking issues)
 ```
-* When using "-f", To allow custom ports (from internal ip ranges, i.e 192.168 or 10.) through the firewall.
-``` bash
+
+-   When using "-f", To allow custom ports (from internal ip ranges, i.e 192.168 or 10.) through the firewall.
+
+```bash
 openpyn us -f --allow 22 80 443  #only accessible from local network
 ```
-* To quickly connect to a specific server.
-``` bash
+
+-   To quickly connect to a specific server.
+
+```bash
 openpyn -s au10
 ```
-* To list all the Countries and their Country Codes where NordVPN hosts servers.
-``` bash
+
+-   To list all the Countries and their Country Codes where NordVPN hosts servers.
+
+```bash
 openpyn -l
 ```
-* To find detailed information about the available servers in a given country.
-``` bash
+
+-   To find detailed information about the available servers in a given country.
+
+```bash
 openpyn -l uk
 ```
-* To find servers with features like "peer-to-peer", "netflix", "tor over vpn",
-  "double vpn" in all countries or a given country.
-``` bash
+
+-   To find servers with features like "peer-to-peer", "netflix", "tor over vpn",
+    "double vpn" in all countries or a given country.
+
+```bash
 openpyn -l uk --p2p
 openpyn --list uk --dedicated
 openpyn -l --tor  # tor over vpn in all countries
 ```
-* To find the least loaded 10 NordVPN servers in US that support "peer-to-peer",
-sort them by the lowest latency from you, connect to the best one, if connection fails
-try the next one and so on.
-``` bash
+
+-   To find the least loaded 10 NordVPN servers in US that support "peer-to-peer",
+    sort them by the lowest latency from you, connect to the best one, if connection fails
+    try the next one and so on.
+
+```bash
 openpyn us -t 10 --p2p
 ```
-* To update and run the systemd openpyn.service, use "-d" or "--daemon"
-``` bash
+
+-   To update and run the systemd openpyn.service, use "-d" or "--daemon"
+
+```bash
 sudo openpyn us -d
 ```
-* To check the status of the systemd openpyn.service.
-``` bash
+
+-   To check the status of the systemd openpyn.service.
+
+```bash
 systemctl status openpyn
 ```
-* To kill a running openvpn connection.
-``` bash
+
+-   To kill a running openvpn connection.
+
+```bash
 sudo openpyn -k
 ```
-* To Flush the iptables and kill any running openvpn connections.
-``` bash
+
+-   To Flush the iptables and kill any running openvpn connections.
+
+```bash
 sudo openpyn -x   #optionally --allow 22 if using as ssh server
 ```
-* To Download/Update the latest vpn config files from NordVPN by:
-``` bash
+
+-   To Download/Update the latest vpn config files from NordVPN by:
+
+```bash
 openpyn --update
 ```
 
-* To quickly save best NordVPN server in US to NVRAM for "OpenVPN Client 5"
-(ASUSWRT-Merlin):
-``` bash
+-   To quickly save best NordVPN server in US to NVRAM for "OpenVPN Client 5"
+    (ASUSWRT-Merlin):
+
+```bash
 openpyn us --nvram 5
 ```
 
 ## Usage Options
-``` bash
+
+```bash
 usage: openpyn.py [-h] [-v] [-s SERVER] [-u] [-c COUNTRY_CODE] [-a AREA] [-d]
                   [-m MAX_LOAD] [-t TOP_SERVERS] [-p PINGS]
                   [-k] [-x] [--update] [-f]
@@ -263,21 +324,22 @@ optional arguments:
   -o OPENVPN_OPTIONS, --openvpn-options OPENVPN_OPTIONS
                         Pass through openvpn options, e.g. openpyn uk -o '--
                         status /var/log/status.log --log /var/log/log.log'
+```
 
-  ```
 ## Todo
-- [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
-- [x] utilise the frequently updated api at "api.nordvpn.com/server"
-- [x] clean exit, handle exceptions
-- [x] store credentials from user input, if "credentials" file exists use that instead
-- [x] sane command-line options following the POSIX guidelines
-- [ ] ability to store profiles (sort of works as the systemd service file stores last state)
-- [x] find and display server's locations (cities)
-- [x] accept full country names
-- [x] colourise output
-- [x] modularize
-- [x] create a combined config of multiple servers (on the fly) for auto failover
-- [x] uninstall.sh   #sudo pip3 uninstall openpyn
-- [x] view status of the connection after launching in --daemon mode
-- [x] desktop notifications
-- [x] initd script for Asuswrt-merlin: "/opt/etc/init.d/S23openpyn start"
+
+-   [x] find servers with P2P support, Dedicated ips, Anti DDoS, Double VPN, Onion over VPN
+-   [x] utilise the frequently updated api at "api.nordvpn.com/server"
+-   [x] clean exit, handle exceptions
+-   [x] store credentials from user input, if "credentials" file exists use that instead
+-   [x] sane command-line options following the POSIX guidelines
+-   [ ] ability to store profiles (sort of works as the systemd service file stores last state)
+-   [x] find and display server's locations (cities)
+-   [x] accept full country names
+-   [x] colourise output
+-   [x] modularize
+-   [x] create a combined config of multiple servers (on the fly) for auto failover
+-   [x] uninstall.sh   #sudo pip3 uninstall openpyn
+-   [x] view status of the connection after launching in --daemon mode
+-   [x] desktop notifications
+-   [x] initd script for Asuswrt-merlin: "/opt/etc/init.d/S23openpyn start"
