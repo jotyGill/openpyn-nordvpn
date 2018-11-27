@@ -104,13 +104,21 @@ pip3 install --upgrade setuptools
 pip3 install --upgrade .
 ```
 
+> **Note**:
+> Steps below not required if only using --nvram option
+
 ```bash
-# steps not needed if using only nvram option
+# change the DNS in your router, either in LAN or WAN settings
+**DNS Server1** 103.86.96.100
+**DNS Server2** 103.86.99.100
+```
+
+```bash
+# steps need to be done once after every router reboot
 modprobe tun
 iptables -A FORWARD -i eth0 -o tun0 -s 192.168.1.0/24 -m conntrack --ctstate NEW -j ACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A POSTROUTING -t nat -o tun0 -j MASQUERADE
-# steps need to be done once after every reboot
 ```
 
 ## Setup
