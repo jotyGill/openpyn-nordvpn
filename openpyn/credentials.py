@@ -3,7 +3,6 @@ import logging
 import os
 import subprocess
 import sys
-from typing import List
 
 import verboselogs
 from openpyn import __basefilepath__, root
@@ -20,13 +19,11 @@ def check_credentials() -> bool:
 
 def save_credentials() -> None:
     if not sys.__stdin__.isatty():
-        logger.critical("Please run %s in interactive mode", __name__)
-        sys.exit(1)
+        raise RuntimeError("Please run %s in interactive mode" % __name__)
 
     if root.verify_running_as_root() is False:
-        logger.error("Please run as 'sudo openpyn --init' the first time. \
-Root access is needed to store credentials in '%s'.", credentials_file_path)
-        sys.exit(1)
+        raise RuntimeError("Please run as 'sudo openpyn --init' the first time. \
+Root access is needed to store credentials in '%s'." % credentials_file_path)
     else:
         logger.info("Storing credentials in '%s' with openvpn \
 compatible 'auth-user-pass' file format", credentials_file_path)
@@ -43,5 +40,4 @@ compatible 'auth-user-pass' file format", credentials_file_path)
 
             logger.info("Awesome, the credentials have been saved in '%s'", credentials_file_path)
         except (IOError, OSError):
-            logger.error("IOError while creating 'credentials' file.")
-    return
+            raise RuntimeError("IOError while creating 'credentials' file.")

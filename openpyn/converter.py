@@ -43,7 +43,7 @@ T_USERONLY = 'useronly'
 T_LOG_VERBOSITY = 'verb'
 
 
-class Converter(object):
+class Converter:
     # NordVPN username
     _username = None
     # NordVPN password
@@ -106,56 +106,56 @@ class Converter(object):
     def set_name(self, name):
         """Name for the VPN connection"""
         if not name:
-            raise Exception("Please specify an name.")
+            raise RuntimeError("Please specify an name.")
 
         self._name = name
 
     def set_source_folder(self, source_input):
         """Sets the source folder for the configuration files"""
         if not source_input or not os.path.isdir(source_input):
-            raise Exception("Please specify a valid path for the configuration files.")
+            raise RuntimeError("Please specify a valid path for the configuration files.")
 
         self._source_folder = source_input
 
     def set_certs_folder(self, certs_output):
         """Sets the destination folder for the certificates"""
         if not certs_output or not os.path.isdir(certs_output):
-            raise Exception("Please specify a valid path for the certificates.")
+            raise RuntimeError("Please specify a valid path for the certificates.")
 
         self._certs_folder = certs_output
 
     def set_description(self, description):
         """Description for the VPN connection"""
         if not description:
-            raise Exception("Please specify an description.")
+            raise RuntimeError("Please specify an description.")
 
         self._description = description
 
     def set_password(self, password):
         """Password for the VPN connection"""
         if not password:
-            raise Exception("Please specify an password.")
+            raise RuntimeError("Please specify an password.")
 
         self._password = password
 
     def set_port(self, port):
         """Port for the VPN connection"""
         if not port:
-            raise Exception("Please specify an port.")
+            raise RuntimeError("Please specify an port.")
 
         self._port = port
 
     def set_protocol(self, protocol):
         """Protocol for the VPN connection"""
         if not protocol:
-            raise Exception("Please specify an protocol.")
+            raise RuntimeError("Please specify an protocol.")
 
         self._protocol = protocol
 
     def set_username(self, username):
         """Username for the VPN connection"""
         if not username:
-            raise Exception("Please specify an username.")
+            raise RuntimeError("Please specify an username.")
 
         self._username = username
 
@@ -177,7 +177,7 @@ class Converter(object):
         """Compression for the VPN connection"""
         if compression is None:
             return
-        values = ("-1", "no", "yes", "adaptive", "lz4")
+        # values = ("-1", "no", "yes", "adaptive", "lz4")
         values = ("yes", "adaptive")
         if compression not in values:
             raise ValueError("Value must be one of {0}".format(values))
@@ -279,8 +279,8 @@ class Converter(object):
 
         self.pprint(line)
 
-        line = self.stringToBase64(line)
-        line = line.decode('utf-8')
+        line = self.string_to_b64(line)
+        line = line.decode("utf-8")
         self._extracted_data[T_CUSTOM_CONFIGURATION] = line
 
         self.pprint(line)
@@ -387,12 +387,12 @@ class Converter(object):
         return False
 
     @staticmethod
-    def stringToBase64(s):
-        return base64.b64encode(bytes(s, 'utf-8'))
+    def string_to_b64(s):
+        return base64.b64encode(bytes(s, "utf-8"))
 
     @staticmethod
-    def base64ToString(b):
-        return base64.b64decode(b).decode('utf-8')
+    def b64_to_string(b):
+        return base64.b64decode(b).decode("utf-8")
 
     def _extract_vpn_description(self):
         """Description for the VPN connection"""

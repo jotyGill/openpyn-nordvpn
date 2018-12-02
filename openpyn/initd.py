@@ -6,30 +6,28 @@ import subprocess
 import sys
 
 import verboselogs
-
 from openpyn import api
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
-def install_service() -> bool:
+def install_service() -> None:
     if not sys.__stdin__.isatty():
-        logger.critical("Please run %s in interactive mode", __name__)
-        return 1
+        raise RuntimeError("Please run %s in interactive mode" % __name__)
 
     openpyn_options = input("Enter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
     # regex used
-    # (, help).+' --> “”
-    # (\n).+       ' --> “'”
-    # (\n).+       ac --> “ ac”
+    # (, help).+' --> ""
+    # (\n).+       ' --> "'"
+    # (\n).+       ac --> " ac"
 
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     # parser.add_argument('--init')
-    parser.add_argument('-s', '--server')
+    parser.add_argument('-s', '--server', type=str)
     parser.add_argument('--tcp', action='store_true')
     parser.add_argument('-c', '--country-code', type=str)
     parser.add_argument('country', nargs='?')
@@ -53,7 +51,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
     parser.add_argument('--netflix', dest='netflix', action='store_true')
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('-n', '--nvram', type=str, default="5")
+    parser.add_argument('-n', '--nvram', type=str)
     parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
     parser.add_argument('-loc', '--location', nargs=2, type=float)
 
@@ -124,7 +122,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     if top_servers:
         openpyn_options += " --top-servers " + str(top_servers)
     if pings:
-        openpyn_options += " --pings " + str(pings)
+        openpyn_options += " --pings " + pings
     if force_fw_rules:
         openpyn_options += " --force-fw-rules"
     if p2p:
@@ -151,14 +149,13 @@ Default(Just Press Enter) is, uk : ") or "uk"
     if silent:
         openpyn_options += " --silent"
     if nvram:
-        openpyn_options += " --nvram " + str(nvram)
+        openpyn_options += " --nvram " + nvram
     if openvpn_options:
         openpyn_options += " --openvpn-options '" + openvpn_options + "'"
     if location:
         openpyn_options += " --location " + str(location[1]) + " " + str(location[2])
 
     update_service(openpyn_options)
-    return 0
 
 
 def update_service(openpyn_options: str, run=False) -> None:

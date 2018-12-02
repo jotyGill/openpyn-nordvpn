@@ -1,8 +1,7 @@
 import logging
 import random
-import sys
 import time
-from typing import Dict, List, Set
+from typing import Dict, List
 
 import requests
 import verboselogs
@@ -25,9 +24,9 @@ def get_unique_locations(list_of_servers: List) -> List:
     locations_count = 0
 
     for aServer in list_of_servers:
-        latLongDic = {"lat": aServer["location"]["lat"], "long": aServer["location"]["long"]}
-        if latLongDic not in unique_locations:
-            unique_locations.append(latLongDic)
+        lat_long_dic = {"lat": aServer["location"]["lat"], "long": aServer["location"]["long"]}
+        if lat_long_dic not in unique_locations:
+            unique_locations.append(lat_long_dic)
     # logger.debug(unique_locations)
     for eachLocation in unique_locations:
         user_agent = {'User-Agent': user_agents[locations_count % 6],
@@ -59,9 +58,8 @@ def get_locations(location_dic: Dict, req_headers: str) -> List:
         results = response['address']
         # logger.debug(results)
     except IndexError:
-        logger.error("IndexError: Looks like you have reached API's daily request limit. \
+        raise RuntimeError("IndexError: Looks like you have reached APIs daily request limit. \
 No location data for you :( you could restart your router to get a new IP.")
-        sys.exit()
 
     geo_address_list.append(location_dic)
 
