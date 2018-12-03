@@ -516,7 +516,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 return 0
 
             # keep trying to connect to same server
-            for _ in range(20):
+            for _ in range(3 * top_servers):
                 connect(server, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
