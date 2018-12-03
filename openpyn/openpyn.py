@@ -348,13 +348,19 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     elif kill_flush:
         if detected_os == "linux":
-            firewall.clear_fw_rules()      # also clear iptable rules
-            # if --allow present, allow those ports internally
-            logger.info("Re-enabling ipv6")
-            firewall.manage_ipv6(disable=False)
-            if internally_allowed:
-                network_interfaces = get_network_interfaces()
-                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            if asuswrt_os:
+                pass
+            elif openwrt_os:
+                pass
+            else:
+                # also clear iptable rules
+                firewall.clear_fw_rules()
+                # if --allow present, allow those ports internally
+                logger.info("Re-enabling ipv6")
+                firewall.manage_ipv6(disable=False)
+                if internally_allowed:
+                    network_interfaces = get_network_interfaces()
+                    firewall.internally_allow_ports(network_interfaces, internally_allowed)
         try:
             kill_all()
             # returns exit code 143
