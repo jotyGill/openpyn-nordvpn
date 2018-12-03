@@ -714,9 +714,10 @@ def kill_all() -> None:
     if root_access is False:
         root.obtain_root_access()
 
-    kill_vpn_processes()  # don't touch iptable rules
-    kill_openpyn_process()
     kill_management_client()
+    kill_vpn_processes()
+
+    kill_openpyn_process()
 
 
 def kill_vpn_processes() -> None:
