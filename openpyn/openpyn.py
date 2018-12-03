@@ -341,6 +341,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     elif kill:
         try:
             kill_all()
+            # returns exit code 143
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -356,6 +357,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 firewall.internally_allow_ports(network_interfaces, internally_allowed)
         try:
             kill_all()
+            # returns exit code 143
         except RuntimeError as e:
             logger.critical(e)
             return 1
