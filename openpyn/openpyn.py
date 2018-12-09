@@ -1051,7 +1051,13 @@ using it to update DNS Resolver Entries", detected_os)
                     "--down-pre",
                     *args,
                 ] + openvpn_options.split()
-                subprocess.run(cmdline, check=True)
+                completed = subprocess.run(cmdline, check=True)
+
+                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
+
+                if completed.returncode == 0:
+                    raise SystemExit
 
             if silent:
                 run_openvpn()
@@ -1088,7 +1094,13 @@ using it to update DNS Resolver Entries", detected_os)
                     "--auth-user-pass", __basefilepath__ + "credentials",
                     *args,
                 ] + openvpn_options.split()
-                subprocess.run(cmdline, check=True)
+                completed = subprocess.run(cmdline, check=True)
+
+                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
+
+                if completed.returncode == 0:
+                    raise SystemExit
 
             if silent:
                 run_openvpn()
