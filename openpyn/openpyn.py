@@ -359,7 +359,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 # also clear iptable rules
                 firewall.clear_fw_rules()
                 # if --allow present, allow those ports internally
-                logger.info("Re-enabling ipv6")
+                logger.notice("Re-enabling ipv6")
                 firewall.manage_ipv6(disable=False)
                 if internally_allowed:
                     network_interfaces = get_network_interfaces()
@@ -554,7 +554,7 @@ def set_file_permissions(log_folder: str) -> None:
     for dirpath, dirnames, files in os.walk(log_folder):
         for file in files:
             path = os.path.join(dirpath, file)
-            logger.info(path)
+            logger.verbose(path)
             os.chmod(path, mode=0o666)
 
 
@@ -719,7 +719,7 @@ def choose_best_servers(best_servers: List, stats: bool) -> List:
 
 
 def kill_all() -> None:
-    logger.warning("Killing the running processes")
+    logger.notice("Killing the running processes")
 
     root_access = root.verify_root_access("Root access needed to kill 'openvpn', 'openpyn', 'openpyn-management' processes")
     if root_access is False:
