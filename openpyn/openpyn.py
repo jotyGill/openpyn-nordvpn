@@ -200,7 +200,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 openvpn_options += " " + "--syslog openpyn"
             else:
                 openvpn_options = "--syslog openpyn"
-            logger.debug(openvpn_options)
+            # logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
             set_file_permissions(log_folder)
 
