@@ -165,12 +165,12 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
 
     stats = True
+    # if non-interactive shell
     if not sys.__stdin__.isatty():
-        # non-interactive shell
+        # special handler and formatter for JuiceSSH plugin
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler_formatter = logging.Formatter("%(message)s:%(levelname)s")
         stdout_handler.setFormatter(stdout_handler_formatter)
-        stdout_handler.setLevel(logging.NOTICE)
         logger.addHandler(stdout_handler)
         stats = False
 
