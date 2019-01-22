@@ -133,16 +133,22 @@ def filter_by_type(json_response, p2p: bool, dedicated: bool, double_vpn: bool, 
         for ServerType in eachServer["categories"]:
             if p2p and ServerType["name"] == "P2P":
                 remaining_servers.append(eachServer)
+                break
             elif dedicated and ServerType["name"] == "Dedicated IP":
                 remaining_servers.append(eachServer)
+                break
             elif double_vpn and ServerType["name"] == "Double VPN":
                 remaining_servers.append(eachServer)
+                break
             elif tor_over_vpn and ServerType["name"] == "Onion Over VPN":
                 remaining_servers.append(eachServer)
+                break
             elif anti_ddos and ServerType["name"] == "Obfuscated Servers":
                 remaining_servers.append(eachServer)
+                break
             elif standard_vpn and ServerType["name"] == "Standard VPN servers":
                 remaining_servers.append(eachServer)
+                break
     # logger.debug("Total available servers = ", serverCount)
     return remaining_servers
 

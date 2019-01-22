@@ -165,10 +165,13 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
 
     stats = True
+    # if non-interactive shell
     if not sys.__stdin__.isatty():
-        # non-interactive shell
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.WARNING)
+        # special handler and formatter for JuiceSSH plugin
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler_formatter = logging.Formatter("%(message)s:%(levelname)s")
+        stdout_handler.setFormatter(stdout_handler_formatter)
+        logger.addHandler(stdout_handler)
         stats = False
 
     # if only positional argument used
@@ -185,6 +188,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     openwrt_os = False
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            set_file_permissions(log_folder)
+
             asuswrt_os = True
             force_fw_rules = False
             internally_allowed = None
@@ -195,8 +200,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 openvpn_options += " " + "--syslog openpyn"
             else:
                 openvpn_options = "--syslog openpyn"
-            logger.debug(openvpn_options)
+            # logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
+            set_file_permissions(log_folder)
+
             openwrt_os = True
             force_fw_rules = False
             internally_allowed = None
@@ -337,21 +344,29 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     elif kill:
         try:
             kill_all()
+            # returns exit code 143
         except RuntimeError as e:
             logger.critical(e)
             return 1
 
     elif kill_flush:
         if detected_os == "linux":
-            firewall.clear_fw_rules()      # also clear iptable rules
-            # if --allow present, allow those ports internally
-            logger.info("Re-enabling ipv6")
-            firewall.manage_ipv6(disable=False)
-            if internally_allowed:
-                network_interfaces = get_network_interfaces()
-                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            if asuswrt_os:
+                pass
+            elif openwrt_os:
+                pass
+            else:
+                # also clear iptable rules
+                firewall.clear_fw_rules()
+                # if --allow present, allow those ports internally
+                logger.notice("Re-enabling ipv6")
+                firewall.manage_ipv6(disable=False)
+                if internally_allowed:
+                    network_interfaces = get_network_interfaces()
+                    firewall.internally_allow_ports(network_interfaces, internally_allowed)
         try:
             kill_all()
+            # returns exit code 143
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -512,7 +527,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 return 0
 
             # keep trying to connect to same server
-            for _ in range(20):
+            for _ in range(3 * top_servers):
                 connect(server, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
@@ -539,7 +554,7 @@ def set_file_permissions(log_folder: str) -> None:
     for dirpath, dirnames, files in os.walk(log_folder):
         for file in files:
             path = os.path.join(dirpath, file)
-            logger.info(path)
+            logger.verbose(path)
             os.chmod(path, mode=0o666)
 
 
@@ -704,15 +719,16 @@ def choose_best_servers(best_servers: List, stats: bool) -> List:
 
 
 def kill_all() -> None:
-    logger.warning("Killing the running processes")
+    logger.notice("Killing the running processes")
 
     root_access = root.verify_root_access("Root access needed to kill 'openvpn', 'openpyn', 'openpyn-management' processes")
     if root_access is False:
         root.obtain_root_access()
 
-    kill_vpn_processes()  # don't touch iptable rules
-    kill_openpyn_process()
     kill_management_client()
+    kill_vpn_processes()
+
+    kill_openpyn_process()
 
 
 def kill_vpn_processes() -> None:
@@ -1038,7 +1054,13 @@ using it to update DNS Resolver Entries", detected_os)
                     "--down-pre",
                     *args,
                 ] + openvpn_options.split()
-                subprocess.run(cmdline, check=True)
+                completed = subprocess.run(cmdline, check=True)
+
+                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
+
+                if completed.returncode == 0:
+                    raise SystemExit
 
             if silent:
                 run_openvpn()
@@ -1075,7 +1097,13 @@ using it to update DNS Resolver Entries", detected_os)
                     "--auth-user-pass", __basefilepath__ + "credentials",
                     *args,
                 ] + openvpn_options.split()
-                subprocess.run(cmdline, check=True)
+                completed = subprocess.run(cmdline, check=True)
+
+                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
+
+                if completed.returncode == 0:
+                    raise SystemExit
 
             if silent:
                 run_openvpn()

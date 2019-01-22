@@ -80,5 +80,5 @@ No location data for you :( you could restart your router to get a new IP.")
         if key == "state_district":
             name_list.append(results["state_district"])
     geo_address_list.insert(2, name_list)
-    logger.debug(geo_address_list)
+    # logger.debug(geo_address_list)
     return geo_address_list
