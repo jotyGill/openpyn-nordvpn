@@ -8,7 +8,7 @@ import logging.handlers
 import sys
 import time
 
-import mock
+from unittest import mock
 import pytest
 
 from openpyn import openpyn
