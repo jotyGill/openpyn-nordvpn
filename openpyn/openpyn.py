@@ -942,9 +942,6 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool,
 don't worry running 'openpyn --update' for you :)", vpn_config_file)
             time.sleep(6)
             update_config_files()
-    elif server_provider == "ipvanish":
-        vpn_config_file = __basefilepath__ + "files/" + "ipvanish/" + server
-        # logger.debug("ipvanish")
 
     root_access = root.verify_root_access("Sudo credentials required to run 'openvpn'")
     if root_access is False:
