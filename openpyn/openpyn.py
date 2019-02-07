@@ -832,8 +832,8 @@ its config files (In which case run 'sudo openpyn --update')")
     openvpn_files_list = openvpn_files_str.split("\\n")
 
     for server in openvpn_files_list:
-        server_name = server[server.find("files/" + folder) + 15:server.find(".")]
-        servers_in_files.add(server_name)
+        server_name = os.path.basename(server)
+        servers_in_files.add(server_name.split('.')[0])
 
     for server in servers_in_files:
         if server not in server_set:
