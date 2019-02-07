@@ -50,11 +50,11 @@ You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
 
     subprocess.run(["systemctl", "--user", "daemon-reload"])
     if run:
-        daemon_running = subprocess.call(  # subprocess.run behaves differently
+        subprocess.call(  # subprocess.run behaves differently
             ["systemctl", "--user", "is-active", "openpyn"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-        ) == 0
+        )
 
         logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")

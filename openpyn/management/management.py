@@ -148,7 +148,7 @@ def show(do_notify) -> bool:
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Management interface for openpyn to display notifications and log"
-        "them to /var/log/openpyn/openpyn-notifications.log ", allow_abbrev=False)
+        f"them to {log_folder}/openpyn-notifications.log", allow_abbrev=False)
     parser.add_argument(
         '--do-notify', dest='do_notify', help='try to display desktop notifications.',
         action='store_true')

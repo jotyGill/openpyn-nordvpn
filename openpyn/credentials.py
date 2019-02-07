@@ -1,11 +1,10 @@
 import getpass
 import logging
 import os
-import subprocess
 import sys
 
 import verboselogs
-from openpyn import __basefilepath__, root
+from openpyn import __basefilepath__
 
 verboselogs.install()
 logger = logging.getLogger(__package__)

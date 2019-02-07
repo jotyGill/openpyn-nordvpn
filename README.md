@@ -22,10 +22,10 @@ A python3 script (systemd service as well) to manage openvpn connections. Create
 -   Now list and connect to servers with "Netflix" --netflix, "Peer To Peer" --p2p, "Dedicated IP" --dedicated, \\
     "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 -   Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
--   Auto retry if [soft,auth-failure] received, auto failover to next best server if connection dies.
+-   Auto retry if \[soft,auth-failure\] received, auto failover to next best server if connection dies.
 -   NVRAM write support for Asuswrt-merlin
 -   Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
--   Logs stored in '/var/log/openpyn/' for information and troubleshooting.
+-   Logs stored in '~/.local/share/openpyn/logs/' for information and troubleshooting.
 -   Temporarily disable ipv6 to prevent leakage (when using -f).
 
 ## Demo
@@ -38,7 +38,7 @@ A python3 script (systemd service as well) to manage openvpn connections. Create
 
 ```bash
 # common dependencies
-sudo apt install openvpn unzip wget python3-setuptools python3-pip
+sudo apt install openvpn python3-setuptools python3-pip
 ```
 
 2.  The following python dependencies are needed and will be installed when using pip.
@@ -77,7 +77,7 @@ For the latest in development features, try the 'test' branch instead
 xcode-select --install
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
-brew install python3 wget openvpn
+brew install python3 openvpn
 sudo brew services start openvpn
 ```
 
@@ -85,14 +85,14 @@ sudo brew services start openvpn
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 git pull
-sudo pip3 install --upgrade .
+python3 -m pip install --upgrade .
 ```
 
 4.  On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
 
 ```bash
 # common dependencies
-opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget
+opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo
 ```
 
 ```bash
