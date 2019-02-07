@@ -12,7 +12,6 @@ logger = logging.getLogger(__package__)
 def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     with open(__basefilepath__ + "credentials", 'r') as f:
         lines = f.read().splitlines()
-        f.close()
 
     url = "https://api.nordvpn.com/server"
     json_response = api.get_json(url)

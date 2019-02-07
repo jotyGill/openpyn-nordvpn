@@ -251,7 +251,6 @@ class Converter:
                     self._extract_tls_control_channel_security(line)
                     continue
                 data = data + line
-            lines.close()
 
         # print(data, end="")
 

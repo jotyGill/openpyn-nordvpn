@@ -10,7 +10,6 @@ if sys.version_info < (3, 5):
 
 with open("README.md", encoding="utf-8") as readme_file:
     full_description = readme_file.read()
-    readme_file.close()
 
 setuptools.setup(
     name='openpyn',

@@ -888,7 +888,6 @@ def get_vpn_server_ip(server: str, port: str) -> str:
                 if "remote " in line:
                     vpn_server_ip = line[7:]
                     vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
-            openvpn_file.close()
         return vpn_server_ip
     except FileNotFoundError:
         raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
