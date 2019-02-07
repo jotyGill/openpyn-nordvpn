@@ -603,7 +603,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 
 # Pings servers with the specified no of "ping",
-# returns a sorted list by Ping Avg and Median Deviation
+# returns a sorted list by ping median average deviation
 def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
@@ -655,7 +655,7 @@ falling back to wait of 1 second between pings, pings will be slow")
         ping_result.append(ping_list)
         # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
-    # sort by Ping Avg and Median Deviation
+    # sort by ping median average deviation
     pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
     return pinged_servers_list
 
@@ -819,7 +819,7 @@ def print_latest_servers(list_servers: str, port: str, server_set: Set) -> None:
     folder = f'ovpn_{port}'
 
     servers_in_files = set()      # servers from .ovpn files
-    new_servers = set()   # new Servers, not published on website yet, or taken down
+    new_servers = set()   # new servers, not published on website yet, or taken down
     try:
         server_files_path = os.path.join(ovpn_folder, folder, list_servers)
         server_files = subprocess.check_output(

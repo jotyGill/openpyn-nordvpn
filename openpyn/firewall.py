@@ -82,7 +82,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     logger.notice("Temporarily disabling ipv6 to prevent leakage")
     manage_ipv6(disable=True)
 
-    # Allow all traffic out over the vpn tunnel
+    # Allow all traffic out over the VPN tunnel
     # except for DNS, which is handled by systemd-resolved script
     # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
     # weird that ping ya.ru was showing "operation not permitted"
