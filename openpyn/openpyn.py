@@ -12,13 +12,14 @@ import time
 import zipfile
 from email.utils import parsedate
 from typing import List, Set
+from pathlib import Path
 
 import coloredlogs
 import requests
 import verboselogs
 from colorama import Fore, Style
-
 from tqdm import tqdm
+
 from openpyn import api
 from openpyn import asus
 from openpyn import credentials
@@ -542,9 +543,9 @@ def print_status():
 
 
 def load_tun_module():
-    if not stat.S_ISCHR(os.stat("/dev/net/tun").st_mode):
+    if not Path("/dev/net/tun").is_char_device():
         subprocess.call("modprobe tun", shell=True)
-        if not stat.S_ISCHR(os.stat("/dev/net/tun").st_mode):
+        if not Path("/dev/net/tun").is_char_device():
             raise RuntimeError("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
 
 
