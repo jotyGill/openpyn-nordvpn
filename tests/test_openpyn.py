@@ -52,6 +52,11 @@ def test_connect_country_code():
         assert openpyn.main() == 0
 
 
+def test_connect_country_location():
+    with mock.patch('sys.argv', ['openpyn', 'au', '--location', '-37.813938', '144.963425', '--test']):
+        assert openpyn.main() == 0
+
+
 def test_connect_country_name():
     with mock.patch('sys.argv', ['openpyn', 'australia', '--test']):
         assert openpyn.main() == 0
