@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=W0611
 
 import argparse
 import datetime
@@ -7,10 +8,9 @@ import logging
 import logging.handlers
 import sys
 import time
-
 from unittest import mock
-import pytest
 
+import pytest
 from openpyn import openpyn
 
 # def test_version():

@@ -1,7 +1,6 @@
-import sys
 import os.path
 import subprocess
-
+import sys
 
 __version__ = "2.7.6.dev1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"

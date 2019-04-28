@@ -1,6 +1,7 @@
 import sys
 
 import setuptools
+
 from openpyn import __data_files__, __version__
 
 if sys.version_info < (3, 5):

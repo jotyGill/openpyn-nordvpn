@@ -5,14 +5,13 @@ import io
 import logging
 import os
 import shutil
-import stat
 import subprocess
 import sys
 import time
 import zipfile
 from email.utils import parsedate
-from typing import List, Set
 from pathlib import Path
+from typing import List, Set
 
 import coloredlogs
 import requests
