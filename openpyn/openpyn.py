@@ -230,7 +230,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     os.makedirs(log_folder, exist_ok=True)
 
     # Add another rotating handler to log to .log files
-    file_handler = logging.FileHandler(log_folder + '/openpyn.log')
+    file_handler = logging.FileHandler(log_folder + "/openpyn.log")
     file_handler_formatter = logging.Formatter(log_format)
     file_handler.setFormatter(file_handler_formatter)
     logger.addHandler(file_handler)
@@ -360,7 +360,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             return 1
 
     # a hack to list all countries and their codes when no arg supplied with "-l"
-    elif list_servers != 'nope':      # means "-l" supplied
+    elif list_servers != "nope":      # means "-l" supplied
         try:
             if list_servers is None:      # no arg given with "-l"
                 if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos or netflix:
@@ -524,7 +524,7 @@ def initialise(detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
             initd.install_service()
         elif openwrt_os:
             initd.install_service()
-        elif os.path.exists('/sbin/init') and os.readlink('/sbin/init').rsplit('/', maxsplit=1)[-1] == "systemd":
+        elif os.path.exists("/sbin/init") and os.readlink("/sbin/init").rsplit("/", maxsplit=1)[-1] == "systemd":
             systemd.install_service()
         else:
             logger.warning("systemd not found, skipping systemd integration")
@@ -534,7 +534,7 @@ def print_status():
     try:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
         # When it returns "0", proceed
-        with open(f"{log_folder}/status", "r") as status_file:
+        with open("{}/status".format(log_folder), "r") as status_file:
             print(status_file.readline().rstrip())
     except subprocess.CalledProcessError:
         # when Exception, the openpyn-management_processes issued non 0 result, "not found"
@@ -725,27 +725,27 @@ def kill_management_client() -> None:
 
 
 def update_config_files() -> None:
-    url = 'https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip'
-    _, filename = url.rsplit('/', maxsplit=1)
+    url = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
+    _, filename = url.rsplit("/", maxsplit=1)
 
     r = requests.head(url, stream=True)
-    total = int(r.headers['content-length'])
+    total = int(r.headers["content-length"])
 
-    last_modified = r.headers['last-modified']
-    last_update_path = os.path.join(ovpn_folder, 'last_update')
+    last_modified = r.headers["last-modified"]
+    last_update_path = os.path.join(ovpn_folder, "last_update")
     if os.path.exists(last_update_path):
         with open(last_update_path, 'r') as fp:
             last_update = parsedate(fp.read())
 
         if last_update >= parsedate(last_modified):
-            logger.info('Configuration files are up-to-date, skipping...')
+            logger.info("Configuration files are up-to-date, skipping...")
             return
 
     r = requests.get(url, stream=True)
     f = io.BytesIO()
     chunk_size = 512
 
-    with tqdm(total=total, unit='B', unit_scale=True, desc=f'Downloading {filename}') as pbar:
+    with tqdm(total=total, unit="B", unit_scale=True, desc="Downloading {}".format(filename)) as pbar:
         for chunk in r.iter_content(chunk_size=chunk_size):
             if chunk:
                 f.write(chunk)
@@ -754,12 +754,12 @@ def update_config_files() -> None:
     z = zipfile.ZipFile(f)
     total = sum(f.file_size for f in z.infolist())
 
-    with tqdm(total=total, unit='B', unit_scale=True, desc=f'Extracting {filename}') as pbar:
+    with tqdm(total=total, unit="B", unit_scale=True, desc="Extracting {}".format(filename)) as pbar:
         for file in z.infolist():
             z.extract(file, path=ovpn_folder)
             pbar.update(file.file_size)
 
-    with open(os.path.join(ovpn_folder, 'last_update'), 'w') as fp:
+    with open(os.path.join(ovpn_folder, "last_update"), 'w') as fp:
         fp.write(last_modified)
 
 
@@ -778,22 +778,22 @@ def display_servers(list_servers: str, port: str, area: str, p2p: bool, dedicate
     if not json_res_list:
         raise RuntimeError("There are no servers that satisfy your criteria, please broaden your search.")
 
-    print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
+    print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers in", Fore.GREEN +
           list_servers.upper() + Fore.BLUE, end=" ")
     if area:
-        print("Area ", Fore.GREEN + area + Fore.BLUE, end=" ")
+        print("Area", Fore.GREEN + area + Fore.BLUE, end=" ")
     if p2p:
-        print("with " + Fore.GREEN + "p2p" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "p2p" + Fore.BLUE + " Support", end=" ")
     if dedicated:
-        print("with " + Fore.GREEN + "dedicated" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "dedicated" + Fore.BLUE + " Support", end=" ")
     if double_vpn:
-        print("with " + Fore.GREEN + "double_vpn" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "double_vpn" + Fore.BLUE + " Support", end=" ")
     if tor_over_vpn:
-        print("with " + Fore.GREEN + "tor_over_vpn" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "tor_over_vpn" + Fore.BLUE + " Support", end=" ")
     if anti_ddos:
-        print("with " + Fore.GREEN + "anti_ddos" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "anti_ddos" + Fore.BLUE + " Support", end=" ")
     if netflix:
-        print("with " + Fore.GREEN + "netflix" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "netflix" + Fore.BLUE + " Support", end=" ")
     print("Are:\n" + Style.RESET_ALL)
 
     # add server names to "servers_on_web" set
@@ -816,7 +816,7 @@ def display_servers(list_servers: str, port: str, area: str, p2p: bool, dedicate
 
 
 def print_latest_servers(list_servers: str, port: str, server_set: Set) -> None:
-    folder = f'ovpn_{port}'
+    folder = "ovpn_{}".format(port)
 
     servers_in_files = set()      # servers from .ovpn files
     new_servers = set()   # new servers, not published on website yet, or taken down
@@ -833,7 +833,7 @@ its config files (In which case run 'sudo openpyn --update')")
 
     for server in openvpn_files_list:
         server_name = os.path.basename(server)
-        servers_in_files.add(server_name.split('.')[0])
+        servers_in_files.add(server_name.split(".")[0])
 
     for server in servers_in_files:
         if server not in server_set:
@@ -881,7 +881,7 @@ def get_network_interfaces() -> List:
 
 def get_vpn_server_ip(server: str, port: str) -> str:
     # grab the ip address of VPN server from the config file
-    vpn_config_file = os.path.join(ovpn_folder, f'ovpn_{port}', f'{server}.nordvpn.com.{port}.ovpn')
+    vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
     try:
         with open(vpn_config_file, 'r') as openvpn_file:
             for line in openvpn_file:
@@ -927,7 +927,7 @@ def uses_systemd_resolved() -> bool:
 
     # otherwise, something must be broken.. why is systemd-resolved running, yet resolv.conf still pointing somewhere else?
     # TODO test implications
-    logger.warning("systemd-resolved is running, but resolv.conf contains {}, test if DNS leaks!".format(dns_servers))
+    logger.warning("systemd-resolved is running, but resolv.conf contains %s, test if DNS leaks!", dns_servers)
     return True
 
 
@@ -935,7 +935,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool,
             openvpn_options: str, use_systemd_resolved: bool, use_resolvconf: bool, server_provider="nordvpn") -> None:
     detected_os = sys.platform
     if server_provider == "nordvpn":
-        vpn_config_file = os.path.join(ovpn_folder, f'ovpn_{port}', f'{server}.nordvpn.com.{port}.ovpn')
+        vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
         # logger.debug("CONFIG FILE %s", vpn_config_file)
         if os.path.isfile(vpn_config_file) is False:
             logger.notice("VPN configuration file %s doesn't exist, \
@@ -985,7 +985,7 @@ using it to update DNS Resolver Entries", detected_os)
                 cmdline = [
                     "sudo", "openvpn",
                     "--redirect-gateway",
-                    "--status", f"{log_folder}/openvpn-status", "30",
+                    "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
                     "--auth-user-pass", __basefilepath__ + "credentials",
@@ -1032,7 +1032,7 @@ using it to update DNS Resolver Entries", detected_os)
                 cmdline = [
                     "sudo", "openvpn",
                     "--redirect-gateway",
-                    "--status", f"{log_folder}/openvpn-status", "30",
+                    "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
                     "--auth-user-pass", __basefilepath__ + "credentials",

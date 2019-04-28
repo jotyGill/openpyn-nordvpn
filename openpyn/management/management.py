@@ -65,7 +65,7 @@ def show(do_notify) -> bool:
             if do_notify:
                 notification = Notify.Notification.new(summary, body)
                 notification.show()
-            logger.warning("{} {}".format(summary, body))
+            logger.warning("%s %s", summary, body)
         elif detected_os == "darwin":
             if do_notify:
                 notification = "\"{}\" with title \"{}\"".format(body, summary)
@@ -91,7 +91,7 @@ def show(do_notify) -> bool:
                         notification.update(summary, body)
                         # Show again
                         notification.show()
-                    logger.info("{} {}".format(summary, body))
+                    logger.info("%s %s", summary, body)
                 elif detected_os == "darwin":
                     if do_notify:
                         notification = "\"{}\" with title \"{}\"".format(body, summary)
@@ -108,7 +108,7 @@ def show(do_notify) -> bool:
                     if do_notify:
                         notification.update(summary, body)
                         notification.show()
-                    logger.info("{} {}".format(summary, body))
+                    logger.info("%s %s", summary, body)
                 elif detected_os == "darwin":
                     if do_notify:
                         notification = "\"{}\" with title \"{}\"".format(body, summary)
@@ -120,7 +120,7 @@ def show(do_notify) -> bool:
 
     except KeyboardInterrupt:
         body = "Disconnected, Bye."
-        logger.info("{} {}".format(summary, body))
+        logger.info("%s %s", summary, body)
         if detected_os == "linux":
             if do_notify:
                 notification.update(summary, body)
@@ -131,7 +131,7 @@ def show(do_notify) -> bool:
                 os.system("""osascript -e 'display notification {}'""".format(notification))
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
-        logger.info("{} {}".format(summary, body))
+        logger.info("%s %s", summary, body)
         if detected_os == "linux":
             if do_notify:
                 notification.update(summary, body)
@@ -148,7 +148,7 @@ def show(do_notify) -> bool:
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Management interface for openpyn to display notifications and log"
-        f"them to {log_folder}/openpyn-notifications.log", allow_abbrev=False)
+        "them to {}/openpyn-notifications.log".format(log_folder), allow_abbrev=False)
     parser.add_argument(
         '--do-notify', dest='do_notify', help='try to display desktop notifications.',
         action='store_true')
