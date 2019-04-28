@@ -435,6 +435,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                         touch_iptables_rules(aserver, port, skip_dns_patch, internally_allowed)
 
                     if nvram:
+                        check_config_files()
                         asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                         logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
                         return 0
@@ -485,6 +486,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 touch_iptables_rules(server, port, skip_dns_patch, internally_allowed)
 
             if nvram:
+                check_config_files()
                 asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                 logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM " + nvram)
                 return 0
