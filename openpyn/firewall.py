@@ -160,7 +160,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call("sudo iptables -P INPUT DROP".split())
 
 
-# open specified ports for devices in the local network
+# Open specified ports for devices in the local network
 def internally_allow_ports(interfaces_details: List, internally_allowed: List) -> None:
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
