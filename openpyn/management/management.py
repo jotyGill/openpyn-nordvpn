@@ -58,7 +58,7 @@ def show(do_notify) -> bool:
         break
 
     try:
-        # Create the notification object and show once
+        # create the notification object and show once
         summary = "Openpyn"
         body = "Initiating connection (If stuck here, try again)"
         if detected_os == "linux":
@@ -89,7 +89,7 @@ def show(do_notify) -> bool:
                 if detected_os == "linux":
                     if do_notify:
                         notification.update(summary, body)
-                        # Show again
+                        # show again
                         notification.show()
                     logger.info("%s %s", summary, body)
                 elif detected_os == "darwin":

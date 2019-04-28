@@ -29,7 +29,7 @@ compatible 'auth-user-pass' file format", credentials_file_path)
         with open(credentials_file_path, 'w') as creds:
             creds.write(username + "\n")
             creds.write(password + "\n")
-        # Change file permission to 600
+        # change file permission to 600
         os.chmod(credentials_file_path, 0o600)
 
         logger.info("Awesome, the credentials have been saved in '%s'", credentials_file_path)

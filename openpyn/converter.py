@@ -348,7 +348,7 @@ class Converter:
     def _extract_custom_configuration(self, line):
         """Specific extractor for Custom Configuration"""
         value = line.strip()
-        # These are already added by OpenVPN
+        # these are already added by OpenVPN
         if value == "tun-mtu 1500":
             pass
         elif value == "tun-mtu-extra 0":
@@ -357,7 +357,7 @@ class Converter:
             pass
         elif value == "mssfix 1450":
             pass
-        # These are already added by ASUSWRT-Merlin
+        # these are already added by ASUSWRT-Merlin
         elif value == "client":
             pass
         elif value == "nobind":
@@ -366,10 +366,10 @@ class Converter:
             pass
         elif value == "persist-tun":
             pass
-        # Pull is implied by "client"
+        # 'pull' is implied by "client"
         elif value == "pull":
             pass
-        # These are already added by us
+        # these are already added by us
         elif value.startswith("auth-user-pass"):
             pass
         elif value.startswith("comp-lzo"):

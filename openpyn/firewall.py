@@ -74,7 +74,7 @@ def apply_dns_rules():
 def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
-    # Empty the INPUT and OUTPUT chain of any current rules
+    # empty the INPUT and OUTPUT chain of any current rules
     subprocess.check_call(["sudo", "iptables", "-F", "OUTPUT"])
     subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
@@ -82,7 +82,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     logger.notice("Temporarily disabling ipv6 to prevent leakage")
     manage_ipv6(disable=True)
 
-    # Allow all traffic out over the VPN tunnel
+    # allow all traffic out over the VPN tunnel
     # except for DNS, which is handled by systemd-resolved script
     # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
     # weird that ping ya.ru was showing "operation not permitted"
@@ -148,14 +148,14 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
             "-j", "ACCEPT"
         ])
 
-    # Allow loopback traffic
+    # allow loopback traffic
     subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
     subprocess.check_call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
 
     # best practice, stops spoofing
     subprocess.check_call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
 
-    # Default action if no other rules match
+    # default action if no other rules match
     subprocess.check_call("sudo iptables -P OUTPUT DROP".split())
     subprocess.check_call("sudo iptables -P INPUT DROP".split())
 
@@ -165,7 +165,7 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List) -
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:
-            # Allow the specified ports on internal network
+            # allow the specified ports on internal network
             for port in internally_allowed:
                 subprocess.call([
                     "sudo", "iptables",

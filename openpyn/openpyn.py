@@ -167,7 +167,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     logger.addHandler(logging.StreamHandler())
 
-    # In this case only log messages originating from this logger will show up on the terminal.
+    # in this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
 
     stats = True
@@ -229,7 +229,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     os.makedirs(log_folder, exist_ok=True)
 
-    # Add another rotating handler to log to .log files
+    # add another rotating handler to log to .log files
     file_handler = logging.FileHandler(log_folder + "/openpyn.log")
     file_handler_formatter = logging.Formatter(log_format)
     file_handler.setFormatter(file_handler_formatter)
@@ -535,7 +535,7 @@ def initialise(detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
 def print_status():
     try:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         with open("{}/status".format(log_folder), "r") as status_file:
             print(status_file.readline().rstrip())
     except subprocess.CalledProcessError:
@@ -605,7 +605,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 
 # Pings servers with the specified no of "ping",
-# returns a sorted list by ping median average deviation
+# Returns a sorted list by ping median average deviation
 def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
@@ -693,7 +693,7 @@ def kill_all() -> None:
 def kill_vpn_processes() -> None:
     try:
         subprocess.check_output(["pgrep", "openvpn"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openvpn process")
         subprocess.check_output(["sudo", "killall", "openvpn"], stderr=subprocess.DEVNULL)
         time.sleep(1)
@@ -705,7 +705,7 @@ def kill_vpn_processes() -> None:
 def kill_openpyn_process() -> None:
     try:
         subprocess.check_output(["pgrep", "openpyn"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openpyn process")
         subprocess.check_output(["sudo", "killall", "openpyn"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
@@ -717,7 +717,7 @@ def kill_management_client() -> None:
     # kill the management client if it is for some reason still alive
     try:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openvpn-management process")
         subprocess.check_output(["sudo", "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
         time.sleep(3)
@@ -903,7 +903,7 @@ def uses_systemd_resolved() -> bool:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ) == 0
-    except FileNotFoundError:   # When OS doesn't find systemctl
+    except FileNotFoundError:   # when OS doesn't find systemctl
         return False
 
     if not systemd_resolved_running:
@@ -1020,7 +1020,7 @@ using it to update DNS Resolver Entries", detected_os)
             raise SystemExit
         except PermissionError:     # needed cause complains when killing sudo process
             raise SystemExit
-    else:       # If not Debian Based or skip_dns_patch
+    else:       # if not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
             logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)

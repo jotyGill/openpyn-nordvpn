@@ -9,8 +9,8 @@ verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
+# Check that user has root privileges, if not print message
 def verify_root_access(message: str) -> bool:
-    # Check that user has root privileges. if not print message
     # in a case when starting openpyn without sudo then providing sudo privileges when asked,
     # sudo privileges get cached, os.getuid would say user not root and prints "root needed"
     # messages, but it would work
@@ -28,7 +28,7 @@ def verify_root_access(message: str) -> bool:
     return True
 
 
-# check if openpyn itself has been started with root access.
+# Check if openpyn itself has been started with root access.
 def verify_running_as_root() -> bool:
     if os.getuid() == 0:
         # logger.debug(message)
