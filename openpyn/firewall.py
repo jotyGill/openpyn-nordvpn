@@ -1,6 +1,10 @@
 import logging
 import subprocess
-from typing import List
+import os
+import json
+import itertools
+from jsonschema import Draft4Validator
+from typing import List, Dict
 
 import verboselogs
 
@@ -142,7 +146,6 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
     subprocess.check_call("sudo iptables -P INPUT DROP".split())
     return
 
-
 # open sepecified ports for devices in the local network
 def internally_allow_ports(interfaces_details: List, internally_allowed: List) -> None:
     for interface in interfaces_details:
@@ -153,3 +156,161 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List) -
                 subprocess.call(
                     ("sudo iptables -A INPUT -p tcp --dport " + port + " -i " +
                         interface[0] + " -s " + interface[2] + " -j ACCEPT").split())
+
+#Converts the allwed ports config to a series of iptable rules and applies them
+def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: List) -> bool:
+
+    if not validate_allowed_ports_json(allowed_ports_config):
+        return False
+
+    root.verify_root_access("Root access needed to pre load fire wall rules")
+
+    DEFAULT_PORT_CONFIG = {
+        "internal": True,
+        "protocol": "tcp",
+        "allowed_ip_range": None
+    }
+    
+    #Merge default config with existing config
+    allowed_ports_config = [{**DEFAULT_PORT_CONFIG, **port_config} for port_config in allowed_ports_config]
+
+    ip_table_rules = []
+
+    for port_config in allowed_ports_config:
+        #Get perms for the connection type
+        port_protocol_permiatations = []
+
+        if port_config['protocol'] in ['tcp' , 'both']:
+            port_protocol_permiatations.append('tcp')
+        
+        if port_config['protocol'] in ['udp', 'both']:
+            port_protocol_permiatations.append('udp')
+        
+        #Create the flags for the port range / port
+        if '-' in str(port_config['port']):
+            port_range = port_config['port'].split('-')
+            port_flag = '--match multiport --dports {0}:{1}'.format(*port_range)
+        else:
+            port_flag = '--dport {0}'.format(port_config['port'])
+
+        for interface, port_type in itertools.product(interfaces_details, port_protocol_permiatations):
+            #Skip any tunnel interfaces that might be invalid
+            if len(interface) != 3 or "tun" in interface[0]:
+                continue
+            
+            ip_flag = ''
+            ip_ranges = []
+            
+            if port_config['internal']:
+                ip_ranges.append(interface[2])
+            
+            if port_config['allowed_ip_range'] != None:
+                if isinstance(port_config['allowed_ip_range'], list):
+                    ip_ranges += port_config['allowed_ip_range']
+                else:
+                    ip_ranges.append(port_config['allowed_ip_range'])
+                
+
+            if ip_ranges != []:
+                ip_flag = ' -s '+ ','.join(ip_ranges)
+
+            ip_table_rules.append("sudo iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
+                port_type=port_type, port_flag=port_flag, interface=interface[0], ip_flag=ip_flag
+            ))
+
+    for rule in ip_table_rules:
+        subprocess.call(rule.split(' '))
+
+    return True    
+
+# Load allowed ports config from path (does not include validation)
+def load_allowed_ports(path_to_allowed_ports: str) -> bool:
+    #Ensure paths are resolved to real paths
+    path_to_allowed_ports = os.path.realpath(path_to_allowed_ports)
+
+    if not os.path.isfile(path_to_allowed_ports) :
+        logger.warn("Connot preload allowed ports: file {0} does not exist".format(path_to_allowed_ports))
+        return False
+    
+    try:
+        with open(path_to_allowed_ports, 'rt') as file_handle:
+            try:
+                allowed_ports_config = json.load(file_handle)
+            except json.JSONDecodeError as json_decode_error:
+                logger.error("Failed to decode allowed ports JSON")
+                return False
+
+        
+    except EnvironmentError as file_read_error:
+        logger.error("Connot preload allowed ports: failed to load \"{filename}\" {strerr}".format(filename = file_read_error.filename, strerr=file_read_error.strerror))
+
+    return allowed_ports_config
+
+#Validates if the allowed ports json is valid before loading it
+def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
+    validation_schema = {
+        "description": "Root config node",
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "port" : { 
+                    "anyOf": [
+                        {
+                            "name": "Port number",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 65535
+                        },
+                        {
+                            "type": "string",
+                            "pattern": "^\\d{1,5}(-\\d{1,5})?$"
+                        }
+                    ]
+                },
+                "protocol": {
+                    "type": "string",
+                    "pattern": "^(tcp|ip|both)$"
+                },
+                "internal": {
+                    "type": "boolean",
+                },
+                "allowed_ip_range": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/ip_address_block"
+                        },
+                        {
+                            "items": {"$ref": "#/definitions/ip_address_block"},
+                            "uniqueItems": True
+                        }
+                    ]
+                    
+                }
+            },
+            "required": ["port"]
+        },
+        "definitions": {
+            "ip_address_block": {
+                "type": "string",
+                "pattern": "^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$"
+            }
+        }
+    }
+    
+    #Create the config validator
+    allowed_ports_config_validator = Draft4Validator(validation_schema)
+    
+    #If the passed config is not valid enumerate errors and print them in human readable form
+    if not allowed_ports_config_validator.is_valid(allowed_ports_config):
+        
+        error_message = "Errors were raise when validating the allowed ports config:"
+        #Retrieve all validation errors yielded in schema
+        for validation_error in allowed_ports_config_validator.iter_errors(allowed_ports_config):
+            error_message += "\n\nError at root.{0} in config: {1}".format('.'.join([str(part) for part in validation_error.absolute_path]), validation_error.message)
+        
+        logger.error(error_message)
+        
+        return False
+
+    return True

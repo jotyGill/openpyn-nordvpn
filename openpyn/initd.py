@@ -4,6 +4,8 @@ import logging
 import os
 import subprocess
 import sys
+import shlex
+import json
 
 import verboselogs
 
@@ -44,6 +46,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
+    parser.add_argument('--allow-config-json', dest='internally_allowed_config_json')
     # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
     parser.add_argument('--silent')
     parser.add_argument('--p2p')
@@ -83,6 +86,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     netflix = args.netflix
     test = args.test
     internally_allowed = args.internally_allowed
+    internally_allowed_config_json = args.internally_allowed_config_json
     skip_dns_patch = args.skip_dns_patch
     silent = args.silent
     nvram = args.nvram
@@ -146,6 +150,9 @@ Default(Just Press Enter) is, uk : ") or "uk"
         for port_number in internally_allowed:
             open_ports += " " + port_number
         openpyn_options += " --allow" + open_ports
+    if internally_allowed_config_json:
+        #Assume at this stage the json has been passed as string so it can be directly loaded
+        openpyn_options += " --allow-config-json=" + internally_allowed_config_json
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
     if silent:

@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import sys
 import time
+import json
+import shlex
 from typing import List, Set
 
 import coloredlogs
@@ -89,7 +91,17 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '--allow', dest='internally_allowed', help='To be used with "f" to allow ports \
         but ONLY to INTERNAL IP RANGE. for example: you can use your PC as SSH, HTTP server \
-        for local devices (i.e. 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+')
+        for local devices (i.e. 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+'),
+    parser.add_argument(
+        '--allow-config', dest='internally_allowed_config', help='To be used with "f" to allow a complex \
+        a complex set of allow port rules. This option requires a path to a JSON file that contains the \
+        relevent config'
+    ),
+    parser.add_argument(
+        '--allow-config-json', dest='internally_allowed_config_json', help='To be used with "f" to allow a complex \
+        a complex set of allow port rules. This option requires works the same as "--allow-config" option \
+        but accepts a json object as a string instead'
+    ),
     parser.add_argument(
         '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
         help='If no argument given prints all Country Names and Country Codes; \
@@ -141,7 +153,8 @@ def main() -> bool:
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location)
+        args.internally_allowed_config, args.internally_allowed_config_json , args.skip_dns_patch, args.silent, args.nvram,
+        args.openvpn_options, args.location)
     return return_code
 
 
@@ -149,8 +162,8 @@ def main() -> bool:
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
         max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
-        netflix: bool, test: bool, internally_allowed: List, skip_dns_patch: bool, silent: bool, nvram: str,
-        openvpn_options: str, location: float) -> bool:
+        netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
+        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float) -> bool:
 
     if init:
         initialise(log_folder)
@@ -215,6 +228,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     port = "udp"
     if tcp:
         port = "tcp"
+
+    # Allways decode internally json config when passed
+    if internally_allowed_config_json:
+        try:
+            internally_allowed_config_json = json.loads(internally_allowed_config_json)
+        except json.JSONDecodeError as err:
+            logger.error("Failed to decode JSON passed in '----allow-config-json' Error at line {line}:{col} {msg} ".format(lineno=err.lineno, col=err.colno, msg=err.msg))
+            internally_allowed_config_json = None
 
     detected_os = sys.platform
     if detected_os == "linux":
@@ -304,6 +325,13 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --netflix"
         if test:
             openpyn_options += " --test"
+        if internally_allowed_config_json or internally_allowed_config:
+            # Override passed config is file is specified
+            if internally_allowed_config:
+                internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config) 
+            if firewall.validate_allowed_ports_json(internally_allowed_config_json):
+                openpyn_options += " --allow-config-json=" + shlex.quote(json.dumps(internally_allowed_config_json, separators=(',', ':')))
+            logger.error(openpyn_options)
         if internally_allowed:
             open_ports = ""
             for port_number in internally_allowed:
@@ -404,6 +432,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 # if "-f" used apply firewall rules
                 if force_fw_rules:
                     network_interfaces = get_network_interfaces()
+
+                    if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
+                        if internally_allowed_config:
+                            internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
+                    
+                        if firewall.validate_allowed_ports_json(internally_allowed_config_json):
+                            firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
+                        
                     vpn_server_ip = get_vpn_server_ip(aserver, port)
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
                     if internally_allowed:
@@ -423,6 +459,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         # if "-f" used apply firewall rules
         if force_fw_rules:
             network_interfaces = get_network_interfaces()
+
+            if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
+                if internally_allowed_config:
+                    internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
+            
+                if firewall.validate_allowed_ports_json(internally_allowed_config_json):
+                    firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
+
             vpn_server_ip = get_vpn_server_ip(server, port)
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
             if internally_allowed:
