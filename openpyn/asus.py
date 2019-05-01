@@ -2,7 +2,7 @@ import logging
 import subprocess
 
 import verboselogs
-from openpyn import __basefilepath__, api
+from openpyn import __basefilepath__, api, ovpn_folder
 from openpyn.converter import T_CLIENT, Converter
 
 verboselogs.install()
@@ -12,7 +12,6 @@ logger = logging.getLogger(__package__)
 def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     with open(__basefilepath__ + "credentials", 'r') as f:
         lines = f.read().splitlines()
-        f.close()
 
     url = "https://api.nordvpn.com/server"
     json_response = api.get_json(url)
@@ -24,12 +23,12 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
     port = "udp"
     port_name = "1194"
     protocol_name = "udp"
-    folder = "ovpn_udp/"
+    folder = "/ovpn_udp/"
     if tcp:
         port = "tcp"
         port_name = "443"
         protocol_name = "tcp-client"
-        folder = "ovpn_tcp/"
+        folder = "/ovpn_tcp/"
 
     vpn_config_file = server + ".nordvpn.com." + port + ".ovpn"
 
@@ -41,7 +40,7 @@ def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=
     c.set_protocol(protocol_name)
 
     c.set_name(server)
-    c.set_source_folder(__basefilepath__ + "files/" + folder)
+    c.set_source_folder(ovpn_folder + folder)
     c.set_certs_folder("/jffs/openvpn/")
 
     c.set_accept_dns_configuration(adns)

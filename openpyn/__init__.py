@@ -1,7 +1,6 @@
-import sys
 import os.path
 import subprocess
-
+import sys
 
 __version__ = "2.7.6.dev1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
@@ -9,7 +8,12 @@ __data_files__ = []
 __basefilepath__ = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 log_format = "%(asctime)s [%(levelname)s] %(message)s"
-log_folder = "/var/log/openpyn"     # logs will be saved here
+
+_xdg_data_home = os.environ.get('XDG_DATA_HOME')
+if not _xdg_data_home:
+    _xdg_data_home = os.path.join(os.environ.get('HOME'), '.local', 'share')
+ovpn_folder = os.path.join(_xdg_data_home, 'openpyn', 'files')
+log_folder = os.path.join(_xdg_data_home, 'openpyn', 'logs')      # logs will be saved here
 
 
 if sys.platform == "linux":
