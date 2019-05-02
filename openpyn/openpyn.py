@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 
 import argparse
+import io
 import logging
 import os
 import shutil
 import subprocess
 import sys
 import time
+import zipfile
+from email.utils import parsedate
+from pathlib import Path
 from typing import List, Set
 
 import coloredlogs
+import requests
 import verboselogs
 from colorama import Fore, Style
+from tqdm import tqdm
 
 from openpyn import api
 from openpyn import asus
@@ -22,7 +28,7 @@ from openpyn import initd
 from openpyn import locations
 from openpyn import root
 from openpyn import systemd
-from openpyn import __basefilepath__, __version__, log_folder, log_format    # variables
+from openpyn import __basefilepath__, __version__, log_folder, ovpn_folder, log_format    # variables
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -161,7 +167,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     logger.addHandler(logging.StreamHandler())
 
-    # In this case only log messages originating from this logger will show up on the terminal.
+    # in this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
 
     stats = True
@@ -179,17 +185,13 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         # consider the positional arg e.g "us" same as "-c us"
         country_code = country
 
-    port = "udp"
-    if tcp:
-        port = "tcp"
+    port = "tcp" if tcp else "udp"
 
     detected_os = sys.platform
     asuswrt_os = False
     openwrt_os = False
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
-            set_file_permissions(log_folder)
-
             asuswrt_os = True
             force_fw_rules = False
             internally_allowed = None
@@ -202,8 +204,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 openvpn_options = "--syslog openpyn"
             # logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
-            set_file_permissions(log_folder)
-
             openwrt_os = True
             force_fw_rules = False
             internally_allowed = None
@@ -223,51 +223,25 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         nvram = None
 
     # check if dependencies are installed
-    if shutil.which("openvpn") is None or shutil.which("wget") is None or shutil.which("unzip") is None:
-        # In case of Debian Sid where "openvpn" is only in root's PATH, don't error out
-        try:
-            root_access = root.verify_root_access(
-                "Sudo credentials required to check if 'openvpn' is available in root's PATH")
-            if root_access is False:
-                root.obtain_root_access()
-            subprocess.check_output(["sudo", "which", "openvpn"])
-            subprocess.check_output(["sudo", "which", "wget"])
-            subprocess.check_output(["sudo", "which", "unzip"])
-        except RuntimeError as e:
-            logger.critical(e)
-            return 1
-        except subprocess.CalledProcessError:
-            logger.error("Please Install 'openvpn' 'wget' 'unzip' first")
-            return 1
+    if shutil.which("openvpn") is None:
+        logger.error("Please install 'openvpn' first")
+        return 1
+
+    os.makedirs(log_folder, exist_ok=True)
+
+    # add another rotating handler to log to .log files
+    file_handler = logging.FileHandler(log_folder + "/openpyn.log")
+    file_handler_formatter = logging.Formatter(log_format)
+    file_handler.setFormatter(file_handler_formatter)
+    logger.addHandler(file_handler)
 
     if init:
         try:
-            initialise(log_folder, detected_os, asuswrt_os, openwrt_os)
+            initialise(detected_os, asuswrt_os, openwrt_os)
             return 0
         except RuntimeError as e:
             logger.critical(e)
             return 1
-
-    # if log folder doesn't exist, exit, "--init" creates it
-    if not os.path.exists(log_folder):
-        logger.error("Please initialise first by running 'sudo openpyn --init', then start using 'openpyn' without sudo")
-        return 1
-
-    # Add another rotating handler to log to .log files
-    # fix permissions if needed
-    for _ in range(2):
-        try:
-            file_handler = logging.FileHandler(
-                log_folder + '/openpyn.log')
-            file_handler_formatter = logging.Formatter(log_format)
-            file_handler.setFormatter(file_handler_formatter)
-            logger.addHandler(file_handler)
-        except PermissionError:
-            logger.error(
-                "PermissionError: To reset file permissions of '/var/log/openpyn/' please run 'sudo openpyn --init'")
-            return 1
-        else:
-            break
 
     if daemon:
         if detected_os != "linux":
@@ -386,7 +360,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             return 1
 
     # a hack to list all countries and their codes when no arg supplied with "-l"
-    elif list_servers != 'nope':      # means "-l" supplied
+    elif list_servers != "nope":      # means "-l" supplied
         try:
             if list_servers is None:      # no arg given with "-l"
                 if p2p or dedicated or double_vpn or tor_over_vpn or anti_ddos or netflix:
@@ -461,6 +435,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                         touch_iptables_rules(aserver, port, skip_dns_patch, internally_allowed)
 
                     if nvram:
+                        check_config_files()
                         asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                         logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
                         return 0
@@ -511,6 +486,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 touch_iptables_rules(server, port, skip_dns_patch, internally_allowed)
 
             if nvram:
+                check_config_files()
                 asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
                 logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM " + nvram)
                 return 0
@@ -542,32 +518,15 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     return 0
 
 
-def set_file_permissions(log_folder: str) -> None:
-    if not os.path.exists(log_folder):
-        os.mkdir(log_folder)
-    os.chmod(log_folder, mode=0o755)
-    # os.chmod(log_folder + "/openpyn.log", mode=0o666)
-
-    log_files = ['openpyn.log', 'openpyn-notifications.log', 'status', 'openvpn-status']
-    for file in log_files:
-        open(log_folder + "/" + file, "a").close()      # touch the log file
-    for dirpath, dirnames, files in os.walk(log_folder):
-        for file in files:
-            path = os.path.join(dirpath, file)
-            logger.verbose(path)
-            os.chmod(path, mode=0o666)
-
-
-def initialise(log_folder: str, detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
-    credentials.save_credentials()
+def initialise(detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
     update_config_files()
-    set_file_permissions(log_folder)
+    credentials.save_credentials()
     if detected_os == "linux":
         if asuswrt_os:
             initd.install_service()
         elif openwrt_os:
             initd.install_service()
-        elif subprocess.check_output(["cat", "/proc/1/comm"]).decode(sys.stdout.encoding).strip() == "systemd":
+        elif os.path.exists("/sbin/init") and os.readlink("/sbin/init").rsplit("/", maxsplit=1)[-1] == "systemd":
             systemd.install_service()
         else:
             logger.warning("systemd not found, skipping systemd integration")
@@ -576,8 +535,8 @@ def initialise(log_folder: str, detected_os: str, asuswrt_os: bool, openwrt_os: 
 def print_status():
     try:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
-        with open("/var/log/openpyn/status", "r") as status_file:
+        # when it returns "0", proceed
+        with open("{}/status".format(log_folder), "r") as status_file:
             print(status_file.readline().rstrip())
     except subprocess.CalledProcessError:
         # when Exception, the openpyn-management_processes issued non 0 result, "not found"
@@ -585,9 +544,9 @@ def print_status():
 
 
 def load_tun_module():
-    if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
+    if not Path("/dev/net/tun").is_char_device():
         subprocess.call("modprobe tun", shell=True)
-        if os.popen("test ! -c /dev/net/tun && echo 0 || echo 1").read()[0:-1] == '0':
+        if not Path("/dev/net/tun").is_char_device():
             raise RuntimeError("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
 
 
@@ -646,7 +605,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 
 # Pings servers with the specified no of "ping",
-# returns a sorted list by Ping Avg and Median Deviation
+# Returns a sorted list by ping median average deviation
 def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
@@ -698,7 +657,7 @@ falling back to wait of 1 second between pings, pings will be slow")
         ping_result.append(ping_list)
         # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
-    # sort by Ping Avg and Median Deviation
+    # sort by ping median average deviation
     pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
     return pinged_servers_list
 
@@ -734,7 +693,7 @@ def kill_all() -> None:
 def kill_vpn_processes() -> None:
     try:
         subprocess.check_output(["pgrep", "openvpn"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openvpn process")
         subprocess.check_output(["sudo", "killall", "openvpn"], stderr=subprocess.DEVNULL)
         time.sleep(1)
@@ -746,7 +705,7 @@ def kill_vpn_processes() -> None:
 def kill_openpyn_process() -> None:
     try:
         subprocess.check_output(["pgrep", "openpyn"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openpyn process")
         subprocess.check_output(["sudo", "killall", "openpyn"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
@@ -758,7 +717,7 @@ def kill_management_client() -> None:
     # kill the management client if it is for some reason still alive
     try:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
-        # When it returns "0", proceed
+        # when it returns "0", proceed
         logger.notice("Killing the running openvpn-management process")
         subprocess.check_output(["sudo", "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
         time.sleep(3)
@@ -768,41 +727,46 @@ def kill_management_client() -> None:
 
 
 def update_config_files() -> None:
-    root.verify_root_access("Root access needed to write files in " + "'" + __basefilepath__ + "files/" + "'")
-    try:
-        zip_archive = __basefilepath__ + "ovpn.zip"
-        if os.path.exists(zip_archive):
-            logger.notice("Previous update file already exists, deleting...")
-            os.remove(zip_archive)
+    url = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
+    _, filename = url.rsplit("/", maxsplit=1)
 
-        subprocess.check_call(
-            ["sudo", "wget", "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip", "-P", __basefilepath__])
-    except subprocess.CalledProcessError:
-        raise RuntimeError("Exception occurred while wgetting zip, is the internet working? \
-is nordcdn.com blocked by your ISP or Country?, If so use Privoxy \
-[https://github.com/jotyGill/openpyn-nordvpn/issues/109]")
-    try:
-        subprocess.check_call(
-            ["sudo", "unzip", "-q", "-u", "-o", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"],
-            stderr=subprocess.DEVNULL)
-        subprocess.check_call(
-            ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
-    except subprocess.CalledProcessError:
-        try:
-            subprocess.check_call(
-                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_udp"])
-            subprocess.check_call(
-                ["sudo", "rm", "-rf", __basefilepath__ + "files/ovpn_tcp"])
-            subprocess.check_call(
-                ["sudo", "unzip", __basefilepath__ + "ovpn", "-d", __basefilepath__ + "files/"])
-            subprocess.check_call(
-                ["sudo", "rm", __basefilepath__ + "ovpn.zip"])
-        except subprocess.CalledProcessError:
-            raise RuntimeError("Exception occurred while unzipping ovpn.zip, is unzip installed?")
+    r = requests.head(url, stream=True)
+    total = int(r.headers["content-length"])
+
+    last_modified = r.headers["last-modified"]
+    last_update_path = os.path.join(ovpn_folder, "last_update")
+    if os.path.exists(last_update_path):
+        with open(last_update_path, 'r') as fp:
+            last_update = parsedate(fp.read())
+
+        if last_update >= parsedate(last_modified):
+            logger.info("Configuration files are up-to-date, skipping...")
+            return
+
+    r = requests.get(url, stream=True)
+    f = io.BytesIO()
+    chunk_size = 512
+
+    with tqdm(total=total, unit="B", unit_scale=True, desc="Downloading {}".format(filename)) as pbar:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if chunk:
+                f.write(chunk)
+                pbar.update(len(chunk))
+
+    z = zipfile.ZipFile(f)
+    total = sum(f.file_size for f in z.infolist())
+
+    with tqdm(total=total, unit="B", unit_scale=True, desc="Extracting {}".format(filename)) as pbar:
+        for file in z.infolist():
+            z.extract(file, path=ovpn_folder)
+            pbar.update(file.file_size)
+
+    with open(os.path.join(ovpn_folder, "last_update"), 'w') as fp:
+        fp.write(last_modified)
 
 
 # Lists information about servers under the given criteria.
-def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
+def display_servers(list_servers: str, port: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
                     tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> None:
     servers_on_web = set()      # servers shown on the website
 
@@ -816,22 +780,22 @@ def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicat
     if not json_res_list:
         raise RuntimeError("There are no servers that satisfy your criteria, please broaden your search.")
 
-    print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers In", Fore.GREEN +
+    print(Style.BRIGHT + Fore.BLUE + "The NordVPN Servers in", Fore.GREEN +
           list_servers.upper() + Fore.BLUE, end=" ")
     if area:
-        print("Area ", Fore.GREEN + area + Fore.BLUE, end=" ")
+        print("Area", Fore.GREEN + area + Fore.BLUE, end=" ")
     if p2p:
-        print("with " + Fore.GREEN + "p2p" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "p2p" + Fore.BLUE + " Support", end=" ")
     if dedicated:
-        print("with " + Fore.GREEN + "dedicated" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "dedicated" + Fore.BLUE + " Support", end=" ")
     if double_vpn:
-        print("with " + Fore.GREEN + "double_vpn" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "double_vpn" + Fore.BLUE + " Support", end=" ")
     if tor_over_vpn:
-        print("with " + Fore.GREEN + "tor_over_vpn" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "tor_over_vpn" + Fore.BLUE + " Support", end=" ")
     if anti_ddos:
-        print("with " + Fore.GREEN + "anti_ddos" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "anti_ddos" + Fore.BLUE + " Support", end=" ")
     if netflix:
-        print("with " + Fore.GREEN + "netflix" + Fore.BLUE + " support", end=" ")
+        print("with " + Fore.GREEN + "netflix" + Fore.BLUE + " Support", end=" ")
     print("Are:\n" + Style.RESET_ALL)
 
     # add server names to "servers_on_web" set
@@ -849,21 +813,19 @@ def display_servers(list_servers: List, port: str, area: str, p2p: bool, dedicat
 
     if list_servers != "all" and not p2p and not dedicated and not double_vpn \
             and not tor_over_vpn and not anti_ddos and not netflix and not area:
-            # else not applicable.
+        # else not applicable.
         print_latest_servers(list_servers=list_servers, port=port, server_set=servers_on_web)
 
 
-def print_latest_servers(list_servers: List, port: str, server_set: Set) -> None:
-    if port == "tcp":
-        folder = "ovpn_tcp/"
-    else:
-        folder = "ovpn_udp/"
+def print_latest_servers(list_servers: str, port: str, server_set: Set) -> None:
+    folder = "ovpn_{}".format(port)
 
     servers_in_files = set()      # servers from .ovpn files
-    new_servers = set()   # new Servers, not published on website yet, or taken down
+    new_servers = set()   # new servers, not published on website yet, or taken down
     try:
+        server_files_path = os.path.join(ovpn_folder, folder, list_servers)
         server_files = subprocess.check_output(
-            "ls " + __basefilepath__ + "files/" + folder + list_servers + "*", shell=True)
+            "ls " + server_files_path + "*", shell=True)
     except subprocess.CalledProcessError:
         raise RuntimeError("The supplied Country Code is likely wrong or you just don't have \
 its config files (In which case run 'sudo openpyn --update')")
@@ -872,8 +834,8 @@ its config files (In which case run 'sudo openpyn --update')")
     openvpn_files_list = openvpn_files_str.split("\\n")
 
     for server in openvpn_files_list:
-        server_name = server[server.find("files/" + folder) + 15:server.find(".")]
-        servers_in_files.add(server_name)
+        server_name = os.path.basename(server)
+        servers_in_files.add(server_name.split(".")[0])
 
     for server in servers_in_files:
         if server not in server_set:
@@ -884,15 +846,10 @@ its config files (In which case run 'sudo openpyn --update')")
 
 
 def check_config_files() -> None:
-    try:
-        server_files = subprocess.check_output("ls " + __basefilepath__ + "files", shell=True, stderr=subprocess.DEVNULL)
-        openvpn_files_str = str(server_files)
-    except subprocess.CalledProcessError:
-        subprocess.call(["sudo", "mkdir", "-p", __basefilepath__ + "files"])
-        server_files = subprocess.check_output("ls " + __basefilepath__ + "files", shell=True, stderr=subprocess.DEVNULL)
-        openvpn_files_str = str(server_files)
+    if not os.path.exists(ovpn_folder):
+        os.mkdir(ovpn_folder)
 
-    if len(openvpn_files_str) < 4:  # 3 is of Empty str (b'')
+    if len(os.listdir(ovpn_folder)) < 3:
         logger.notice("Running openpyn for the first time? running 'openpyn --update' for you :)")
         time.sleep(5)
         # download the config files
@@ -925,20 +882,14 @@ def get_network_interfaces() -> List:
 
 
 def get_vpn_server_ip(server: str, port: str) -> str:
-    # grab the ip address of vpnserver from the config file
-    if port == "tcp":
-        folder = "ovpn_tcp/"
-    else:
-        folder = "ovpn_udp/"
-
-    vpn_config_file = __basefilepath__ + "files/" + folder + server + ".nordvpn.com." + port + ".ovpn"
+    # grab the ip address of VPN server from the config file
+    vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
     try:
         with open(vpn_config_file, 'r') as openvpn_file:
             for line in openvpn_file:
                 if "remote " in line:
                     vpn_server_ip = line[7:]
                     vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
-            openvpn_file.close()
         return vpn_server_ip
     except FileNotFoundError:
         raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
@@ -952,7 +903,7 @@ def uses_systemd_resolved() -> bool:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ) == 0
-    except FileNotFoundError:   # When OS doesn't find systemctl
+    except FileNotFoundError:   # when OS doesn't find systemctl
         return False
 
     if not systemd_resolved_running:
@@ -978,7 +929,7 @@ def uses_systemd_resolved() -> bool:
 
     # otherwise, something must be broken.. why is systemd-resolved running, yet resolv.conf still pointing somewhere else?
     # TODO test implications
-    logger.warning("systemd-resolved is running, but resolv.conf contains {}, test if DNS leaks!".format(dns_servers))
+    logger.warning("systemd-resolved is running, but resolv.conf contains %s, test if DNS leaks!", dns_servers)
     return True
 
 
@@ -986,21 +937,13 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool,
             openvpn_options: str, use_systemd_resolved: bool, use_resolvconf: bool, server_provider="nordvpn") -> None:
     detected_os = sys.platform
     if server_provider == "nordvpn":
-        if port == "tcp":
-            folder = "ovpn_tcp/"
-        else:
-            folder = "ovpn_udp/"
-
-        vpn_config_file = __basefilepath__ + "files/" + folder + server + ".nordvpn.com." + port + ".ovpn"
+        vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
         # logger.debug("CONFIG FILE %s", vpn_config_file)
         if os.path.isfile(vpn_config_file) is False:
             logger.notice("VPN configuration file %s doesn't exist, \
 don't worry running 'openpyn --update' for you :)", vpn_config_file)
             time.sleep(6)
             update_config_files()
-    elif server_provider == "ipvanish":
-        vpn_config_file = __basefilepath__ + "files/" + "ipvanish/" + server
-        # logger.debug("ipvanish")
 
     root_access = root.verify_root_access("Sudo credentials required to run 'openvpn'")
     if root_access is False:
@@ -1044,7 +987,7 @@ using it to update DNS Resolver Entries", detected_os)
                 cmdline = [
                     "sudo", "openvpn",
                     "--redirect-gateway",
-                    "--status", "/var/log/openpyn/openvpn-status", "30",
+                    "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
                     "--auth-user-pass", __basefilepath__ + "credentials",
@@ -1077,7 +1020,7 @@ using it to update DNS Resolver Entries", detected_os)
             raise SystemExit
         except PermissionError:     # needed cause complains when killing sudo process
             raise SystemExit
-    else:       # If not Debian Based or skip_dns_patch
+    else:       # if not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
             logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)
@@ -1091,7 +1034,7 @@ using it to update DNS Resolver Entries", detected_os)
                 cmdline = [
                     "sudo", "openvpn",
                     "--redirect-gateway",
-                    "--status", "/var/log/openpyn/openvpn-status", "30",
+                    "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
                     "--auth-user-pass", __basefilepath__ + "credentials",

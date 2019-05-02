@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=W0611
 
 import argparse
 import datetime
@@ -7,10 +8,9 @@ import logging
 import logging.handlers
 import sys
 import time
+from unittest import mock
 
-import mock
 import pytest
-
 from openpyn import openpyn
 
 # def test_version():
@@ -38,17 +38,22 @@ def test_list_tor():
 #
 #
 # def test_list_country_area_state():
-#     with mock.patch('sys.argv', ['openpyn', '-l', 'au', '--area', 'sa']):
+#     with mock.patch('sys.argv', ['openpyn', '-l', 'au', '--area', 'south australia']):
 #         assert openpyn.main() == 0
 
 
 def test_list_country_area_state_p2p():
-    with mock.patch('sys.argv', ['openpyn', '-l', 'au', '--area', 'sa', '--p2p']):
+    with mock.patch('sys.argv', ['openpyn', '-l', 'au', '--area', 'south australia', '--p2p']):
         assert openpyn.main() == 0
 
 
 def test_connect_country_code():
     with mock.patch('sys.argv', ['openpyn', 'au', '--test']):
+        assert openpyn.main() == 0
+
+
+def test_connect_country_location():
+    with mock.patch('sys.argv', ['openpyn', 'au', '--location', '-37.813938', '144.963425', '--test']):
         assert openpyn.main() == 0
 
 

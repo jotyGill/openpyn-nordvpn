@@ -1,6 +1,7 @@
 import sys
 
 import setuptools
+
 from openpyn import __data_files__, __version__
 
 if sys.version_info < (3, 5):
@@ -10,7 +11,6 @@ if sys.version_info < (3, 5):
 
 with open("README.md", encoding="utf-8") as readme_file:
     full_description = readme_file.read()
-    readme_file.close()
 
 setuptools.setup(
     name='openpyn',
@@ -25,7 +25,7 @@ setuptools.setup(
         'openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn',
         'vpn wrapper', 'private vpn', 'privacy'],
     python_requires='>=3.5',
-    install_requires=['requests', 'colorama', 'coloredlogs', 'verboselogs'],
+    install_requires=['colorama', 'coloredlogs', 'requests', 'tqdm', 'verboselogs'],
     tests_require=['pytest', 'mock'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
     packages=setuptools.find_packages(),
