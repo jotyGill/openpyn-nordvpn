@@ -9,16 +9,11 @@ verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
-def run(server, c_code, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
+def run(server, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
+    country_name = api.get_country_name(server[:2])
+
     with open(__basefilepath__ + "credentials", 'r') as f:
         lines = f.read().splitlines()
-
-    url = "https://api.nordvpn.com/server"
-    json_response = api.get_json(url)
-    for res in json_response:
-        if res["domain"][:2].lower() == c_code.lower():
-            country_name = res["country"]
-            break
 
     port = "udp"
     port_name = "1194"
