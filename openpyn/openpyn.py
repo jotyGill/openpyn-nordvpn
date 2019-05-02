@@ -256,8 +256,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
         # if either "-c" or positional arg f.e "au" is present
         if country_code:
-            if len(country_code) > 2:   # full country name
-                # get the country_code from the full name
+            # if full name of the country supplied get country_code
+            if len(country_code) > 2:
                 try:
                     country_code = api.get_country_code(full_name=country_code)
                 except RuntimeError as e:
@@ -376,6 +376,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 # if full name of the country supplied get country_code
                 if len(list_servers) > 2:
                     list_servers = api.get_country_code(full_name=list_servers)
+
+                list_servers = list_servers.lower()
+
                 display_servers(
                     list_servers=list_servers, port=port, area=area, p2p=p2p, dedicated=dedicated,
                     double_vpn=double_vpn, tor_over_vpn=tor_over_vpn, anti_ddos=anti_ddos,
@@ -406,8 +409,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     use_systemd_resolved = uses_systemd_resolved()
                     use_resolvconf = os.path.isfile("/sbin/resolvconf")
 
-            if len(country_code) > 2:   # full country name
-                # get the country_code from the full name
+            # if full name of the country supplied get country_code
+            if len(country_code) > 2:
                 country_code = api.get_country_code(full_name=country_code)
 
             country_code = country_code.lower()
