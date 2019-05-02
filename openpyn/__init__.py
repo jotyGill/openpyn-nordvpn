@@ -9,9 +9,11 @@ __basefilepath__ = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 log_format = "%(asctime)s [%(levelname)s] %(message)s"
 
-_xdg_data_home = os.environ.get('XDG_DATA_HOME')
-if not _xdg_data_home:
+try:
+    _xdg_data_home = os.environ['XDG_DATA_HOME']
+except KeyError:
     _xdg_data_home = os.path.join(os.environ.get('HOME'), '.local', 'share')
+
 ovpn_folder = os.path.join(_xdg_data_home, 'openpyn', 'files')
 log_folder = os.path.join(_xdg_data_home, 'openpyn', 'logs')      # logs will be saved here
 
