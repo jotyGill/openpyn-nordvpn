@@ -36,17 +36,22 @@ def update_service(openpyn_options: str, run=False) -> None:
         "WorkingDirectory=" + __basefilepath__ + "\nExecStartPre=" + sleep_location + " 5\nExecStart=" + \
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
-
-    _xdg_config_home = os.environ['XDG_CONFIG_HOME']
-    if not _xdg_config_home:
+    try:
+        _xdg_config_home = os.environ['XDG_CONFIG_HOME']
+    except KeyError:
         _xdg_config_home = os.path.expanduser(os.path.join('~', '.config'))
-    systemd_service_path = os.path.join(_xdg_config_home, 'systemd', 'user', 'openpyn.service')
-    with open(systemd_service_path, 'w') as fp:
+
+    systemd_service_path = os.path.join(_xdg_config_home, 'systemd', 'user')
+    systemd_service_file = os.path.join(systemd_service_path, 'openpyn.service')
+
+    if not os.path.exists(systemd_service_path):
+        os.makedirs(systemd_service_path)
+    with open(systemd_service_file, 'w') as fp:
         fp.write(service_text)
 
     logger.notice("The Following config has been saved in openpyn.service. \
 You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
-'systemctl --user enable openpyn' \n" + service_text)
+'systemctl --user enable openpyn' \n\n" + service_text)
 
     subprocess.run(["systemctl", "--user", "daemon-reload"])
     if run:
