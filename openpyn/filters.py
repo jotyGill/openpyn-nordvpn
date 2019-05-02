@@ -27,7 +27,7 @@ def filter_by_area(area: str, type_country_filtered: List) -> List:
 def filter_by_country(country_code: str, type_filtered_servers: List) -> List:
     remaining_servers = []
     for aServer in type_filtered_servers:
-        if aServer["domain"][:2].lower() == country_code:
+        if aServer["domain"][:2] == country_code:
             remaining_servers.append(aServer)
             # logger.debug(aServer["domain"])
     return remaining_servers

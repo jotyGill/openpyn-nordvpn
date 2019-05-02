@@ -62,10 +62,11 @@ def list_all_countries() -> None:
 
 
 def get_country_code(full_name: str) -> str:
+    full_name = full_name.lower()
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
     for res in json_response:
-        if res["country"].lower() == full_name.lower():
-            code = res["domain"][:2].lower()
+        if res["country"].lower() == full_name:
+            code = res["domain"][:2]
             return code
     raise RuntimeError("Country Name Not Correct")
