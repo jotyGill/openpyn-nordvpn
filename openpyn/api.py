@@ -29,7 +29,7 @@ forgot to flush iptables? (openpyn -x)")
 def get_data_from_api(
         country_code: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
         tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> List:
-
+    country_code = country_code.lower()
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
 
