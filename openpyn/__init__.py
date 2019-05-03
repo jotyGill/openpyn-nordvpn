@@ -14,9 +14,9 @@ try:
 except KeyError:
     _xdg_data_home = os.path.join(os.environ.get('HOME'), '.local', 'share')
 
-ovpn_folder = os.path.join(_xdg_data_home, 'openpyn', 'files')
+ovpn_folder = os.path.join(_xdg_data_home, 'openpyn', 'files')      # .ovpn config files location
 log_folder = os.path.join(_xdg_data_home, 'openpyn', 'logs')      # logs will be saved here
-
+credentials_file_path = os.path.join(_xdg_data_home, 'openpyn', 'credentials')  # nordvpn username/password
 
 if sys.platform == "linux":
     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
