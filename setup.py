@@ -1,6 +1,7 @@
 import sys
 
 import setuptools
+
 from openpyn import __data_files__, __version__
 
 if sys.version_info < (3, 5):
@@ -8,9 +9,8 @@ if sys.version_info < (3, 5):
                      "Install using 'pip3' instead of just 'pip' \n")
     sys.exit(1)
 
-with open('README.md', encoding='utf-8') as readme_file:
+with open("README.md", encoding="utf-8") as readme_file:
     full_description = readme_file.read()
-    readme_file.close()
 
 setuptools.setup(
     name='openpyn',
@@ -24,7 +24,8 @@ setuptools.setup(
     keywords=[
         'openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn',
         'vpn wrapper', 'private vpn', 'privacy'],
-    install_requires=['requests', 'colorama', 'coloredlogs', 'verboselogs', 'jsonschema'],
+    python_requires='>=3.5',
+    install_requires=['colorama', 'coloredlogs', 'jsonschema', 'requests', 'tqdm', 'verboselogs'],
     tests_require=['pytest', 'mock'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
     packages=setuptools.find_packages(),

@@ -1,25 +1,24 @@
 import logging
+import os
+import shutil
 import subprocess
 import sys
 
 import verboselogs
-
 from openpyn import __basefilepath__
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
-def install_service() -> int:
+def install_service() -> None:
     if not sys.__stdin__.isatty():
-        logger.critical("Please run %s in interactive mode", __name__)
-        return 1
+        raise RuntimeError("Please run %s in interactive mode" % __name__)
 
     openpyn_options = input("\nEnter Openpyn options to be stored in systemd \
 service file (/etc/systemd/system/openpyn.service, \
 Default(Just Press Enter) is, uk : ") or "uk"
     update_service(openpyn_options)
-    return 0
 
 
 def update_service(openpyn_options: str, run=False) -> None:
@@ -29,36 +28,39 @@ def update_service(openpyn_options: str, run=False) -> None:
         kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_location = str(subprocess.check_output(["which", "openpyn"]))[2:-3]
-    sleep_location = str(subprocess.check_output(["which", "sleep"]))[2:-3]
+    openpyn_location = shutil.which("openpyn")
+    sleep_location = shutil.which("sleep")
 
     service_text = "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\n" + \
         "After=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\n" + \
         "WorkingDirectory=" + __basefilepath__ + "\nExecStartPre=" + sleep_location + " 5\nExecStart=" + \
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
+    try:
+        _xdg_config_home = os.environ['XDG_CONFIG_HOME']
+    except KeyError:
+        _xdg_config_home = os.path.expanduser(os.path.join('~', '.config'))
 
-    with open("/etc/systemd/system/openpyn.service", "w+") as service_file:
-        service_file.write(service_text)
-        service_file.close()
+    systemd_service_path = os.path.join(_xdg_config_home, 'systemd', 'user')
+    systemd_service_file = os.path.join(systemd_service_path, 'openpyn.service')
+
+    if not os.path.exists(systemd_service_path):
+        os.makedirs(systemd_service_path)
+    with open(systemd_service_file, 'w') as fp:
+        fp.write(service_text)
 
     logger.notice("The Following config has been saved in openpyn.service. \
 You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
-'sudo systemctl enable openpyn' \n" + service_text)
+'systemctl --user enable openpyn' \n\n" + service_text)
 
-    subprocess.run(["systemctl", "daemon-reload"])
+    subprocess.run(["systemctl", "--user", "daemon-reload"])
     if run:
-        daemon_running = subprocess.call(  # subprocess.run behaves differently
-            ["systemctl", "is-active", "openpyn"],
+        subprocess.call(  # subprocess.run behaves differently
+            ["systemctl", "--user", "is-active", "openpyn"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-        ) == 0
+        )
 
-        if daemon_running:
-            logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
+        logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
-            subprocess.Popen(["systemctl", "restart", "openpyn"])
-        else:
-            logger.notice("Starting Openpyn by running 'systemctl start openpyn'\n\
-To check VPN status, run 'systemctl status openpyn'")
-            subprocess.Popen(["systemctl", "start", "openpyn"])
+        subprocess.Popen(["systemctl", "--user", "restart", "openpyn"])

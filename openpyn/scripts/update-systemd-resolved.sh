@@ -73,6 +73,8 @@ dhcp_settings() {
 }
 
 up() {
+  # echo UP with date but strip timezone info
+  echo "UP $(date '+%T %F')" > ~/.local/share/openpyn/logs/status
   local link="$1"
   shift
   local if_index="$1"
@@ -137,6 +139,8 @@ up() {
 }
 
 down() {
+  # echo DOWN with date but strip timezone info
+  echo "DOWN $(date '+%T %F')" > ~/.local/share/openpyn/logs/status
   local link="$1"
   shift
   local if_index="$1"
