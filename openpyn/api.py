@@ -29,7 +29,7 @@ forgot to flush iptables? (openpyn -x)")
 def get_data_from_api(
         country_code: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
         tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> List:
-
+    country_code = country_code.lower()
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
 
@@ -62,10 +62,22 @@ def list_all_countries() -> None:
 
 
 def get_country_code(full_name: str) -> str:
+    full_name = full_name.lower()
     url = "https://api.nordvpn.com/server"
     json_response = get_json(url)
     for res in json_response:
-        if res["country"].lower() == full_name.lower():
-            code = res["domain"][:2].lower()
+        if res["country"].lower() == full_name:
+            code = res["domain"][:2]
             return code
     raise RuntimeError("Country Name Not Correct")
+
+
+def get_country_name(iso_code: str) -> str:
+    iso_code = iso_code.lower()
+    url = "https://api.nordvpn.com/server"
+    json_response = get_json(url)
+    for res in json_response:
+        if res["domain"][:2] == iso_code:
+            name = res["country"]
+            return name
+    raise RuntimeError("Country Code Not Correct")
