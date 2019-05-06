@@ -3,6 +3,7 @@
 import argparse
 import io
 import logging
+import logging.handlers
 import os
 import shutil
 import subprocess
@@ -249,11 +250,23 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     os.makedirs(log_folder, exist_ok=True)
 
-    # add another rotating handler to log to .log files
-    file_handler = logging.FileHandler(log_folder + "/openpyn.log")
-    file_handler_formatter = logging.Formatter(log_format)
-    file_handler.setFormatter(file_handler_formatter)
-    logger.addHandler(file_handler)
+    # Add another rotating handler to log to .log files
+    # fix permissions if needed
+    for attempt in range(2):
+        try:
+            file_handler = logging.handlers.TimedRotatingFileHandler(
+                log_folder + '/openpyn.log', when='W0', interval=4)
+            file_handler_formatter = logging.Formatter(log_format)
+            file_handler.setFormatter(file_handler_formatter)
+            logger.addHandler(file_handler)
+        except PermissionError:
+            root.verify_root_access(
+                "Root access needed to set permissions of {}/openpyn.log".format(log_folder))
+            subprocess.run("sudo chmod 777 {}".format(log_folder).split())
+            subprocess.run("sudo chmod 666 {}/openpyn.log".format(log_folder).split())
+            subprocess.run("sudo chmod 666 {}/openpyn-notifications.log".format(log_folder).split())
+        else:
+            break
 
     if init:
         try:
@@ -420,7 +433,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             if not test:
                 # ask for and store credentials if not present, skip if "--test"
                 if credentials.check_credentials() is False:
-                    credentials.save_credentials()
+                    logger.error("Credentials not found: Please run 'sudo openpyn --init' first")
 
                 # check if OpenVPN config files exist if not download them, skip if "--test"
                 check_config_files()
@@ -491,9 +504,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     elif server:
         try:
             if not test:
-                # ask for and store credentials if not present, skip if "--test"
+                # ask to store credentials if not present, skip if "--test"
                 if credentials.check_credentials() is False:
-                    credentials.save_credentials()
+                    logger.error("Credentials not found: Please run 'sudo openpyn --init' first")
 
                 # check if OpenVPN config files exist if not download them, skip if "--test"
                 check_config_files()
