@@ -165,6 +165,8 @@ openpyn us -f # Experimental!, Warning, clears IPtables rules!
 openpyn us -f --allow 22 80 443  #only accessible from local network
 ```
 
+-   To allow ports from other ranges use the `--allow-config` or `--allow-config-json` options. More details can be found [here](./docs/allowed-ports-config.md)
+
 -   To quickly connect to a specific server.
 
 ```bash
@@ -307,6 +309,17 @@ optional arguments:
                         INTERNAL IP RANGE. e.g, you can use your PC as
                         SSH, HTTP server for local devices (e.g 192.168.1.*
                         range) by using "openpyn us -f --allow 22 80"
+
+  --allow-config INTERNALLY_ALLOWED_CONFIG
+                        To be used with "f" to allow a complex a complex set
+                        of allow port rules. This option requires a path to a
+                        JSON file that contains the relevent config
+
+  --allow-config-json INTERNALLY_ALLOWED_CONFIG_JSON
+                        To be used with "f" to allow a complex a complex set
+                        of allow port rules. This option requires works the
+                        same as "--allow-config" option but accepts a json
+                        object as a string instead
 
   --update              Fetch the latest config files from nord''s site
 
