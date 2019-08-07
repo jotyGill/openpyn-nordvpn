@@ -674,17 +674,15 @@ falling back to wait of 1 second between pings, pings will be slow")
     else:
         ping_proc_command_list = ["ping", "-c", pings]
 
-
-    for server_specification in better_servers_list:
-        ping_proc_command_list.append(server_specification[0] + ".nordvpn.com")
-
+    for i in better_servers_list:
+        ping_proc_command_list.append(i[0] + ".nordvpn.com")
         # ping_result to append 2  lists into it
         ping_proc_list = []
         ping_result = []
         try:
-            logger.info("pinging server %s", server_specification[0])
+            logger.info("pinging server %s", i[0])
             ping_proc_list.append(
-                [   server_specification,
+                [   i,
                     subprocess.Popen(
                         ping_proc_command_list,
                         stdout=subprocess.PIPE)
@@ -693,7 +691,7 @@ falling back to wait of 1 second between pings, pings will be slow")
 
 
         except subprocess.CalledProcessError:
-            logger.warning("Ping Failed to: %s, excluding it from the list", server_specification[0])
+            logger.warning("Ping Failed to: %s, excluding it from the list", i[0])
             continue
         except KeyboardInterrupt:
             raise SystemExit
@@ -718,7 +716,7 @@ falling back to wait of 1 second between pings, pings will be slow")
             logger.warning("Some packet loss while pinging %s, skipping it", ping_proc[0][0])
             continue
 
-        #some kind of issue with the data structures, not sure how
+
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
         ping_list = ping_string.split("/")
