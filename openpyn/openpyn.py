@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+i#!/usr/bin/env python3
 
 import argparse
 import io
@@ -332,7 +332,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         if internally_allowed_config_json or internally_allowed_config:
             # Override passed config is file is specified
             if internally_allowed_config:
-                internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config) 
+                internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
             if firewall.validate_allowed_ports_json(internally_allowed_config_json):
                 openpyn_options += " --allow-config-json=" + shlex.quote(json.dumps(internally_allowed_config_json, separators=(',', ':')))
             logger.error(openpyn_options)
@@ -600,7 +600,7 @@ def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internall
     if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
         if internally_allowed_config:
             internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
-    
+
         if firewall.validate_allowed_ports_json(internally_allowed_config_json):
             firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
 
@@ -608,7 +608,7 @@ def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internall
     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
     if internally_allowed:
         firewall.internally_allow_ports(network_interfaces, internally_allowed)
-        
+
 
 
 # Filters servers based on the specified criteria.
@@ -669,32 +669,56 @@ def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
         ping_supports_option_i = False
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
-    for i in better_servers_list:
+    if ping_supports_option_i == True:
+        ping_proc_command_list = ["ping", "-n", "-i", ".2", "-c", pings]
+    else:
+        ping_proc_command_list = ["ping", "-c", pings]
+
+
+    for server_specification in better_servers_list:
+        ping_proc_command_list.append(server_specification[0] + ".nordvpn.com")
+
         # ping_result to append 2  lists into it
+        ping_proc_list = []
         ping_result = []
         try:
-            if ping_supports_option_i:
-                ping_proc = subprocess.Popen(
-                    ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
-                    stdout=subprocess.PIPE)
-            else:
-                ping_proc = subprocess.Popen(
-                    ["ping", "-c", pings, i[0] + ".nordvpn.com"],
-                    stdout=subprocess.PIPE)
-            # pipe the output of ping to grep.
-            ping_output = subprocess.check_output(
-                ["grep", "-B", "1", "min/avg/max"], stdin=ping_proc.stdout)
+            logger.info("pinging server %s", server_specification[0])
+            ping_proc_list.append(
+                [   server_specification,
+                    subprocess.Popen(
+                        ping_proc_command_list,
+                        stdout=subprocess.PIPE)
+                ]
+            )
 
-            ping_string = str(ping_output)
-            # logger.debug(ping_string)
-            if "0%" not in ping_string:
-                logger.warning("Some packet loss while pinging %s, skipping it", i[0])
-                continue
+
         except subprocess.CalledProcessError:
-            logger.warning("Ping Failed to: %s, excluding it from the list", i[0])
+            logger.warning("Ping Failed to: %s, excluding it from the list", server_specification[0])
             continue
         except KeyboardInterrupt:
             raise SystemExit
+
+    for ping_proc in ping_proc_list:
+
+        # pipe the output of ping to grep.
+        try:
+            ping_output = subprocess.check_output(
+            ["grep", "-B", "1", "min/avg/max"], stdin=ping_proc[1].stdout)
+        except subprocess.CalledProcessError:
+            logger.warning("Ping Failed to: %s, excluding it from the list", ping_proc[0][0])
+            continue
+        except KeyboardInterrupt:
+            logger.info('KeyboardInterrupt; Shutting down')
+            sys.exit()
+
+
+        ping_string = str(ping_output)
+        # logger.debug(ping_string)
+        if "0%" not in ping_string:
+            logger.warning("Some packet loss while pinging %s, skipping it", ping_proc[0][0])
+            continue
+
+        #some kind of issue with the data structures, not sure how
         ping_string = ping_string[ping_string.find("= ") + 2:]
         ping_string = ping_string[:ping_string.find(" ")]
         ping_list = ping_string.split("/")
@@ -703,9 +727,9 @@ falling back to wait of 1 second between pings, pings will be slow")
         ping_list = list(map(int, ping_list))
 
         if stats:
-            print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = \
+            print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + ping_proc[0][0] + " min/avg/max/mdev = \
 " + Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
-        ping_result.append(i)
+        ping_result.append(ping_proc[0])
         ping_result.append(ping_list)
         # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
