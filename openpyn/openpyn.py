@@ -676,6 +676,7 @@ falling back to wait of 1 second between pings, pings will be slow")
 
     for i in better_servers_list:
         ping_proc_command_list.append(i[0] + ".nordvpn.com")
+        # ping_proc_command_list.extend(["|", "grep", "-B", "1", "min/avg/max"])
         # ping_result to append 2  lists into it
         ping_proc_list = []
         ping_result = []
@@ -698,14 +699,18 @@ falling back to wait of 1 second between pings, pings will be slow")
 
     for ping_proc in ping_proc_list:
         ping_proc.append(ping_proc[1].communicate())
+        logger.info("getting ping output for %s\n%s", ping_proc[0][0], ping_proc[2])
 
 
     for ping_proc in ping_proc_list:
 
         # pipe the output of ping to grep.
         try:
-            ping_output = subprocess.check_output(
+            ping_output = subprocess.Popen(
             ["grep", "-B", "1", "min/avg/max"], stdin=ping_proc[1].stdout)
+            ping_output = ping_output.communicate(ping_proc[2])
+            # ping_output = ping_proc[1].communicate()
+
         except subprocess.CalledProcessError:
             logger.warning("Ping Failed to: %s, excluding it from the list", ping_proc[0][0])
             continue
