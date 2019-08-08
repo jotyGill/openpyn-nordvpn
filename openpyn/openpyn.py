@@ -697,6 +697,10 @@ falling back to wait of 1 second between pings, pings will be slow")
             raise SystemExit
 
     for ping_proc in ping_proc_list:
+        ping_proc.append(ping_proc[1].communicate())
+
+
+    for ping_proc in ping_proc_list:
 
         # pipe the output of ping to grep.
         try:
