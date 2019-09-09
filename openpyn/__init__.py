@@ -9,14 +9,9 @@ __basefilepath__ = os.path.dirname(os.path.abspath(__file__)) + "/"
 
 log_format = "%(asctime)s [%(levelname)s] %(message)s"
 
-try:
-    _xdg_data_home = os.environ['XDG_DATA_HOME']
-except KeyError:
-    _xdg_data_home = os.path.join(os.environ.get('HOME'), '.local', 'share')
-
-ovpn_folder = os.path.join(_xdg_data_home, 'openpyn', 'files')      # .ovpn config files location
-log_folder = os.path.join(_xdg_data_home, 'openpyn', 'logs')      # logs will be saved here
-credentials_file_path = os.path.join(_xdg_data_home, 'openpyn', 'credentials')  # nordvpn username/password
+ovpn_folder = os.path.join(__basefilepath__, "files")  # .ovpn config files location
+log_folder = "/var/log/openpyn"  # logs will be saved here
+credentials_file_path = os.path.join(__basefilepath__, "credentials")  # nordvpn username/password
 
 if sys.platform == "linux":
     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
