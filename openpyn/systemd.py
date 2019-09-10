@@ -1,5 +1,4 @@
 import logging
-import os
 import shutil
 import subprocess
 import sys
@@ -37,7 +36,12 @@ def update_service(openpyn_options: str, run=False) -> None:
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
-    with open("/etc/systemd/system/openpyn.service", "w+") as service_file:
+    systemd_service_path = os.path.join("/", "etc", "systemd", "system")
+    systemd_service_file = os.path.join(systemd_service_path, "openpyn.service")
+
+    if not os.path.exists(systemd_service_path):
+        os.makedirs(systemd_service_path)
+    with open(systemd_service_file, "w+") as service_file:
         service_file.write(service_text)
 
     logger.notice("The Following config has been saved in openpyn.service. \
