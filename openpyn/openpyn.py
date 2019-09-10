@@ -248,7 +248,18 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         logger.error("Please install 'openvpn' first")
         return 1
 
-    os.makedirs(log_folder, exist_ok=True)
+    if init:
+        try:
+            initialise(detected_os, asuswrt_os, openwrt_os)
+            return 0
+        except RuntimeError as e:
+            logger.critical(e)
+            return 1
+
+    # if log folder doesnt exist, exit, "--init" creates it
+    if not os.path.exists(log_folder):
+        raise RuntimeError("Please initialise first by running 'sudo openpyn --init'"
+            ", then start using 'openpyn' without sudo")
 
     # Add another rotating handler to log to .log files
     # fix permissions if needed
@@ -267,14 +278,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             subprocess.run("sudo chmod 666 {}/openpyn-notifications.log".format(log_folder).split())
         else:
             break
-
-    if init:
-        try:
-            initialise(detected_os, asuswrt_os, openwrt_os)
-            return 0
-        except RuntimeError as e:
-            logger.critical(e)
-            return 1
 
     if daemon:
         if detected_os != "linux":
@@ -332,7 +335,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         if internally_allowed_config_json or internally_allowed_config:
             # Override passed config is file is specified
             if internally_allowed_config:
-                internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config) 
+                internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
             if firewall.validate_allowed_ports_json(internally_allowed_config_json):
                 openpyn_options += " --allow-config-json=" + shlex.quote(json.dumps(internally_allowed_config_json, separators=(',', ':')))
             logger.error(openpyn_options)
@@ -600,7 +603,7 @@ def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internall
     if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
         if internally_allowed_config:
             internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
-    
+
         if firewall.validate_allowed_ports_json(internally_allowed_config_json):
             firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
 
@@ -608,7 +611,7 @@ def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internall
     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
     if internally_allowed:
         firewall.internally_allow_ports(network_interfaces, internally_allowed)
-        
+
 
 
 # Filters servers based on the specified criteria.
@@ -710,7 +713,12 @@ falling back to wait of 1 second between pings, pings will be slow")
         # logger.debug(ping_result)
         pinged_servers_list.append(ping_result)
     # sort by ping median average deviation
-    pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
+    if len(pinged_servers_list[0][1]) >= 4:
+        # sort by Ping Avg and Median Deviation
+        pinged_servers_list = sorted(pinged_servers_list, key=lambda item: (item[1][1], item[1][3]))
+    else:
+        # sort by Ping Avg
+        pinged_servers_list = sorted(pinged_servers_list, key=lambda item: item[1][1])
     return pinged_servers_list
 
 
