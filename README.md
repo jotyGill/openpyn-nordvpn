@@ -25,7 +25,7 @@ A python3 script (systemd service as well) to manage openvpn connections. Create
 -   Auto retry if \[soft,auth-failure\] received, auto failover to next best server if connection dies.
 -   NVRAM write support for Asuswrt-merlin
 -   Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
--   Logs stored in '~/.local/share/openpyn/logs/' for information and troubleshooting.
+-   Logs are stored in '/var/log/openpyn/' for information and troubleshooting.
 -   Temporarily disable ipv6 to prevent leakage (when using -f).
 
 ## Demo
@@ -44,14 +44,14 @@ sudo apt install openvpn python3-setuptools python3-pip
 2.  The following python dependencies are needed and will be installed when using pip.
 
 ```bash
-requests colorama coloredlogs verboselogs
+requests colorama coloredlogs verboselogs tqdm jsonschema
 ```
 
 ### Installation Methods
 
 1.  Install openpyn with pip3 (Python=>3.5)
     **Recommended method to get the latest version and receive frequent updates.**
-
+    Do not install with --user switch, as OpenVPN needs to run as sudo and sudo won't be able to locate openpyn.
 ```bash
 sudo python3 -m pip install --upgrade openpyn
 ```
@@ -85,7 +85,7 @@ sudo brew services start openvpn
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 git pull
-python3 -m pip install --upgrade .
+sudo python3 -m pip install --upgrade .
 ```
 
 4.  On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
