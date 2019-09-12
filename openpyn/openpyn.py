@@ -463,46 +463,44 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             country_code = country_code.lower()
 
-            # keep trying to connect to new servers
-            for _ in range(3):
-                better_servers_list = find_better_servers(
-                    country_code, area, max_load, top_servers, tcp, p2p,
-                    dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
-                # if no servers under search criteria
-                if not better_servers_list:
-                    logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
-                    return 1
-                pinged_servers_list = ping_servers(better_servers_list, pings, stats)
-                chosen_servers = choose_best_servers(pinged_servers_list, stats)
+            better_servers_list = find_better_servers(
+                country_code, area, max_load, top_servers, tcp, p2p,
+                dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
+            # if no servers under search criteria
+            if not better_servers_list:
+                logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
+                return 1
+            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
+            chosen_servers = choose_best_servers(pinged_servers_list, stats)
 
-                # connect to chosen_servers, if one fails go to next
-                for aserver in chosen_servers:
-                    if stats:
-                        print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
-                              (Fore.GREEN + aserver + Fore.BLUE) + "\n")
+            # only clear/touch FW Rules if "-f" used, skip if "--test"
+            if force_fw_rules and not test:
+                touch_iptables_rules(chosen_servers, port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
 
-                    # only clear/touch FW Rules if "-f" used, skip if "--test"
-                    if force_fw_rules and not test:
-                        touch_iptables_rules(aserver, port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
+            # connect to chosen_servers, if one fails go to next
+            for aserver in chosen_servers:
+                if stats:
+                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
+                          (Fore.GREEN + aserver + Fore.BLUE) + "\n")
 
-                    if nvram:
-                        check_config_files()
-                        asus.run(aserver, nvram, "All", "adaptive", "Strict", tcp, test)
-                        logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
-                        return 0
+                if nvram:
+                    check_config_files()
+                    asus.run(aserver, nvram, "All", "adaptive", "Strict", tcp, test)
+                    logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
+                    return 0
 
-                    if test:
-                        logger.success(
-                            "Simulation end reached, openpyn would have connected to server: "
-                            + aserver
-                            + " on port: "
-                            + port
-                            + " with 'silent' mode: "
-                            + str(silent).lower()
-                        )
-                        continue
+                if test:
+                    logger.success(
+                        "Simulation end reached, openpyn would have connected to server: "
+                        + aserver
+                        + " on port: "
+                        + port
+                        + " with 'silent' mode: "
+                        + str(silent).lower()
+                    )
+                    continue
 
-                    connect(aserver, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
+                connect(aserver, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -609,9 +607,10 @@ def load_tun_module():
             raise RuntimeError("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
 
 
-def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
+def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
     firewall.clear_fw_rules()
     network_interfaces = get_network_interfaces()
+    vpn_server_ips = []
 
     if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
         if internally_allowed_config:
@@ -619,9 +618,10 @@ def touch_iptables_rules(server: str, port: str, skip_dns_patch: bool, internall
 
         if firewall.validate_allowed_ports_json(internally_allowed_config_json):
             firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
+    for server in chosen_servers:
+        vpn_server_ips.append(get_vpn_server_ip(server, port))
 
-    vpn_server_ip = get_vpn_server_ip(server, port)
-    firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
+    firewall.apply_fw_rules(network_interfaces, vpn_server_ips, skip_dns_patch)
     if internally_allowed:
         firewall.internally_allow_ports(network_interfaces, internally_allowed)
 
@@ -1008,15 +1008,20 @@ def get_network_interfaces() -> List:
 def get_vpn_server_ip(server: str, port: str) -> str:
     # grab the ip address of VPN server from the config file
     vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
-    try:
-        with open(vpn_config_file, 'r') as openvpn_file:
-            for line in openvpn_file:
-                if "remote " in line:
-                    vpn_server_ip = line[7:]
-                    vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
-        return vpn_server_ip
-    except FileNotFoundError:
-        raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
+    for i in range(2):
+        try:
+            with open(vpn_config_file, 'r') as openvpn_file:
+                for line in openvpn_file:
+                    if "remote " in line:
+                        vpn_server_ip = line[7:]
+                        vpn_server_ip = vpn_server_ip[:vpn_server_ip.find(" ")]
+            return vpn_server_ip
+        except FileNotFoundError:
+            logger.notice("VPN configuration file for '{}' doesn't exist. auto downloading config files".format(server))
+            update_config_files()
+            continue
+        else:
+            raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
 
 
 def uses_systemd_resolved() -> bool:

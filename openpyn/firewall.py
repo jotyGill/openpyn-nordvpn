@@ -64,9 +64,8 @@ def do_dns(iface: str, dest: str, what: str) -> None:
         cmd.extend(["-o", iface])
     subprocess.check_call(cmd)
 
+
 # responsibility of update-systemd-resolved script now...
-
-
 def apply_dns_rules():
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     for ndns in NORDVPN_DNS:
@@ -75,7 +74,7 @@ def apply_dns_rules():
     # do_dns(None, "0.0.0.0/0", "DROP")
 
 
-def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch: bool) -> None:
+def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patch: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
 
     # empty the INPUT and OUTPUT chain of any current rules
@@ -112,25 +111,27 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
             print("WARNING: empty {}".format(interface))
             continue
 
-        # allow access to vpn_server_ip
-        subprocess.check_call([
-            "sudo", "iptables",
-            "-A", "OUTPUT",
-            "-o", iname,
-            "-d", vpn_server_ip,
-            "-j", "ACCEPT"
-        ])
+        # Allow currently choosen vpn_server_ips
+        for vpn_server_ip in vpn_server_ips:
+            # allow access to vpn_server_ip
+            subprocess.check_call([
+                "sudo", "iptables",
+                "-A", "OUTPUT",
+                "-o", iname,
+                "-d", vpn_server_ip,
+                "-j", "ACCEPT"
+            ])
 
-        # talk to the vpn_server_ip to connect to it
-        subprocess.check_call([
-            "sudo", "iptables",
-            "-A", "INPUT",
-            "-m", "conntrack",
-            "--ctstate", "ESTABLISHED,RELATED",
-            "-i", iname,
-            "-s", vpn_server_ip,
-            "-j", "ACCEPT"
-        ])
+            # talk to the vpn_server_ip to connect to it
+            subprocess.check_call([
+                "sudo", "iptables",
+                "-A", "INPUT",
+                "-m", "conntrack",
+                "--ctstate", "ESTABLISHED,RELATED",
+                "-i", iname,
+                "-s", vpn_server_ip,
+                "-j", "ACCEPT"
+            ])
 
         # allow access to internal ip range
         # print("internal ip with range", interface[2])
@@ -180,6 +181,8 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List) -
                     "-s", interface[2],
                     "-j", "ACCEPT"
                 ])
+
+
 #Converts the allwed ports config to a series of iptable rules and applies them
 def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: List) -> bool:
 
@@ -193,7 +196,7 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
         "protocol": "tcp",
         "allowed_ip_range": None
     }
-    
+
     #Merge default config with existing config
     allowed_ports_config = [{**DEFAULT_PORT_CONFIG, **port_config} for port_config in allowed_ports_config]
 
@@ -205,10 +208,10 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
 
         if port_config['protocol'] in ['tcp' , 'both']:
             port_protocol_permiatations.append('tcp')
-        
+
         if port_config['protocol'] in ['udp', 'both']:
             port_protocol_permiatations.append('udp')
-        
+
         #Create the flags for the port range / port
         if '-' in str(port_config['port']):
             port_range = port_config['port'].split('-')
@@ -220,19 +223,19 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
             #Skip any tunnel interfaces that might be invalid
             if len(interface) != 3 or "tun" in interface[0]:
                 continue
-            
+
             ip_flag = ''
             ip_ranges = []
-            
+
             if port_config['internal']:
                 ip_ranges.append(interface[2])
-            
+
             if port_config['allowed_ip_range'] != None:
                 if isinstance(port_config['allowed_ip_range'], list):
                     ip_ranges += port_config['allowed_ip_range']
                 else:
                     ip_ranges.append(port_config['allowed_ip_range'])
-                
+
 
             if ip_ranges != []:
                 ip_flag = ' -s '+ ','.join(ip_ranges)
@@ -244,7 +247,8 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
     for rule in ip_table_rules:
         subprocess.call(rule.split(' '))
 
-    return True    
+    return True
+
 
 # Load allowed ports config from path (does not include validation)
 def load_allowed_ports(path_to_allowed_ports: str) -> bool:
@@ -254,7 +258,7 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
     if not os.path.isfile(path_to_allowed_ports) :
         logger.warn("Connot preload allowed ports: file {0} does not exist".format(path_to_allowed_ports))
         return False
-    
+
     try:
         with open(path_to_allowed_ports, 'rt') as file_handle:
             try:
@@ -263,11 +267,12 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
                 logger.error("Failed to decode allowed ports JSON")
                 return False
 
-        
+
     except EnvironmentError as file_read_error:
         logger.error("Connot preload allowed ports: failed to load \"{filename}\" {strerr}".format(filename = file_read_error.filename, strerr=file_read_error.strerror))
 
     return allowed_ports_config
+
 
 #Validates if the allowed ports json is valid before loading it
 def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
@@ -277,7 +282,7 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
         "items": {
             "type": "object",
             "properties": {
-                "port" : { 
+                "port" : {
                     "anyOf": [
                         {
                             "name": "Port number",
@@ -308,7 +313,7 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
                             "uniqueItems": True
                         }
                     ]
-                    
+
                 }
             },
             "required": ["port"]
@@ -320,21 +325,20 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
             }
         }
     }
-    
+
     #Create the config validator
     allowed_ports_config_validator = Draft4Validator(validation_schema)
-    
+
     #If the passed config is not valid enumerate errors and print them in human readable form
     if not allowed_ports_config_validator.is_valid(allowed_ports_config):
-        
+
         error_message = "Errors were raise when validating the allowed ports config:"
         #Retrieve all validation errors yielded in schema
         for validation_error in allowed_ports_config_validator.iter_errors(allowed_ports_config):
             error_message += "\n\nError at root.{0} in config: {1}".format('.'.join([str(part) for part in validation_error.absolute_path]), validation_error.message)
-        
+
         logger.error(error_message)
-        
+
         return False
 
     return True
-            
