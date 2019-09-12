@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import json
 import shlex
@@ -249,6 +250,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         return 1
 
     if init:
+        if not root.verify_running_as_root():
+            logger.error("Option '--init' "
+                "requires sudo access. run 'sudo openpyn --init' instead.")
+            return 1
         try:
             initialise(detected_os, asuswrt_os, openwrt_os)
             return 0
@@ -565,6 +570,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
 
 def initialise(detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
+    if os.path.exists(ovpn_folder):
+        shutil.rmtree(ovpn_folder)
+    os.mkdir(ovpn_folder)
+    os.chmod(ovpn_folder, 0o777)
+
+    os.makedirs(log_folder, exist_ok=True)
+    os.chmod(log_folder, 0o777)
+
     update_config_files()
     credentials.save_credentials()
     if detected_os == "linux":
@@ -787,11 +800,18 @@ def kill_management_client() -> None:
 
 
 def update_config_files() -> None:
+    # temporary folder to download files in and change permissions to 666
+    temp_folder = tempfile.mkdtemp()
+
     url = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
     _, filename = url.rsplit("/", maxsplit=1)
 
-    r = requests.head(url, stream=True)
-    total = int(r.headers["content-length"])
+    try:
+        r = requests.head(url, stream=True)
+        total = int(r.headers["content-length"])
+    except requests.exceptions.RequestException:
+        raise RuntimeError("Error while connecting to {}, Check Your Network Connection. \
+forgot to flush iptables? (openpyn -x)".format(url))
 
     last_modified = r.headers["last-modified"]
     last_update_path = os.path.join(ovpn_folder, "last_update")
@@ -818,11 +838,61 @@ def update_config_files() -> None:
 
     with tqdm(total=total, unit="B", unit_scale=True, desc="Extracting {}".format(filename)) as pbar:
         for file in z.infolist():
-            z.extract(file, path=ovpn_folder)
+            z.extract(file, path=temp_folder)
             pbar.update(file.file_size)
+
+    # change dir permissions so non root can delete/write them
+    for root, dirs, files in os.walk(temp_folder):
+        for dir in dirs:
+            os.chmod(os.path.join(root, dir), 0o777)
+        for file in files:
+            # os.chmod(os.path.join(root, file), 0o666)
+            pass
+
+    # remove dirs, because non-root can't chmod if files/dirs were created by root
+    subprocess.run(["rm", "-rf", os.path.join(ovpn_folder, "ovpn_tcp")])
+    subprocess.run(["rm", "-rf", os.path.join(ovpn_folder, "ovpn_udp")])
+
+    recusive_copy(temp_folder, ovpn_folder, 0o777)
 
     with open(os.path.join(ovpn_folder, "last_update"), 'w') as fp:
         fp.write(last_modified)
+    os.chmod(os.path.join(ovpn_folder, "last_update"), 0o666)
+
+    shutil.rmtree(temp_folder)
+
+
+# Impliments recusive copy in python
+def recusive_copy(source_path, destination_path, folder_permission):
+    for dirpath, dirnames, filenames in os.walk(source_path):
+        for dirname in dirnames:
+            pass
+            # src_folder_path = os.path.join(dirpath, dirname)
+            # dst_path = os.path.join(prof, dirname)
+        for filename in filenames:
+            src_file_path = os.path.join(dirpath, filename)
+            src_list = list(Path(src_file_path).parts)
+            # remove first element '/' from the list
+            src_list.pop(0)
+            # find index of base folder in order to extract subfolder paths
+            # these subfolder paths will be created in dest location then appended to
+            # the full path of files ~/.mozilla/firefox/TEST/"extensions/uBlock0@raymondhill.net.xpi"
+            base_folder_ends = len(list(Path(source_path).parts)) - 1
+
+            # extract section after 'profile' out of '/home/user/privacy-fighter/profile/extensions/ext.xpi'
+            src_list = src_list[base_folder_ends:]
+
+            # now src_file would be e.g extensions/ext.xpi
+            src_file = Path(*src_list)
+
+            dst_file_path = os.path.join(destination_path, src_file)
+            # print("file : ", src_file_path, dst_file_path)
+            # print("Copying: ", src_file)
+            # create parent directory
+            if not os.path.exists(os.path.dirname(dst_file_path)):
+                os.makedirs(os.path.dirname(dst_file_path))
+                os.chmod(os.path.dirname(dst_file_path), folder_permission)
+            shutil.copy(src_file_path, dst_file_path)
 
 
 # Lists information about servers under the given criteria.
@@ -907,13 +977,7 @@ its config files (In which case run 'sudo openpyn --update')")
 
 def check_config_files() -> None:
     if not os.path.exists(ovpn_folder):
-        os.mkdir(ovpn_folder)
-
-    if len(os.listdir(ovpn_folder)) < 3:
-        logger.notice("Running openpyn for the first time? running 'openpyn --update' for you :)")
-        time.sleep(5)
-        # download the config files
-        update_config_files()
+        raise RuntimeError("please run 'sudo openpyn --init' first. {} not found".format(ovpn_folder))
 
 
 def get_network_interfaces() -> List:
