@@ -20,8 +20,8 @@ def get_json(url) -> Dict:
         raise RuntimeError("Cannot GET the JSON from nordvpn.com, Manually Specify a Server \
 using '-s' for example '-s au10'")
     except requests.exceptions.RequestException:
-        raise RuntimeError("There was an ambiguous exception, Check Your Network Connection. \
-forgot to flush iptables? (openpyn -x)")
+        raise RuntimeError("Error while connecting to {}, Check Your Network Connection. \
+forgot to flush iptables? (openpyn -x)".format(url))
     return json_response
 
 
