@@ -22,10 +22,8 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options: str, run=False) -> None:
-    if "-f" in openpyn_options or "--force-fw-rules" in openpyn_options:
-        kill_option = " --kill-flush"
-    else:
-        kill_option = " --kill"
+    # if '-f' is used, you'll need to manually clear the killswitch with 'openpyn -x'
+    kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
     openpyn_location = shutil.which("openpyn")
