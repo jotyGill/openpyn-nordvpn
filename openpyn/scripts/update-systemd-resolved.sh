@@ -28,7 +28,6 @@
 # Define what needs to be called via DBus
 DBUS_DEST="org.freedesktop.resolve1"
 DBUS_NODE="/org/freedesktop/resolve1"
-PATH="$PATH:/usr/sbin"
 
 SCRIPT_NAME="${BASH_SOURCE[0]##*/}"
 

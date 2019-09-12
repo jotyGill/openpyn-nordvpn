@@ -20,21 +20,12 @@ if sys.platform == "linux":
         __data_files__ = [("/opt/etc/init.d", ["./openpyn/S23openpyn"])]
 
 
-# import gc
-# print("\n".join(sorted({attrname for item in gc.get_objects() for attrname in dir(item) if attrname.startswith("__")})))
-#
-# print(__basefilepath__)
-# print(__build_class__)
-# print(__builtins__)
-# print(__data_files__)
-# print(__debug__)
-# print(__doc__)
-# print(__file__)
-# print(__import__)
-# print(__license__)
-# print(__loader__)
-# print(__name__)
-# print(__package__)
-# print(__path__)
-# print(__spec__)
-# print(__version__)
+# locally modify the PATH variable, to get around issues on some distros
+def add_to_path(bin_path):
+    # add pathseperator i.e ":"
+    bin_path_str = os.pathsep + bin_path
+    if bin_path_str not in os.environ["PATH"]:
+        os.environ["PATH"] += bin_path_str
+
+add_to_path("/usr/sbin")
+add_to_path("/sbin")
