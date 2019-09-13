@@ -136,7 +136,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
     parser.add_argument(
-        '--status', dest='last_status', help='Show last change in connection status', action='store_true')
+        '--status', dest='show_status', help='Show last change in connection status', action='store_true')
+    parser.add_argument(
+        '--stats', dest='show_stats', help='Show openvpn connection stats', action='store_true')
     return parser.parse_args(argv[1:])
 
 
@@ -149,7 +151,7 @@ def main() -> bool:
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.internally_allowed_config, args.internally_allowed_config_json, args.skip_dns_patch,
-        args.silent, args.nvram, args.openvpn_options, args.location, args.last_status)
+        args.silent, args.nvram, args.openvpn_options, args.location, args.show_status, args.show_stats)
     return return_code
 
 
@@ -159,7 +161,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
-        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, last_status: bool) -> bool:
+        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, show_status: bool,
+        show_stats: bool) -> bool:
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -400,12 +403,20 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.critical(e)
             return 1
 
-    elif last_status:
+    elif show_status:
         try:
             print_status()
         except RuntimeError as e:
             logger.critical(e)
             return 1
+
+    elif show_stats:
+        try:
+            print_stats()
+        except RuntimeError as e:
+            logger.critical(e)
+            return 1
+
 
     # a hack to list all countries and their codes when no arg supplied with "-l"
     elif list_servers != "nope":      # means "-l" supplied
@@ -591,13 +602,36 @@ def initialise(detected_os: str, asuswrt_os: bool, openwrt_os: bool) -> None:
 
 def print_status():
     try:
-        subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
-        # when it returns "0", proceed
-        with open("{}/status".format(log_folder), "r") as status_file:
-            print(status_file.readline().rstrip())
+        ps = subprocess.check_output(["pgrep", "openpyn"],
+            stderr=subprocess.DEVNULL).decode(sys.stdout.encoding).strip().split()
+        if len(ps) > 1: # first is the current process
+            # when it returns "0", proceed
+            with open("{}/status".format(log_folder), "r") as status_file:
+                print(status_file.readline().rstrip())
+        else:
+            raise RuntimeError("'openpyn' is not running")
     except subprocess.CalledProcessError:
-        # when Exception, the openpyn-management_processes issued non 0 result, "not found"
-        raise RuntimeError("'openpyn-management' is not running")
+        # when check_output issued non 0 result, "not found"
+        raise RuntimeError("command 'pgrep' not found")
+    except FileNotFoundError:
+        raise RuntimeError("{}/status not found".format(log_folder))
+
+
+def print_stats():
+    try:
+        ps = subprocess.check_output(["pgrep", "openpyn"],
+            stderr=subprocess.DEVNULL).decode(sys.stdout.encoding).strip().split()
+        if len(ps) > 1: # first is the current process
+            # when it returns "0", proceed
+            with open("{}/openvpn-status".format(log_folder), "r") as status_file:
+                print(status_file.read())
+        else:
+            raise RuntimeError("'openpyn' is not running")
+    except subprocess.CalledProcessError:
+        # when check_output issued non 0 result, "not found"
+        raise RuntimeError("command 'pgrep' not found")
+    except FileNotFoundError:
+        raise RuntimeError("{}/openvpn-status not found".format(log_folder))
 
 
 def load_tun_module():
@@ -608,7 +642,6 @@ def load_tun_module():
 
 
 def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
-    firewall.clear_fw_rules()
     network_interfaces = get_network_interfaces()
     vpn_server_ips = []
 
