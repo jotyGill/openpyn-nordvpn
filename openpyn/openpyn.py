@@ -1,4 +1,4 @@
-i#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import argparse
 import io
@@ -670,12 +670,12 @@ def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
     if ping_supports_option_i == True:
-        ping_proc_command_list = ["ping", "-n", "-i", ".2", "-c", pings]
+        ping_proc_command_list = ["ping", "-n", "-i", ".2", "-c", pings, "dns_placeholder"]
     else:
-        ping_proc_command_list = ["ping", "-c", pings]
+        ping_proc_command_list = ["ping", "-c", pings, "dns_placeholder"]
 
     for i in better_servers_list:
-        ping_proc_command_list.append(i[0] + ".nordvpn.com")
+        ping_proc_command_list[1] = i[0] + ".nordvpn.com"
         # ping_proc_command_list.extend(["|", "grep", "-B", "1", "min/avg/max"])
         # ping_result to append 2  lists into it
         ping_proc_list = []
@@ -715,8 +715,7 @@ falling back to wait of 1 second between pings, pings will be slow")
             logger.warning("Ping Failed to: %s, excluding it from the list", ping_proc[0][0])
             continue
         except KeyboardInterrupt:
-            logger.info('KeyboardInterrupt; Shutting down')
-            sys.exit()
+            raise SystemExit
 
 
         ping_string = str(ping_output)
