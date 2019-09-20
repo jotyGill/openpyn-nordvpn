@@ -17,6 +17,8 @@ from email.utils import parsedate
 from pathlib import Path
 from typing import List, Set
 
+from time import sleep
+
 import coloredlogs
 import requests
 import verboselogs
@@ -77,6 +79,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '-p', '--pings', type=str, default="3", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=3')
+    parser.add_argument(
+        '-S', '--sequential', help='specify whether to send pings to all servers one after the other, \
+        if this switch is not set, pings will be sent to all servers in parallel, DEFAULT=False', action='store_true')
     parser.add_argument(
         '-k', '--kill', help='Kill any running OpenVPN process, very useful \
         to kill openpyn process running in background with "-d" switch', action='store_true')
@@ -146,7 +151,7 @@ def main() -> bool:
     args = parse_args(sys.argv)
     return_code = run(
         args.init, args.server, args.country_code, args.country, args.area, args.tcp,
-        args.daemon, args.max_load, args.top_servers, args.pings,
+        args.daemon, args.max_load, args.top_servers, args.pings, args.sequential,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
@@ -158,7 +163,7 @@ def main() -> bool:
 # run openpyn
 # pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
-        max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
+        max_load: int, top_servers: int, pings: str, sequential: bool, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
         skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, show_status: bool,
@@ -481,7 +486,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             if not better_servers_list:
                 logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
                 return 1
-            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
+            pinged_servers_list = ping_servers(better_servers_list, pings, sequential, stats)
             chosen_servers = choose_best_servers(pinged_servers_list, stats)
 
             # only clear/touch FW Rules if "-f" used, skip if "--test"
@@ -707,7 +712,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 # Pings servers with the specified no of "ping",
 # Returns a sorted list by ping median average deviation
-def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
+def ping_servers(better_servers_list: List, pings: str, sequential: bool, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
@@ -718,46 +723,64 @@ def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
         ping_supports_option_i = False
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
-    for i in better_servers_list:
-        # ping_result to append 2  lists into it
-        ping_result = []
-        try:
-            if ping_supports_option_i:
-                ping_proc = subprocess.Popen(
-                    ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
-                    stdout=subprocess.PIPE)
-            else:
-                ping_proc = subprocess.Popen(
-                    ["ping", "-c", pings, i[0] + ".nordvpn.com"],
-                    stdout=subprocess.PIPE)
-            # pipe the output of ping to grep.
-            ping_output = subprocess.check_output(
-                ["grep", "-B", "1", "min/avg/max"], stdin=ping_proc.stdout)
+    if ping_supports_option_i == True:
+        ping_subprocess_command = ["ping", "-n", "-i", ".2", "-c", pings, "dns_placeholder"]
+    else:
+        ping_subprocess_command = ["ping", "-c", pings, "dns_placeholder"]
 
-            ping_string = str(ping_output)
-            # logger.debug(ping_string)
-            if "0%" not in ping_string:
-                logger.warning("Some packet loss while pinging %s, skipping it", i[0])
-                continue
+    ping_subprocess_list    = []
+
+    for server_spec in better_servers_list:
+        ping_subprocess_command[-1] = server_spec[0] + ".nordvpn.com"
+
+        try:
+            ping_process = subprocess.Popen(ping_subprocess_command             , stdout=subprocess.PIPE)
+            grep_process = subprocess.Popen(["grep", "-B", "1", "min/avg/max"]  , stdin =ping_process.stdout, stdout=subprocess.PIPE)
+
+            if stats:
+                print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + server_spec[0].ljust(7) )
+
+            ping_subprocess = [ server_spec, grep_process ]
+            if sequential:
+                ping_subprocess.append(grep_process.communicate())
+            else:
+                sleep(0.01)
+            ping_subprocess_list.append(ping_subprocess)
+
         except subprocess.CalledProcessError:
-            logger.warning("Ping Failed to: %s, excluding it from the list", i[0])
+            logger.warning("Ping Failed to: %s, excluding it from the list", server_spec[0])
             continue
         except KeyboardInterrupt:
             raise SystemExit
-        ping_string = ping_string[ping_string.find("= ") + 2:]
-        ping_string = ping_string[:ping_string.find(" ")]
-        ping_list = ping_string.split("/")
-        # change str values in ping_list to ints
-        ping_list = list(map(float, ping_list))
-        ping_list = list(map(int, ping_list))
 
-        if stats:
-            print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + i[0] + " min/avg/max/mdev = \
-" + Fore.GREEN + str(ping_list), Fore.BLUE + "\n")
-        ping_result.append(i)
-        ping_result.append(ping_list)
-        # logger.debug(ping_result)
-        pinged_servers_list.append(ping_result)
+    for ping_subprocess in ping_subprocess_list:
+        if not sequential:
+            ping_subprocess.append(ping_subprocess[1].communicate())
+
+        ping_output = ping_subprocess[2][0]
+
+        # logger.info("openpyn: ping output for %s\n%s", ping_subprocess[0][0], ping_output)
+
+        ping_string = str(ping_output)
+        ping_result = []
+        # logger.debug(ping_string)
+        if "0%" not in ping_string:
+            logger.warning("Some packet loss while pinging %s, skipping it", ping_subprocess[0][0])
+        else:
+            ping_string = ping_string[ping_string.find("= ") + 2:]
+            ping_string = ping_string[:ping_string.find(" ")]
+            ping_list = ping_string.split("/")
+            # change str values in ping_list to ints
+            ping_list = list(map(float, ping_list))
+            ping_list = list(map(int, ping_list))
+
+            if stats:
+                print(Style.BRIGHT + Fore.BLUE + "Respond Server " + ping_subprocess[0][0].ljust(7) + " min/avg/max/mdev = \
+    " + Fore.GREEN + str(ping_list), Fore.BLUE + "")
+            ping_result.append(ping_subprocess[0])
+            ping_result.append(ping_list)
+            # logger.debug(ping_result)
+            pinged_servers_list.append(ping_result)
     # sort by ping median average deviation
     if len(pinged_servers_list[0][1]) >= 4:
         # sort by Ping Avg and Median Deviation
