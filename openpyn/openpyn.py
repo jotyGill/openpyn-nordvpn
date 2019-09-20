@@ -728,15 +728,15 @@ falling back to wait of 1 second between pings, pings will be slow")
 
     ping_subprocess_list    = []
 
+    if stats:
+        print(Style.BRIGHT + Fore.BLUE + "Sending Pings To Servers\n")
+
     for server_spec in better_servers_list:
         ping_subprocess_command[-1] = server_spec[0] + ".nordvpn.com"
 
         try:
             ping_process = subprocess.Popen(ping_subprocess_command             , stdout=subprocess.PIPE)
             grep_process = subprocess.Popen(["grep", "-B", "1", "min/avg/max"]  , stdin =ping_process.stdout, stdout=subprocess.PIPE)
-
-            if stats:
-                print(Style.BRIGHT + Fore.BLUE + "Pinging Server " + server_spec[0].ljust(7) )
 
             ping_subprocess = [ server_spec, grep_process ]
             if sequential:
@@ -773,8 +773,8 @@ falling back to wait of 1 second between pings, pings will be slow")
             ping_list = list(map(int, ping_list))
 
             if stats:
-                print(Style.BRIGHT + Fore.BLUE + "Respond Server " + ping_subprocess[0][0].ljust(7) + " min/avg/max/mdev = \
-    " + Fore.GREEN + str(ping_list), Fore.BLUE + "")
+                print(Style.BRIGHT + Fore.BLUE + "Ping Resonse From " + ping_subprocess[0][0].ljust(7) +
+                        " min/avg/max/mdev = " + Fore.GREEN + str(ping_list), Fore.BLUE + "")
             ping_result.append(ping_subprocess[0])
             ping_result.append(ping_list)
             # logger.debug(ping_result)
@@ -798,8 +798,8 @@ def choose_best_servers(best_servers: List, stats: bool) -> List:
         best_servers_names.append(i[0][0])
 
     if stats:
-        print("Top " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with Best Ping Are: \
-" + Fore.GREEN + str(best_servers_names) + Fore.BLUE)
+        print("\nTop " + Fore.GREEN + str(len(best_servers)) + Fore.BLUE + " Servers with Best Ping Are: "
+                + Fore.GREEN + str(best_servers_names) + Fore.BLUE)
         print(Style.RESET_ALL)
     return best_servers_names
 
