@@ -474,6 +474,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             country_code = country_code.lower()
 
+            # if '-f' supplied, clear_fw_rules first
+            if force_fw_rules and not test:
+                firewall.clear_fw_rules()
+
             better_servers_list = find_better_servers(
                 country_code, area, max_load, top_servers, tcp, p2p,
                 dedicated, double_vpn, tor_over_vpn, anti_ddos, netflix, location, stats)
@@ -543,7 +547,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # only clear/touch FW Rules if "-f" used, skip if "--test"
             if force_fw_rules and not test:
-                touch_iptables_rules(server, port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
+                touch_iptables_rules([server], port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
 
             if nvram:
                 check_config_files()
