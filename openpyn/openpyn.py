@@ -17,8 +17,6 @@ from email.utils import parsedate
 from pathlib import Path
 from typing import List, Set
 
-from time import sleep
-
 import coloredlogs
 import requests
 import verboselogs
@@ -744,7 +742,7 @@ falling back to wait of 1 second between pings, pings will be slow")
             if sequential:
                 ping_subprocess.append(grep_process.communicate())
             else:
-                sleep(0.01)
+                time.sleep(0.02)
             ping_subprocess_list.append(ping_subprocess)
 
         except subprocess.CalledProcessError:
