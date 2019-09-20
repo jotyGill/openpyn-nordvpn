@@ -75,8 +75,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
          servers to choose from the NordVPN\'s server list for the given country, these will be \
          pinged, DEFAULT=10')
     parser.add_argument(
-        '-p', '--pings', type=str, default="3", help='Specify number of pings \
-        to be sent to each server to determine quality, DEFAULT=3')
+        '-p', '--pings', type=str, default="5", help='Specify number of pings \
+        to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
         '-S', '--sequential', help='specify whether to send pings to all servers one after the other, \
         if this switch is not set, pings will be sent to all servers in parallel, DEFAULT=False', action='store_true')
