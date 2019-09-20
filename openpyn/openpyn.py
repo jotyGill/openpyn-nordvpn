@@ -78,9 +78,6 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '-p', '--pings', type=str, default="5", help='Specify number of pings \
         to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
-        '-S', '--sequential', help='specify whether to send pings to all servers one after the other, \
-        if this switch is not set, pings will be sent to all servers in parallel, DEFAULT=False', action='store_true')
-    parser.add_argument(
         '-k', '--kill', help='Kill any running OpenVPN process, very useful \
         to kill openpyn process running in background with "-d" switch', action='store_true')
     parser.add_argument(
@@ -149,7 +146,7 @@ def main() -> bool:
     args = parse_args(sys.argv)
     return_code = run(
         args.init, args.server, args.country_code, args.country, args.area, args.tcp,
-        args.daemon, args.max_load, args.top_servers, args.pings, args.sequential,
+        args.daemon, args.max_load, args.top_servers, args.pings,
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
@@ -161,7 +158,7 @@ def main() -> bool:
 # run openpyn
 # pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
-        max_load: int, top_servers: int, pings: str, sequential: bool, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
+        max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
         skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, show_status: bool,
@@ -484,7 +481,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             if not better_servers_list:
                 logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
                 return 1
-            pinged_servers_list = ping_servers(better_servers_list, pings, sequential, stats)
+            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
             chosen_servers = choose_best_servers(pinged_servers_list, stats)
 
             # only clear/touch FW Rules if "-f" used, skip if "--test"
@@ -710,7 +707,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 # Pings servers with the specified no of "ping",
 # Returns a sorted list by ping median average deviation
-def ping_servers(better_servers_list: List, pings: str, sequential: bool, stats: bool) -> List:
+def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
@@ -739,10 +736,7 @@ falling back to wait of 1 second between pings, pings will be slow")
             grep_process = subprocess.Popen(["grep", "-B", "1", "min/avg/max"]  , stdin =ping_process.stdout, stdout=subprocess.PIPE)
 
             ping_subprocess = [ server_spec, grep_process ]
-            if sequential:
-                ping_subprocess.append(grep_process.communicate())
-            else:
-                time.sleep(0.02)
+            time.sleep(0.02)    # needs to spawn Popen process
             ping_subprocess_list.append(ping_subprocess)
 
         except subprocess.CalledProcessError:
@@ -752,8 +746,7 @@ falling back to wait of 1 second between pings, pings will be slow")
             raise SystemExit
 
     for ping_subprocess in ping_subprocess_list:
-        if not sequential:
-            ping_subprocess.append(ping_subprocess[1].communicate())
+        ping_subprocess.append(ping_subprocess[1].communicate())
 
         ping_output = ping_subprocess[2][0]
 
