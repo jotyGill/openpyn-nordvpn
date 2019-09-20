@@ -84,7 +84,3 @@ def test_connect_pings():
 def test_connect_parallel():
     with mock.patch('sys.argv', ['openpyn', "de", "--test"]):
         assert openpyn.main() == 0
-
-def test_connect_parallel():
-    with mock.patch('sys.argv', ['openpyn', "de", "-S", "--test"]):
-        assert openpyn.main() == 0
