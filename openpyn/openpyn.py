@@ -491,11 +491,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             # only clear/touch FW Rules if "-f" used, skip if "--test"
             if force_fw_rules and not test:
                 touch_iptables_rules(chosen_servers, port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
-
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 if stats:
-                    print(Style.BRIGHT + Fore.BLUE + "Out of the Best Available Servers, Chose",
+                    print(Style.BRIGHT + Fore.BLUE + "\nOut of the Best Available Servers, Chose",
                           (Fore.GREEN + aserver + Fore.BLUE) + "\n")
 
                 if nvram:
@@ -648,19 +647,21 @@ def load_tun_module():
 def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
     network_interfaces = get_network_interfaces()
     vpn_server_ips = []
+    firewall.flush_input_output()
 
-    if (internally_allowed_config or internally_allowed_config_json) and internally_allowed:
+    if (internally_allowed_config or internally_allowed_config_json):
         if internally_allowed_config:
             internally_allowed_config_json = firewall.load_allowed_ports(internally_allowed_config)
 
         if firewall.validate_allowed_ports_json(internally_allowed_config_json):
             firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
+    elif internally_allowed:
+        firewall.internally_allow_ports(network_interfaces, internally_allowed)
+
     for server in chosen_servers:
         vpn_server_ips.append(get_vpn_server_ip(server, port))
 
     firewall.apply_fw_rules(network_interfaces, vpn_server_ips, skip_dns_patch)
-    if internally_allowed:
-        firewall.internally_allow_ports(network_interfaces, internally_allowed)
 
 
 
