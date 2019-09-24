@@ -50,6 +50,14 @@ NORDVPN_DNS = [
 ]
 
 
+# flush input and output iptables rules.
+def flush_input_output() -> None:
+    root.verify_root_access("Root access needed to modify 'iptables' rules")
+    logger.info("Flushing ALL INPUT and OUTPUT Rules")
+    subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
+    subprocess.call(["sudo", "iptables", "-F", "INPUT"])
+
+
 def do_dns(iface: str, dest: str, what: str) -> None:
     # for pp in ("udp", "tcp"):
     pp = "udp"
@@ -76,10 +84,6 @@ def apply_dns_rules():
 
 def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patch: bool) -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
-
-    # empty the INPUT and OUTPUT chain of any current rules
-    subprocess.check_call(["sudo", "iptables", "-F", "OUTPUT"])
-    subprocess.check_call(["sudo", "iptables", "-F", "INPUT"])
 
     apply_dns_rules()
     logger.notice("Temporarily disabling ipv6 to prevent leakage")
