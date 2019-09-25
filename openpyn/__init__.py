@@ -31,3 +31,4 @@ add_to_path("/usr/sbin")        # for Fedora/Debian
 add_to_path("/sbin")            # for Debain Buster
 add_to_path("/usr/local/bin")   # for openpyn-management on Fedora
 add_to_path("/usr/local/sbin")  # for openpyn-management on MacOS
+add_to_path("/usr/local/Cellar")    # for openvpn bin in MacOS
