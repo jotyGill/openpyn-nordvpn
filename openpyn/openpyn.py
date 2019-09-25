@@ -923,21 +923,23 @@ def recusive_copy(source_path, destination_path, folder_permission):
             # dst_path = os.path.join(prof, dirname)
         for filename in filenames:
             src_file_path = os.path.join(dirpath, filename)
-            src_list = list(Path(src_file_path).parts)
+            # src_list = list(Path(src_file_path).parts)
+            src_list = src_file_path.split("/")
             # remove first element '/' from the list
             src_list.pop(0)
             # find index of base folder in order to extract subfolder paths
             # these subfolder paths will be created in dest location then appended to
             # the full path of files ~/.mozilla/firefox/TEST/"extensions/uBlock0@raymondhill.net.xpi"
-            base_folder_ends = len(list(Path(source_path).parts)) - 1
+            # base_folder_ends = len(list(Path(source_path).parts)) - 1
+            base_folder_ends = len(source_path.split("/")) - 1
 
             # extract section after 'profile' out of '/home/user/privacy-fighter/profile/extensions/ext.xpi'
             src_list = src_list[base_folder_ends:]
 
             # now src_file would be e.g extensions/ext.xpi
-            src_file = Path(*src_list)
+            # src_file = Path(*src_list)
 
-            dst_file_path = os.path.join(destination_path, str(src_file))
+            dst_file_path = os.path.join(destination_path, *src_list) #str(src_file))
             # print("file : ", src_file_path, dst_file_path)
             # print("Copying: ", src_file)
             # create parent directory
