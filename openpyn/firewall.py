@@ -187,6 +187,20 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List) -
                 ])
 
 
+# Open all ports for devices in the local network
+def internally_allow_all(interfaces_details: List) -> None:
+    for interface in interfaces_details:
+        # if interface is active with an IP in it, and not "tun*"
+        if len(interface) == 3 and "tun" not in interface[0]:
+            subprocess.call([
+                "sudo", "iptables",
+                "-A", "INPUT",
+                "-i", interface[0],
+                "-s", interface[2],
+                "-j", "ACCEPT"
+            ])
+
+
 #Converts the allwed ports config to a series of iptable rules and applies them
 def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: List) -> bool:
 
