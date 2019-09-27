@@ -937,7 +937,7 @@ def recusive_copy(source_path, destination_path, folder_permission):
             # now src_file would be e.g extensions/ext.xpi
             src_file = Path(*src_list)
 
-            dst_file_path = os.path.join(destination_path, src_file)
+            dst_file_path = os.path.join(destination_path, str(src_file))
             # print("file : ", src_file_path, dst_file_path)
             # print("Copying: ", src_file)
             # create parent directory
