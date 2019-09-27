@@ -45,38 +45,19 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         (using current data from NordVPN website) with lowest latency from you. Find NordVPN \
         servers in a given country or city. Tunnels DNS traffic through the VPN which normally \
         (when using OpenVPN with NordVPN) goes through your ISP's DNS (still unencrypted, even if \
-        you use a third-party DNS servers) and completely compromises Privacy!", allow_abbrev=False)
+        you use a third-party DNS servers)", allow_abbrev=False)
     parser.add_argument(
         '-v', '--version', action='version', version="openpyn " + __version__)
-    parser.add_argument(
-        '--init', help='Initialise, store/change credentials, download/update VPN config files,\
-        needs root "sudo" access.', action='store_true')
-    parser.add_argument(
-        '-s', '--server', type=str, help='server name, i.e. ca64 or au10')
-    parser.add_argument(
-        '--tcp', help='use port TCP-443 instead of the default UDP-1194', action='store_true')
-    parser.add_argument(
-        '-c', '--country-code', type=str, help='Specify country code with 2 letters, i.e. au')
     # use nargs='?' to make a positional arg optional
     parser.add_argument(
         'country', nargs='?', help='Country code can also be specified without "-c,"i.e. "openpyn au"')
     parser.add_argument(
-        '-a', '--area', type=str, help='Specify area, city name or state e.g \
-        "openpyn au -a victoria" or "openpyn au -a \'sydney\'"')
+        '--init', help='Initialise, store/change credentials, download/update VPN config files,\
+        needs root "sudo" access.', action='store_true')
     parser.add_argument(
         '-d', '--daemon', help='Update and start systemd service openpyn.service,\
         running it as a background process, to check status "systemctl status openpyn"',
         action='store_true')
-    parser.add_argument(
-        '-m', '--max-load', type=int, default=70, help='Specify load threshold, \
-        rejects servers with more load than this, DEFAULT=70')
-    parser.add_argument(
-        '-t', '--top-servers', type=int, default=10, help='Specify the number of top \
-         servers to choose from the NordVPN\'s server list for the given country, these will be \
-         pinged, DEFAULT=10')
-    parser.add_argument(
-        '-p', '--pings', type=str, default="5", help='Specify number of pings \
-        to be sent to each server to determine quality, DEFAULT=5')
     parser.add_argument(
         '-k', '--kill', help='Kill any running OpenVPN process, very useful \
         to kill openpyn process running in background with "-d" switch', action='store_true')
@@ -88,44 +69,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '--skip-dns-patch', dest='skip_dns_patch', help='Skips DNS patching,\
         leaves /etc/resolv.conf untouched. (Not recommended)', action='store_true')
     parser.add_argument(
-        '-f', '--force-fw-rules', help='Enforce firewall rules to drop traffic when tunnel breaks\
-        , force disable DNS traffic going to any other interface', action='store_true')
-    parser.add_argument(
-        '--allow', dest='internally_allowed', help='To be used with "f" to allow ports \
-        but ONLY to INTERNAL IP RANGE. for example: you can use your PC as SSH, HTTP server \
-        for local devices (i.e. 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+'),
-    parser.add_argument(
-        '--allow-config', dest='internally_allowed_config', help='To be used with "f" to allow a complex \
-        a complex set of allow port rules. This option requires a path to a JSON file that contains the \
-        relevent config'
-    ),
-    parser.add_argument(
-        '--allow-config-json', dest='internally_allowed_config_json', help='To be used with "f" to allow a complex \
-        a complex set of allow port rules. This option requires works the same as "--allow-config" option \
-        but accepts a json object as a string instead'
-    ),
-    parser.add_argument(
-        '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
-        help='If no argument given prints all Country Names and Country Codes; \
-        If country code supplied ("-l us"): Displays all servers in that given\
-        country with their current load and OpenVPN support status. Works in \
-        conjunction with (-a | --area, and server types (--p2p, --tor) \
-        e.g "openpyn -l it --p2p --area milano"')
-    parser.add_argument(
         '--silent', help='Do not try to send notifications. Use if "libnotify" or "gi"\
         are not available. Automatically used in systemd service file', action='store_true')
-    parser.add_argument(
-        '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
-    parser.add_argument(
-        '--dedicated', help='Only look for servers with "Dedicated IP" support', action='store_true')
-    parser.add_argument(
-        '--tor', dest='tor_over_vpn', help='Only look for servers with "Tor Over VPN" support', action='store_true')
-    parser.add_argument(
-        '--double', dest='double_vpn', help='Only look for servers with "Double VPN" support', action='store_true')
-    parser.add_argument(
-        '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Obfuscated" support', action='store_true')
-    parser.add_argument(
-        '--netflix', dest='netflix', help='Only look for servers that are optimised for "Netflix"', action='store_true')
     parser.add_argument(
         '--test', help='Simulation only, do not actually connect to the VPN server', action='store_true')
     parser.add_argument(
@@ -135,10 +80,75 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
     parser.add_argument(
         '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
-    parser.add_argument(
+
+    connect_options = parser.add_argument_group("Connect Options",
+                            "Connect To A Specific Server Or Any In A Country; TCP or UDP")
+    connect_options.add_argument(
+        '-s', '--server', type=str, help='server name, i.e. ca64 or au10')
+    connect_options.add_argument(
+        '-c', '--country-code', type=str, help='Specify country code with 2 letters, i.e. au')
+    connect_options.add_argument(
+        '--tcp', help='use port TCP-443 instead of the default UDP-1194', action='store_true')
+
+    filter_options = parser.add_argument_group("Filter Options", "Find Specific Types Of Servers")
+    filter_options.add_argument(
+        '-a', '--area', type=str, help='Specify area, city name or state e.g \
+        "openpyn au -a victoria" or "openpyn au -a \'sydney\'"')
+    filter_options.add_argument(
+        '-m', '--max-load', type=int, default=70, help='Specify load threshold, \
+        rejects servers with more load than this, DEFAULT=70')
+    filter_options.add_argument(
+        '-t', '--top-servers', type=int, default=10, help='Specify the number of top \
+         servers to choose from the NordVPN\'s server list for the given country, these will be \
+         pinged, DEFAULT=10')
+    filter_options.add_argument(
+        '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
+    filter_options.add_argument(
+        '--dedicated', help='Only look for servers with "Dedicated IP" support', action='store_true')
+    filter_options.add_argument(
+        '--tor', dest='tor_over_vpn', help='Only look for servers with "Tor Over VPN" support', action='store_true')
+    filter_options.add_argument(
+        '--double', dest='double_vpn', help='Only look for servers with "Double VPN" support', action='store_true')
+    filter_options.add_argument(
+        '--anti-ddos', dest='anti_ddos', help='Only look for servers with "Obfuscated" support', action='store_true')
+    filter_options.add_argument(
+        '--netflix', dest='netflix', help='Only look for servers that are optimised for "Netflix"', action='store_true')
+
+    display_options = parser.add_argument_group("Display Options", "These Only Display Information")
+    display_options.add_argument(
+        '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
+        help='If no argument given prints all Country Names and Country Codes; \
+        If country code supplied ("-l us"): Displays all servers in that given\
+        country with their current load and OpenVPN support status. Works in \
+        conjunction with (-a | --area, and server types (--p2p, --tor) \
+        e.g "openpyn -l it --p2p --area milano"')
+    display_options.add_argument(
         '--status', dest='show_status', help='Show last change in connection status', action='store_true')
-    parser.add_argument(
+    display_options.add_argument(
         '--stats', dest='show_stats', help='Show openvpn connection stats', action='store_true')
+
+    fw_options = parser.add_argument_group("Firewall Options", "Firewall and KillSwitch Options")
+    fw_options.add_argument(
+        '-f', '--force-fw-rules', help='Enforce firewall rules to drop traffic when tunnel breaks\
+        , force disable DNS traffic going to any other interface', action='store_true')
+    fw_options.add_argument(
+        '--allow-locally', dest='allow_locally', help='To be used with "-f" to allow input traffic \
+        on all ports from locally connected / INTERNAL IP RANGEs. for example 192.168.1.* range', action='store_true'),
+    fw_options.add_argument(
+        '--allow', dest='internally_allowed', help='To be used with "-f" to allow TCP connections to given ports \
+        but ONLY to INTERNAL IP RANGE. for example: you can use your PC as SSH, HTTP server \
+        for local devices (i.e. 192.168.1.* range) by "openpyn us -f --allow 22 80"', nargs='+'),
+    fw_options.add_argument(
+        '--allow-config', dest='internally_allowed_config', help='To be used with "-f" to allow a complex \
+        set of port rules. This option requires a path to a JSON file that contains the \
+        relevent config'
+    ),
+    fw_options.add_argument(
+        '--allow-config-json', dest='internally_allowed_config_json', help='To be used with "-f" to allow a complex \
+        a complex set of allow port rules. This option requires works the same as "--allow-config" option \
+        but accepts a json object as a string instead'
+    ),
+
     return parser.parse_args(argv[1:])
 
 
@@ -146,9 +156,9 @@ def main() -> bool:
     args = parse_args(sys.argv)
     return_code = run(
         args.init, args.server, args.country_code, args.country, args.area, args.tcp,
-        args.daemon, args.max_load, args.top_servers, args.pings,
+        args.daemon, args.max_load, args.top_servers,
         args.kill, args.kill_flush, args.update, args.list_servers,
-        args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
+        args.force_fw_rules, args.allow_locally, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.internally_allowed_config, args.internally_allowed_config_json, args.skip_dns_patch,
         args.silent, args.nvram, args.openvpn_options, args.location, args.show_status, args.show_stats)
@@ -158,8 +168,8 @@ def main() -> bool:
 # run openpyn
 # pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
-        max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
-        force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
+        max_load: int, top_servers: int, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
+        force_fw_rules: bool, allow_locally: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
         skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, show_status: bool,
         show_stats: bool) -> bool:
@@ -322,10 +332,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --max-load " + str(max_load)
         if top_servers:
             openpyn_options += " --top-servers " + str(top_servers)
-        if pings:
-            openpyn_options += " --pings " + pings
         if force_fw_rules:
             openpyn_options += " --force-fw-rules"
+        if allow_locally:
+            openpyn_options += " --allow-locally"
         if p2p:
             openpyn_options += " --p2p"
         if dedicated:
@@ -485,12 +495,13 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             if not better_servers_list:
                 logger.critical("There are no servers that satisfy your criteria, please broaden your search.")
                 return 1
-            pinged_servers_list = ping_servers(better_servers_list, pings, stats)
+            pinged_servers_list = ping_servers(better_servers_list, stats)
             chosen_servers = choose_best_servers(pinged_servers_list, stats)
 
             # only clear/touch FW Rules if "-f" used, skip if "--test"
             if force_fw_rules and not test:
-                touch_iptables_rules(chosen_servers, port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
+                touch_iptables_rules(chosen_servers, port, skip_dns_patch, allow_locally,
+                                        internally_allowed, internally_allowed_config, internally_allowed_config_json)
             # connect to chosen_servers, if one fails go to next
             for aserver in chosen_servers:
                 if stats:
@@ -546,7 +557,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # only clear/touch FW Rules if "-f" used, skip if "--test"
             if force_fw_rules and not test:
-                touch_iptables_rules([server], port, skip_dns_patch, internally_allowed, internally_allowed_config, internally_allowed_config_json)
+                touch_iptables_rules([server], port, skip_dns_patch, allow_locally,
+                                    internally_allowed, internally_allowed_config, internally_allowed_config_json)
 
             if nvram:
                 check_config_files()
@@ -644,7 +656,8 @@ def load_tun_module():
             raise RuntimeError("Cannot open TUN/TAP dev /dev/net/tun: No such file or directory")
 
 
-def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
+def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, allow_locally: bool,
+                        internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict):
     network_interfaces = get_network_interfaces()
     vpn_server_ips = []
     firewall.flush_input_output()
@@ -657,6 +670,9 @@ def touch_iptables_rules(chosen_servers: List, port: str, skip_dns_patch: bool, 
             firewall.apply_allowed_port_rules(network_interfaces ,internally_allowed_config_json)
     elif internally_allowed:
         firewall.internally_allow_ports(network_interfaces, internally_allowed)
+
+    if allow_locally:
+        firewall.internally_allow_all(network_interfaces)
 
     for server in chosen_servers:
         vpn_server_ips.append(get_vpn_server_ip(server, port))
@@ -712,7 +728,7 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 
 # Pings servers with the specified no of "ping",
 # Returns a sorted list by ping median average deviation
-def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
+def ping_servers(better_servers_list: List, stats: bool) -> List:
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
@@ -724,9 +740,9 @@ def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
     if ping_supports_option_i == True:
-        ping_subprocess_command = ["ping", "-n", "-i", ".2", "-c", pings, "dns_placeholder"]
+        ping_subprocess_command = ["ping", "-n", "-i", ".2", "-c", "5", "dns_placeholder"]
     else:
-        ping_subprocess_command = ["ping", "-c", pings, "dns_placeholder"]
+        ping_subprocess_command = ["ping", "-c", "5", "dns_placeholder"]
 
     ping_subprocess_list    = []
 
@@ -1184,7 +1200,7 @@ using it to update DNS Resolver Entries", detected_os)
 
                 # "sudo killall openvpn" - the default signal sent is SIGTERM
                 # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
-
+                # logger.debug("RETURN CODE, {}".format(completed.returncode))
                 if completed.returncode == 0:
                     raise SystemExit
 
