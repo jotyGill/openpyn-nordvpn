@@ -254,7 +254,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     else:
         force_fw_rules = False
         internally_allowed = None
-        skip_dns_patch = True
         nvram = None
 
     # check if dependencies are installed
@@ -588,6 +587,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     else:
         logger.info("To see usage options type: 'openpyn -h' or 'openpyn --help'")
+
+    # Darwin: Revert /etc/resolv.conf back to the original if it was modified
+    subprocess.call(["sudo", __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
     # if everything went ok
     return 0
