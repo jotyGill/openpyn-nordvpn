@@ -220,7 +220,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         except json.JSONDecodeError as err:
             logger.error(
                 "Failed to decode JSON passed in '----allow-config-json' Error at line {line}:{col} {msg} ".format(
-                    lineno=err.lineno, col=err.colno, msg=err.msg
+                    line=err.lineno, col=err.colno, msg=err.msg
                 )
             )
             internally_allowed_config_json = None
@@ -748,7 +748,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
         ping_supports_option_i = False
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
-    if ping_supports_option_i == True:
+    if ping_supports_option_i is True:
         ping_subprocess_command = ["ping", "-n", "-i", ".2", "-c", "5", "dns_placeholder"]
     else:
         ping_subprocess_command = ["ping", "-c", "5", "dns_placeholder"]

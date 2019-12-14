@@ -249,7 +249,7 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
             if port_config['internal']:
                 ip_ranges.append(interface[2])
 
-            if port_config['allowed_ip_range'] != None:
+            if port_config['allowed_ip_range'] is not None:
                 if isinstance(port_config['allowed_ip_range'], list):
                     ip_ranges += port_config['allowed_ip_range']
                 else:
