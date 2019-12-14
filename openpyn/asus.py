@@ -9,7 +9,7 @@ verboselogs.install()
 logger = logging.getLogger(__package__)
 
 
-def run(server, client, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
+def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     country_name = api.get_country_name(server[:2])
 
     with open(__basefilepath__ + "credentials", 'r') as f:
@@ -42,6 +42,9 @@ def run(server, client, rgw=None, comp=None, adns=None, tcp=False, test=False, d
     c.set_compression(comp)
     c.set_redirect_gateway(rgw)
     c.set_client(client)
+
+    if options:
+        c.set_openvpn_options("\n".join(filter(None, options.split("--"))))
 
     extracted_info = c.extract_information(vpn_config_file)
     if not test:

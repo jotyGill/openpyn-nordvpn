@@ -236,10 +236,11 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             silent = True
             # TODO test skip_dns_patch
             skip_dns_patch = True
-            if openvpn_options:
-                openvpn_options += " " + "--syslog openpyn"
-            else:
-                openvpn_options = "--syslog openpyn"
+            if not nvram:
+                if openvpn_options:
+                    openvpn_options += " " + "--syslog openpyn"
+                else:
+                    openvpn_options = "--syslog openpyn"
             # logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
             openwrt_os = True
@@ -512,7 +513,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
                 if nvram:
                     check_config_files()
-                    asus.run(aserver, nvram, "All", "adaptive", "Strict", tcp, test)
+                    asus.run(aserver, nvram, openvpn_options, "All", "adaptive", "Strict", tcp, test)
                     logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
                     return 0
 
@@ -564,7 +565,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             if nvram:
                 check_config_files()
-                asus.run(server, nvram, "All", "adaptive", "Strict", tcp, test)
+                asus.run(server, nvram, openvpn_options, "All", "adaptive", "Strict", tcp, test)
                 logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM " + nvram)
                 return 0
 
