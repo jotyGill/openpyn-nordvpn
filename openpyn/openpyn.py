@@ -213,7 +213,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     port = "tcp" if tcp else "udp"
 
-    # Allways decode internally json config when passed
+    # Always decode internally JSON config when passed
     if internally_allowed_config_json:
         try:
             internally_allowed_config_json = json.loads(internally_allowed_config_json)
@@ -943,7 +943,7 @@ def update_config_files() -> None:
     shutil.rmtree(temp_folder)
 
 
-# Impliments recusive copy in python
+# Implements recursive copy in Python
 def recusive_copy(source_path, destination_path, folder_permission):
     for dirpath, dirnames, filenames in os.walk(source_path):
         for dirname in dirnames:

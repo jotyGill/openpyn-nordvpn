@@ -9,7 +9,7 @@ logger = logging.getLogger(__package__)
 verboselogs.install()
 
 
-# Using requests, GETs and returns json from a url.
+# Using requests, GETs and returns JSON from a url.
 def get_json(url) -> Dict:
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) \
     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
@@ -25,7 +25,7 @@ forgot to flush iptables? (openpyn -x)".format(url))
     return json_response
 
 
-# Gets json data, from api.nordvpn.com. filter servers by type, country, area.
+# Gets JSON data, from api.nordvpn.com. filter servers by type, country, area.
 def get_data_from_api(
         country_code: str, area: str, p2p: bool, dedicated: bool, double_vpn: bool,
         tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> List:

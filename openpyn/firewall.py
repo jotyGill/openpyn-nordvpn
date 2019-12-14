@@ -6,9 +6,8 @@ import subprocess
 from typing import Dict, List
 
 import verboselogs
-from openpyn import root
-
 from jsonschema import Draft4Validator
+from openpyn import root
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -292,7 +291,7 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
     return allowed_ports_config
 
 
-# Validates if the allowed ports json is valid before loading it
+# Validates if the allowed ports JSON is valid before loading it
 def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
     validation_schema = {
         "description": "Root config node",
