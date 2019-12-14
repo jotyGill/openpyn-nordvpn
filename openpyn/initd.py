@@ -172,7 +172,7 @@ def update_service(openpyn_options: str, run=False) -> None:
         if sline[0].startswith("ARGS"):
             sline[1] = "\"" + openpyn_options + "\""
         line = '='.join(sline)
-        logger.debug(line)
+        print(line)
 
     logger.notice("The Following config has been saved in S23openpyn. \
 You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start', \
