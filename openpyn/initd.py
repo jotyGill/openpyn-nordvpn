@@ -63,6 +63,10 @@ service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
             args = parser.parse_args(openpyn_options.split())
 
+    if args.update:
+        update_service("--update")
+        return
+
     server = args.server
     country_code = args.country_code
     country = args.country
@@ -85,7 +89,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
     nvram = args.nvram
     openvpn_options = args.openvpn_options
     location = args.location
-    update = args.update
 
     detected_os = sys.platform
     if detected_os == "linux":
@@ -104,9 +107,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
             nvram = None
 
     openpyn_options = ""
-
-    if update:
-        openpyn_options += " --update"
 
     # if only positional argument used
     if country_code is None and server is None:
