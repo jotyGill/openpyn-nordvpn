@@ -21,39 +21,39 @@ service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
     # regex used
-    # (, help).+' --> ""
+    # .*add_argument_group.*\n --> ""
+    # \, help='(.|\\\n)+', --> ","
+    # \, help='(.|\\\n)+' --> ""
     # (\n).+       ' --> "'"
     # (\n).+       ac --> " ac"
 
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
-    # parser.add_argument('--init')
-    parser.add_argument('-s', '--server', type=str)
-    parser.add_argument('--tcp', action='store_true')
-    parser.add_argument('-c', '--country-code', type=str)
-    parser.add_argument('country', nargs='?')
-    parser.add_argument('-a', '--area', type=str)
-    parser.add_argument('-d', '--daemon', action='store_true')
-    parser.add_argument('-m', '--max-load', type=int, default=70)
-    parser.add_argument('-t', '--top-servers', type=int, default=10)
-    parser.add_argument('-p', '--pings', type=str, default="5")
-    # parser.add_argument('-k', '--kill', action='store_true')
-    # parser.add_argument('--update', action='store_true')
-    parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
-    parser.add_argument('-f', '--force-fw-rules')
-    parser.add_argument('--allow', dest='internally_allowed')
+    parser.add_argument('--allow', dest='internally_allowed', nargs='+')
+    parser.add_argument('--allow-config', dest='internally_allowed_config')
     parser.add_argument('--allow-config-json', dest='internally_allowed_config_json')
-    # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
-    parser.add_argument('--silent')
-    parser.add_argument('--p2p')
-    parser.add_argument('--dedicated', action='store_true')
-    parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
-    parser.add_argument('--double', dest='double_vpn', action='store_true')
+    parser.add_argument('--allow-locally', dest='allow_locally', action='store_true')
     parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
+    parser.add_argument('--dedicated', action='store_true')
+    parser.add_argument('--double', dest='double_vpn', action='store_true')
     parser.add_argument('--netflix', dest='netflix', action='store_true')
+    parser.add_argument('--p2p', action='store_true')
+    parser.add_argument('--silent', action='store_true')
+    parser.add_argument('--skip-dns-patch', dest='skip_dns_patch', action='store_true')
+    parser.add_argument('--tcp', action='store_true')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
+    parser.add_argument('--update', action='store_true')
+    parser.add_argument('-a', '--area', type=str)
+    parser.add_argument('-c', '--country-code', type=str)
+    parser.add_argument('-d', '--daemon', action='store_true')
+    parser.add_argument('-f', '--force-fw-rules', action='store_true')
+    parser.add_argument('-loc', '--location', nargs=2, type=float)
+    parser.add_argument('-m', '--max-load', type=int, default=70)
     parser.add_argument('-n', '--nvram', type=str)
     parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
-    parser.add_argument('-loc', '--location', nargs=2, type=float)
+    parser.add_argument('-s', '--server', type=str)
+    parser.add_argument('-t', '--top-servers', type=int, default=10)
+    parser.add_argument('country', nargs='?')
 
     try:
         args = parser.parse_args(openpyn_options.split())
