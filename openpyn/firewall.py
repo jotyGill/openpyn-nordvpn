@@ -1,13 +1,14 @@
-import logging
-import subprocess
-import os
-import json
 import itertools
-from jsonschema import Draft4Validator
-from typing import List, Dict
+import json
+import logging
+import os
+import subprocess
+from typing import Dict, List
 
 import verboselogs
 from openpyn import root
+
+from jsonschema import Draft4Validator
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -201,7 +202,7 @@ def internally_allow_all(interfaces_details: List) -> None:
             ])
 
 
-#Converts the allwed ports config to a series of iptable rules and applies them
+# Converts the allwed ports config to a series of iptable rules and applies them
 def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: List) -> bool:
 
     if not validate_allowed_ports_json(allowed_ports_config):
@@ -215,22 +216,22 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
         "allowed_ip_range": None
     }
 
-    #Merge default config with existing config
+    # Merge default config with existing config
     allowed_ports_config = [{**DEFAULT_PORT_CONFIG, **port_config} for port_config in allowed_ports_config]
 
     ip_table_rules = []
 
     for port_config in allowed_ports_config:
-        #Get perms for the connection type
+        # Get perms for the connection type
         port_protocol_permiatations = []
 
-        if port_config['protocol'] in ['tcp' , 'both']:
+        if port_config['protocol'] in ['tcp', 'both']:
             port_protocol_permiatations.append('tcp')
 
         if port_config['protocol'] in ['udp', 'both']:
             port_protocol_permiatations.append('udp')
 
-        #Create the flags for the port range / port
+        # Create the flags for the port range / port
         if '-' in str(port_config['port']):
             port_range = port_config['port'].split('-')
             port_flag = '--match multiport --dports {0}:{1}'.format(*port_range)
@@ -238,7 +239,7 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
             port_flag = '--dport {0}'.format(port_config['port'])
 
         for interface, port_type in itertools.product(interfaces_details, port_protocol_permiatations):
-            #Skip any tunnel interfaces that might be invalid
+            # Skip any tunnel interfaces that might be invalid
             if len(interface) != 3 or "tun" in interface[0]:
                 continue
 
@@ -254,9 +255,8 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
                 else:
                     ip_ranges.append(port_config['allowed_ip_range'])
 
-
             if ip_ranges != []:
-                ip_flag = ' -s '+ ','.join(ip_ranges)
+                ip_flag = ' -s ' + ','.join(ip_ranges)
 
             ip_table_rules.append("sudo iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
                 port_type=port_type, port_flag=port_flag, interface=interface[0], ip_flag=ip_flag
@@ -270,11 +270,11 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
 
 # Load allowed ports config from path (does not include validation)
 def load_allowed_ports(path_to_allowed_ports: str) -> bool:
-    #Ensure paths are resolved to real paths
+    # Ensure paths are resolved to real paths
     path_to_allowed_ports = os.path.realpath(path_to_allowed_ports)
 
-    if not os.path.isfile(path_to_allowed_ports) :
-        logger.warn("Connot preload allowed ports: file {0} does not exist".format(path_to_allowed_ports))
+    if not os.path.isfile(path_to_allowed_ports):
+        logger.warn("Cannot preload allowed ports: file {0} does not exist".format(path_to_allowed_ports))
         return False
 
     try:
@@ -285,14 +285,14 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
                 logger.error("Failed to decode allowed ports JSON")
                 return False
 
-
     except EnvironmentError as file_read_error:
-        logger.error("Connot preload allowed ports: failed to load \"{filename}\" {strerr}".format(filename = file_read_error.filename, strerr=file_read_error.strerror))
+        logger.error("Cannot preload allowed ports: failed to load \"{filename}\" {strerr}".format(
+            filename=file_read_error.filename, strerr=file_read_error.strerror))
 
     return allowed_ports_config
 
 
-#Validates if the allowed ports json is valid before loading it
+# Validates if the allowed ports json is valid before loading it
 def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
     validation_schema = {
         "description": "Root config node",
@@ -300,7 +300,7 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
         "items": {
             "type": "object",
             "properties": {
-                "port" : {
+                "port": {
                     "anyOf": [
                         {
                             "name": "Port number",
@@ -344,16 +344,17 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
         }
     }
 
-    #Create the config validator
+    # Create the config validator
     allowed_ports_config_validator = Draft4Validator(validation_schema)
 
-    #If the passed config is not valid enumerate errors and print them in human readable form
+    # If the passed config is not valid enumerate errors and print them in human readable form
     if not allowed_ports_config_validator.is_valid(allowed_ports_config):
 
         error_message = "Errors were raise when validating the allowed ports config:"
-        #Retrieve all validation errors yielded in schema
+        # Retrieve all validation errors yielded in schema
         for validation_error in allowed_ports_config_validator.iter_errors(allowed_ports_config):
-            error_message += "\n\nError at root.{0} in config: {1}".format('.'.join([str(part) for part in validation_error.absolute_path]), validation_error.message)
+            error_message += "\n\nError at root.{0} in config: {1}".format(
+                '.'.join([str(part) for part in validation_error.absolute_path]), validation_error.message)
 
         logger.error(error_message)
 

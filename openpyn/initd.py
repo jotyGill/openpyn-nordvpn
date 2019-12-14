@@ -4,8 +4,6 @@ import logging
 import os
 import subprocess
 import sys
-import shlex
-import json
 
 import verboselogs
 from openpyn import api
@@ -18,7 +16,7 @@ def install_service() -> None:
     if not sys.__stdin__.isatty():
         raise RuntimeError("Please run %s in interactive mode" % __name__)
 
-    openpyn_options = input("Enter Openpyn options to be stored in initd \
+    openpyn_options = input("\nEnter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
@@ -39,7 +37,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('-t', '--top-servers', type=int, default=10)
     parser.add_argument('-p', '--pings', type=str, default="5")
     # parser.add_argument('-k', '--kill', action='store_true')
-    # parser.add_argument('-x', '--kill-flush', action='store_true')
     # parser.add_argument('--update', action='store_true')
     parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
     parser.add_argument('-f', '--force-fw-rules')
@@ -62,7 +59,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
         args = parser.parse_args(openpyn_options.split())
     except SystemExit as e:
         if e.code == 2:
-            openpyn_options = input("Enter Openpyn options to be stored in initd \
+            openpyn_options = input("\nEnter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
             args = parser.parse_args(openpyn_options.split())
@@ -150,7 +147,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
             open_ports += " " + port_number
         openpyn_options += " --allow" + open_ports
     if internally_allowed_config_json:
-        #Assume at this stage the json has been passed as string so it can be directly loaded
+        # Assume at this stage the json has been passed as string so it can be directly loaded
         openpyn_options += " --allow-config-json=" + internally_allowed_config_json
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
