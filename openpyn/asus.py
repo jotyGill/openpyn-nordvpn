@@ -44,7 +44,7 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     c.set_client(client)
 
     if options:
-        c.set_openvpn_options("\n".join(filter(None, options.split("--"))))
+        c.set_openvpn_options("\n".join(filter(None, options.split("--")))+"\n")
 
     extracted_info = c.extract_information(vpn_config_file)
     if not test:
