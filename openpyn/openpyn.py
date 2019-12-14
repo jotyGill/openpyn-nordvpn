@@ -930,8 +930,8 @@ def update_config_files() -> None:
             pass
 
     # remove dirs, because non-root can't chmod if files/dirs were created by root
-    subprocess.run(["rm", "-rf", os.path.join(ovpn_folder, "ovpn_tcp")])
-    subprocess.run(["rm", "-rf", os.path.join(ovpn_folder, "ovpn_udp")])
+    shutil.rmtree(os.path.join(ovpn_folder, "ovpn_tcp"), True)
+    shutil.rmtree(os.path.join(ovpn_folder, "ovpn_udp"), True)
 
     recusive_copy(temp_folder, ovpn_folder, 0o777)
 
