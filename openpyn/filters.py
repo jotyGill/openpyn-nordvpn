@@ -174,8 +174,8 @@ def filter_by_load(server_list: List, max_load: int, top_servers: int) -> List:
     # only choose servers with < 70% load then top 10 of them
     for server in server_list:
         server_load = int(server[1])
-        # skip if server_load < 4, sometimes they don't work
-        if max_load >= server_load > 3:
+        # skip if server_load < 6, sometimes they don't work
+        if max_load >= server_load > 5:
             if len(remaining_servers) < top_servers:
                 remaining_servers.append(server)
     return remaining_servers

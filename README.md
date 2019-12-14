@@ -25,7 +25,7 @@ A python3 script (systemd service as well) to manage openvpn connections. Create
 -   Auto retry if \[soft,auth-failure\] received, auto failover to next best server if connection dies.
 -   NVRAM write support for Asuswrt-merlin
 -   Pass through openvpn options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
--   Logs stored in '~/.local/share/openpyn/logs/' for information and troubleshooting.
+-   Logs are stored in '/var/log/openpyn/' for information and troubleshooting.
 -   Temporarily disable ipv6 to prevent leakage (when using -f).
 
 ## Demo
@@ -44,14 +44,14 @@ sudo apt install openvpn python3-setuptools python3-pip
 2.  The following python dependencies are needed and will be installed when using pip.
 
 ```bash
-requests colorama coloredlogs verboselogs
+requests colorama coloredlogs verboselogs tqdm jsonschema
 ```
 
 ### Installation Methods
 
 1.  Install openpyn with pip3 (Python=>3.5)
     **Recommended method to get the latest version and receive frequent updates.**
-
+    Do not install with --user switch, as OpenVPN needs to run as sudo and sudo won't be able to locate openpyn.
 ```bash
 sudo python3 -m pip install --upgrade openpyn
 ```
@@ -85,7 +85,7 @@ sudo brew services start openvpn
 git clone https://github.com/jotyGill/openpyn-nordvpn.git
 cd openpyn-nordvpn
 git pull
-python3 -m pip install --upgrade .
+sudo python3 -m pip install --upgrade .
 ```
 
 4.  On Asuswrt-merlin, install [Entware-ng-3x](https://gist.github.com/1951FDG/3cada1211df8a59a95a8a71db6310299#file-asuswrt-merlin-md) (credit: [1951FDG](https://github.com/1951FDG))
@@ -164,6 +164,8 @@ openpyn us -f # Experimental!, Warning, clears IPtables rules!
 ```bash
 openpyn us -f --allow 22 80 443  #only accessible from local network
 ```
+
+-   To allow ports from other ranges use the `--allow-config` or `--allow-config-json` options. More details can be found [here](./docs/allowed-ports-config.md)
 
 -   To quickly connect to a specific server.
 
@@ -307,6 +309,17 @@ optional arguments:
                         INTERNAL IP RANGE. e.g, you can use your PC as
                         SSH, HTTP server for local devices (e.g 192.168.1.*
                         range) by using "openpyn us -f --allow 22 80"
+
+  --allow-config INTERNALLY_ALLOWED_CONFIG
+                        To be used with "f" to allow a complex a complex set
+                        of allow port rules. This option requires a path to a
+                        JSON file that contains the relevent config
+
+  --allow-config-json INTERNALLY_ALLOWED_CONFIG_JSON
+                        To be used with "f" to allow a complex a complex set
+                        of allow port rules. This option requires works the
+                        same as "--allow-config" option but accepts a json
+                        object as a string instead
 
   --update              Fetch the latest config files from nord''s site
 

@@ -22,10 +22,8 @@ Default(Just Press Enter) is, uk : ") or "uk"
 
 
 def update_service(openpyn_options: str, run=False) -> None:
-    if "-f" in openpyn_options or "--force-fw-rules" in openpyn_options:
-        kill_option = " --kill-flush"
-    else:
-        kill_option = " --kill"
+    # if '-f' is used, you'll need to manually clear the killswitch with 'openpyn -x'
+    kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
     openpyn_location = shutil.which("openpyn")
@@ -37,25 +35,21 @@ def update_service(openpyn_options: str, run=False) -> None:
         openpyn_location + " " + openpyn_options + "\nExecStop=" + openpyn_location + kill_option + \
         "\nStandardOutput=syslog\nStandardError=syslog\n[Install]\nWantedBy=multi-user.target\n"
 
-    _xdg_config_home = os.environ['XDG_CONFIG_HOME']
-    if not _xdg_config_home:
-        _xdg_config_home = os.path.expanduser(os.path.join('~', '.config'))
-    systemd_service_path = os.path.join(_xdg_config_home, 'systemd', 'user', 'openpyn.service')
-    with open(systemd_service_path, 'w') as fp:
-        fp.write(service_text)
+    systemd_service_path = os.path.join("/", "etc", "systemd", "system")
+    systemd_service_file = os.path.join(systemd_service_path, "openpyn.service")
+
+    if not os.path.exists(systemd_service_path):
+        os.makedirs(systemd_service_path)
+    with open(systemd_service_file, "w+") as service_file:
+        service_file.write(service_text)
 
     logger.notice("The Following config has been saved in openpyn.service. \
 You can Run it or/and Enable it with: 'sudo systemctl start openpyn', \
-'systemctl --user enable openpyn' \n" + service_text)
+'sudo systemctl enable openpyn' \n\n" + service_text)
 
-    subprocess.run(["systemctl", "--user", "daemon-reload"])
+    subprocess.run(["systemctl", "daemon-reload"])
+
     if run:
-        subprocess.call(  # subprocess.run behaves differently
-            ["systemctl", "--user", "is-active", "openpyn"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-        logger.notice("Restarting Openpyn by running 'systemctl restart openpyn'\n\
+        logger.notice("Starting/Restarting Openpyn by running 'systemctl restart openpyn'\n\
 To check VPN status, run 'systemctl status openpyn'")
-        subprocess.Popen(["systemctl", "--user", "restart", "openpyn"])
+        subprocess.Popen(["systemctl", "restart", "openpyn"])
