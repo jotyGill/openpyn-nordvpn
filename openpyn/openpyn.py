@@ -230,6 +230,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     openwrt_os = False
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            os.makedirs(log_folder, exist_ok=True)
             asuswrt_os = True
             force_fw_rules = False
             internally_allowed = None
@@ -243,6 +244,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     openvpn_options = "--syslog openpyn"
             # logger.debug(openvpn_options)
         elif os.path.exists("/etc/openwrt_release"):
+            os.makedirs(log_folder, exist_ok=True)
             openwrt_os = True
             force_fw_rules = False
             internally_allowed = None
