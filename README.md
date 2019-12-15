@@ -242,109 +242,119 @@ openpyn us --nvram 5
 ## Usage Options
 
 ```bash
-usage: openpyn.py [-h] [-v] [-s SERVER] [-u] [-c COUNTRY_CODE] [-a AREA] [-d]
-                  [-m MAX_LOAD] [-t TOP_SERVERS] [-p PINGS]
-                  [-k] [-x] [--update] [-f]
-                  [-l [LIST_SERVERS]] [--p2p] [--dedicated] [--tor] [--double] [--anti-ddos] [--test]]
-                  [country]
+usage: openpyn [-h] [-v] [--init] [-d] [-k] [-x] [--update] [--skip-dns-patch]
+               [--silent] [--test] [-n NVRAM] [-o OPENVPN_OPTIONS]
+               [-loc latitude longitude] [-s SERVER] [-c COUNTRY_CODE] [--tcp]
+               [-a AREA] [-m MAX_LOAD] [-t TOP_SERVERS] [--p2p] [--dedicated]
+               [--tor] [--double] [--anti-ddos] [--netflix]
+               [-l [LIST_SERVERS]] [--status] [--stats] [-f] [--allow-locally]
+               [--allow INTERNALLY_ALLOWED [INTERNALLY_ALLOWED ...]]
+               [--allow-config INTERNALLY_ALLOWED_CONFIG]
+               [--allow-config-json INTERNALLY_ALLOWED_CONFIG_JSON]
+               [country]
 
-A python3 script to easily connect to and switch between, OpenVPN servers
-hosted by NordVPN. Quickly Connect to the least busy servers (using current
-data from Nordvpn website) with lowest latency from you. Tunnels DNS traffic
+A python3 script/systemd service (GPLv3+) to easily connect to and switch
+between, OpenVPN servers hosted by NordVPN. Quickly Connect to the least busy
+servers (using current data from NordVPN website) with lowest latency from
+you. Find NordVPN servers in a given country or city. Tunnels DNS traffic
 through the VPN which normally (when using OpenVPN with NordVPN) goes through
-your ISP''s DNS (still unencrypted, even if you use a thirdparty) and
-completely compromises Privacy!
+your ISP’s DNS (still unencrypted, even if you use a third-party DNS servers)
 
 positional arguments:
-  country               Country Code can also be specified without "-c," i.e
+  country               Country code can also be specified without "-c,"i.e.
                         "openpyn au"
 
 optional arguments:
   -h, --help            show this help message and exit
-
-  -v, --version         show program''s version number and exit
-
+  -v, --version         show program’s version number and exit
   --init                Initialise, store/change credentials, download/update
-                        vpn config files, needs root "sudo" access.
-
-  -s SERVER, --server SERVER
-                        server name, i.e. ca64 or au10
-
-  --tcp                 use port TCP-443 instead of the default UDP-1194
-
-  -c COUNTRY_CODE, --country-code COUNTRY_CODE
-                        Specify Country Code with 2 letters, i.e au,
-
-  -a AREA, --area AREA  Specify area: city name or state e.g "openpyn au -a victoria"
-                        or "openpyn au -a 'sydney'"
-
-  -d, --daemon          Update and start Systemd service openpyn.service,
+                        VPN config files, needs root "sudo" access.
+  -d, --daemon          Update and start systemd service openpyn.service,
                         running it as a background process, to check status
-                        "systemctl status openpyn",
-
-  -m MAX_LOAD, --max-load MAX_LOAD
-                        Specify load threshold, rejects servers with more
-                        load than this, DEFAULT=70
-
-  -t TOP_SERVERS, --top-servers TOP_SERVERS
-                        Specify the number of Top Servers to choose from the
-                        NordVPN''s Sever list for the given Country, These will
-                        be Pinged. DEFAULT=4
-
-  -p PINGS, --pings PINGS
-                        Specify number of pings to be sent to each server to
-                        determine quality, DEFAULT=5
-
-  -k, --kill            Kill any running Openvnp process, very useful to kill
+                        "systemctl status openpyn"
+  -k, --kill            Kill any running OpenVPN process, very useful to kill
                         openpyn process running in background with "-d" switch
-
-  -x, --kill-flush      Kill any running Openvnp process, AND Flush Iptables
-
-  -f, --force-fw-rules  Enforce Firewall rules to drop traffic when tunnel
-                        breaks , Force disable DNS traffic going to any other
-                        interface
-
-  --allow INTERNALLY_ALLOWED [INTERNALLY_ALLOWED ...]
-                        To be used with "f" to allow ports but ONLY to
-                        INTERNAL IP RANGE. e.g, you can use your PC as
-                        SSH, HTTP server for local devices (e.g 192.168.1.*
-                        range) by using "openpyn us -f --allow 22 80"
-
-  --allow-config INTERNALLY_ALLOWED_CONFIG
-                        To be used with "f" to allow a complex a complex set
-                        of allow port rules. This option requires a path to a
-                        JSON file that contains the relevent config
-
-  --allow-config-json INTERNALLY_ALLOWED_CONFIG_JSON
-                        To be used with "f" to allow a complex a complex set
-                        of allow port rules. This option requires works the
-                        same as "--allow-config" option but accepts a json
-                        object as a string instead
-
-  --update              Fetch the latest config files from nord''s site
-
-  -l [L_LIST], --list [L_LIST]
-                        If no argument given prints all Country Names and
-                        Country Codes; If country code supplied ("-l us"):
-                        Displays all servers in that given country with their
-                        current load and openvpn support status. Works in
-                        conjunction with (-a | --area, and server types (--p2p,
-                        --tor) e.g "openpyn -l it --p2p --area milano"
-
-  --p2p                 Only look for servers with "Peer To Peer" support
-  --dedicated           Only look for servers with "Dedicated IP" support
-  --tor                 Only look for servers with "Tor Over VPN" support
-  --double              Only look for servers with "Double VPN" support
-  --anti-ddos           Only look for servers with "Anti DDos" support
-  --netflix             Only look for servers that are optimised for "Netflix"
-  --test                Simulation only, do not actually connect to the vpn
+  -x, --kill-flush      Kill any running OpenVPN process, and flush iptables
+  --update              Fetch the latest config files from NordVPN’s site
+  --skip-dns-patch      Skips DNS patching, leaves /etc/resolv.conf untouched.
+                        (Not recommended)
+  --silent              Do not try to send notifications. Use if "libnotify"
+                        or "gi" are not available. Automatically used in
+                        systemd service file
+  --test                Simulation only, do not actually connect to the VPN
                         server
   -n NVRAM, --nvram NVRAM
                         Specify client to save configuration to NVRAM
                         (ASUSWRT-Merlin)
   -o OPENVPN_OPTIONS, --openvpn-options OPENVPN_OPTIONS
-                        Pass through openvpn options, e.g. openpyn uk -o '--
+                        Pass through OpenVPN options, e.g. openpyn uk -o '--
                         status /var/log/status.log --log /var/log/log.log'
+
+Connect Options:
+  Connect To A Specific Server Or Any In A Country; TCP or UDP
+
+  -s SERVER, --server SERVER
+                        server name, i.e. ca64 or au10
+  -c COUNTRY_CODE, --country-code COUNTRY_CODE
+                        Specify country code with 2 letters, i.e. au
+  --tcp                 use port TCP-443 instead of the default UDP-1194
+
+Filter Options:
+  Find Specific Types Of Servers
+
+  -a AREA, --area AREA  Specify area, city name or state e.g "openpyn au -a
+                        victoria" or "openpyn au -a 'sydney'"
+  -m MAX_LOAD, --max-load MAX_LOAD
+                        Specify load threshold, rejects servers with more load
+                        than this, DEFAULT=70
+  -t TOP_SERVERS, --top-servers TOP_SERVERS
+                        Specify the number of top servers to choose from the
+                        NordVPN’s server list for the given country, these
+                        will be pinged, DEFAULT=10
+  --p2p                 Only look for servers with "Peer To Peer" support
+  --dedicated           Only look for servers with "Dedicated IP" support
+  --tor                 Only look for servers with "Tor Over VPN" support
+  --double              Only look for servers with "Double VPN" support
+  --anti-ddos           Only look for servers with "Obfuscated" support
+  --netflix             Only look for servers that are optimised for "Netflix"
+
+Display Options:
+  These Only Display Information
+
+  -l [LIST_SERVERS], --list [LIST_SERVERS]
+                        If no argument given prints all Country Names and
+                        Country Codes; If country code supplied ("-l us"):
+                        Displays all servers in that given country with their
+                        current load and OpenVPN support status. Works in
+                        conjunction with (-a | --area, and server types
+                        (--p2p, --tor) e.g "openpyn -l it --p2p --area milano"
+  --status              Show last change in connection status
+  --stats               Show openvpn connection stats
+
+Firewall Options:
+  Firewall and KillSwitch Options
+
+  -f, --force-fw-rules  Enforce firewall rules to drop traffic when tunnel
+                        breaks , force disable DNS traffic going to any other
+                        interface
+  --allow-locally       To be used with "-f" to allow input traffic on all
+                        ports from locally connected / INTERNAL IP RANGEs. for
+                        example 192.168.1.* range
+  --allow INTERNALLY_ALLOWED [INTERNALLY_ALLOWED ...]
+                        To be used with "-f" to allow TCP connections to given
+                        ports but ONLY to INTERNAL IP RANGE. for example: you
+                        can use your PC as SSH, HTTP server for local devices
+                        (i.e. 192.168.1.* range) by "openpyn us -f --allow 22
+                        80"
+  --allow-config INTERNALLY_ALLOWED_CONFIG
+                        To be used with "-f" to allow a complex set of port
+                        rules. This option requires a path to a JSON file that
+                        contains the relevent config
+  --allow-config-json INTERNALLY_ALLOWED_CONFIG_JSON
+                        To be used with "-f" to allow a complex a complex set
+                        of allow port rules. This option requires works the
+                        same as "--allow-config" option but accepts a json
+                        object as a string instead
 ```
 
 ## Todo
