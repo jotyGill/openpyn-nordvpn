@@ -2,7 +2,7 @@ import logging
 import subprocess
 
 import verboselogs
-from openpyn import __basefilepath__, api, ovpn_folder
+from openpyn import credentials_file_path, api, ovpn_folder
 from openpyn.converter import T_CLIENT, Converter
 
 verboselogs.install()
@@ -12,7 +12,7 @@ logger = logging.getLogger(__package__)
 def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     country_name = api.get_country_name(server[:2])
 
-    with open(__basefilepath__ + "credentials", 'r') as f:
+    with open(credentials_file_path, 'r') as f:
         lines = f.read().splitlines()
 
     port = "udp"
