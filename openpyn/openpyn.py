@@ -97,11 +97,11 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "openpyn au -a victoria" or "openpyn au -a \'sydney\'"')
     filter_options.add_argument(
         '-m', '--max-load', type=int, default=70, help='Specify load threshold, \
-        rejects servers with more load than this, DEFAULT=70')
+        rejects servers with more load than this, DEFAULT=%(default)s')
     filter_options.add_argument(
         '-t', '--top-servers', type=int, default=10, help='Specify the number of top \
          servers to choose from the NordVPN\'s server list for the given country, these will be \
-         pinged, DEFAULT=10')
+         pinged, DEFAULT=%(default)s')
     filter_options.add_argument(
         '--p2p', help='Only look for servers with "Peer To Peer" support', action='store_true')
     filter_options.add_argument(
