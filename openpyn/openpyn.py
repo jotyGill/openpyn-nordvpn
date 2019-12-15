@@ -80,6 +80,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
     parser.add_argument(
+        '-app', '--application', dest='app', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument(
         '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'), help=argparse.SUPPRESS)
 
     connect_options = parser.add_argument_group("Connect Options",
@@ -160,7 +162,7 @@ def main() -> bool:
         args.force_fw_rules, args.allow_locally, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.internally_allowed_config, args.internally_allowed_config_json, args.skip_dns_patch,
-        args.silent, args.nvram, args.openvpn_options, args.location, args.show_status, args.show_stats)
+        args.silent, args.nvram, args.openvpn_options, args.app, args.location, args.show_status, args.show_stats)
     return return_code
 
 
@@ -170,7 +172,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         max_load: int, top_servers: int, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, allow_locally: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
-        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, location: float, show_status: bool,
+        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, app: bool, location: float, show_status: bool,
         show_stats: bool) -> bool:
     fieldstyles = {
         'asctime': {'color': 'green'},
@@ -530,7 +532,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     )
                     continue
 
-                connect(aserver, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
+                connect(aserver, port, silent, skip_dns_patch, app, openvpn_options, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -584,7 +586,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # keep trying to connect to same server
             for _ in range(3 * top_servers):
-                connect(server, port, silent, skip_dns_patch, openvpn_options, use_systemd_resolved, use_resolvconf)
+                connect(server, port, silent, skip_dns_patch, app, openvpn_options, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -1145,7 +1147,7 @@ def uses_systemd_resolved() -> bool:
     return True
 
 
-def connect(server: str, port: str, silent: bool, skip_dns_patch: bool,
+def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: bool,
             openvpn_options: str, use_systemd_resolved: bool, use_resolvconf: bool, server_provider="nordvpn") -> None:
     detected_os = sys.platform
     if server_provider == "nordvpn":
@@ -1251,23 +1253,34 @@ when asked, provide the sudo credentials")
                     "sudo", "openvpn",
                     "--redirect-gateway",
                     "--status", "{}/openvpn-status".format(log_folder), "30",
-                    "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
-                    "--auth-user-pass", __basefilepath__ + "credentials",
                     *args,
                 ] + openvpn_options.split()
                 completed = subprocess.run(cmdline, check=True)
 
                 # "sudo killall openvpn" - the default signal sent is SIGTERM
                 # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
-
+                # logger.debug("RETURN CODE, {}".format(completed.returncode))
                 if completed.returncode == 0:
                     raise SystemExit
 
-            if silent:
+            if app:
+                # an app can allow username and password to be requested and entered via the management socket
+                # the app in question would need to pass the following OpenVPN options to --openvpn-options
+                # --auth-retry nointeract --management 127.0.0.1 7015 --management-hold --management-query-passwords
+                # "--auth-retry" can be either "nointeract" or "interact" depending on the functionality within the app
+                # user auth is done via the app not via the router, hence credentials file may contain invalid credentials
+                # Android app by 1951FDG will use this when both username and password are provided in settings
                 run_openvpn()
+            elif silent:
+                run_openvpn(
+                    "--auth-retry", "nointeract",
+                    "--auth-user-pass", __basefilepath__ + "credentials",
+                )
             else:
                 run_openvpn(
+                    "--auth-retry", "nointeract",
+                    "--auth-user-pass", __basefilepath__ + "credentials",
                     "--management", "127.0.0.1", "7015",
                     "--management-up-down",
                 )
