@@ -80,7 +80,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
         options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
     parser.add_argument(
-        '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'))
+        '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'), help=argparse.SUPPRESS)
 
     connect_options = parser.add_argument_group("Connect Options",
                             "Connect To A Specific Server Or Any In A Country; TCP or UDP")
