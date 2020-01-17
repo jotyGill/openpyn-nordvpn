@@ -4,8 +4,6 @@ import logging
 import os
 import subprocess
 import sys
-import shlex
-import json
 
 import verboselogs
 from openpyn import api
@@ -18,54 +16,56 @@ def install_service() -> None:
     if not sys.__stdin__.isatty():
         raise RuntimeError("Please run %s in interactive mode" % __name__)
 
-    openpyn_options = input("Enter Openpyn options to be stored in initd \
+    openpyn_options = input("\nEnter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
 
     # regex used
-    # (, help).+' --> ""
+    # .*add_argument_group.*\n --> ""
+    # \, help='(.|\\\n)+', --> ","
+    # \, help='(.|\\\n)+' --> ""
     # (\n).+       ' --> "'"
     # (\n).+       ac --> " ac"
 
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
-    # parser.add_argument('--init')
-    parser.add_argument('-s', '--server', type=str)
-    parser.add_argument('--tcp', action='store_true')
-    parser.add_argument('-c', '--country-code', type=str)
-    parser.add_argument('country', nargs='?')
-    parser.add_argument('-a', '--area', type=str)
-    parser.add_argument('-d', '--daemon', action='store_true')
-    parser.add_argument('-m', '--max-load', type=int, default=70)
-    parser.add_argument('-t', '--top-servers', type=int, default=10)
-    parser.add_argument('-p', '--pings', type=str, default="5")
-    # parser.add_argument('-k', '--kill', action='store_true')
-    # parser.add_argument('-x', '--kill-flush', action='store_true')
-    # parser.add_argument('--update', action='store_true')
-    parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
-    parser.add_argument('-f', '--force-fw-rules')
-    parser.add_argument('--allow', dest='internally_allowed')
+    parser.add_argument('--allow', dest='internally_allowed', nargs='+')
+    # parser.add_argument('--allow-config', dest='internally_allowed_config')
     parser.add_argument('--allow-config-json', dest='internally_allowed_config_json')
-    # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
-    parser.add_argument('--silent')
-    parser.add_argument('--p2p')
-    parser.add_argument('--dedicated', action='store_true')
-    parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
-    parser.add_argument('--double', dest='double_vpn', action='store_true')
+    parser.add_argument('--allow-locally', dest='allow_locally', action='store_true')
     parser.add_argument('--anti-ddos', dest='anti_ddos', action='store_true')
+    parser.add_argument('--dedicated', action='store_true')
+    parser.add_argument('--double', dest='double_vpn', action='store_true')
     parser.add_argument('--netflix', dest='netflix', action='store_true')
+    parser.add_argument('--p2p', action='store_true')
+    parser.add_argument('--silent', action='store_true')
+    parser.add_argument('--skip-dns-patch', dest='skip_dns_patch', action='store_true')
+    parser.add_argument('--tcp', action='store_true')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--tor', dest='tor_over_vpn', action='store_true')
+    parser.add_argument('--update', action='store_true')
+    parser.add_argument('-a', '--area', type=str)
+    parser.add_argument('-c', '--country-code', type=str)
+    parser.add_argument('-f', '--force-fw-rules', action='store_true')
+    parser.add_argument('-loc', '--location', nargs=2, type=float)
+    parser.add_argument('-m', '--max-load', type=int, default=70)
     parser.add_argument('-n', '--nvram', type=str)
     parser.add_argument('-o', '--openvpn-options', dest='openvpn_options', type=str)
-    parser.add_argument('-loc', '--location', nargs=2, type=float)
+    parser.add_argument('-s', '--server', type=str)
+    parser.add_argument('-t', '--top-servers', type=int, default=10)
+    parser.add_argument('country', nargs='?')
 
     try:
         args = parser.parse_args(openpyn_options.split())
     except SystemExit as e:
         if e.code == 2:
-            openpyn_options = input("Enter Openpyn options to be stored in initd \
+            openpyn_options = input("\nEnter Openpyn options to be stored in initd \
 service file (/opt/etc/init.d/S23openpyn, \
 Default(Just Press Enter) is, uk : ") or "uk"
             args = parser.parse_args(openpyn_options.split())
+
+    if args.update:
+        update_service("--update")
+        return
 
     server = args.server
     country_code = args.country_code
@@ -74,7 +74,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
     tcp = args.tcp
     max_load = args.max_load
     top_servers = args.top_servers
-    pings = args.pings
     force_fw_rules = args.force_fw_rules
     p2p = args.p2p
     dedicated = args.dedicated
@@ -94,11 +93,18 @@ Default(Just Press Enter) is, uk : ") or "uk"
     detected_os = sys.platform
     if detected_os == "linux":
         if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
+            force_fw_rules = False
+            internally_allowed = None
             silent = True
             skip_dns_patch = True
         elif os.path.exists("/etc/openwrt_release"):
+            force_fw_rules = False
+            internally_allowed = None
             silent = True
             skip_dns_patch = True
+            nvram = None
+        else:
+            nvram = None
 
     openpyn_options = ""
 
@@ -126,8 +132,6 @@ Default(Just Press Enter) is, uk : ") or "uk"
         openpyn_options += " --max-load " + str(max_load)
     if top_servers:
         openpyn_options += " --top-servers " + str(top_servers)
-    if pings:
-        openpyn_options += " --pings " + pings
     if force_fw_rules:
         openpyn_options += " --force-fw-rules"
     if p2p:
@@ -150,7 +154,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
             open_ports += " " + port_number
         openpyn_options += " --allow" + open_ports
     if internally_allowed_config_json:
-        #Assume at this stage the json has been passed as string so it can be directly loaded
+        # Assume at this stage the JSON has been passed as string so it can be directly loaded
         openpyn_options += " --allow-config-json=" + internally_allowed_config_json
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
@@ -173,9 +177,9 @@ def update_service(openpyn_options: str, run=False) -> None:
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
         sline = line.strip().split("=")
         if sline[0].startswith("ARGS"):
-            sline[1] = "\"" + openpyn_options + "\""
-        line = '='.join(sline)
-        logger.debug(line)
+            sline[1] = '"' + openpyn_options + '"'
+        line = "=".join(sline)
+        print(line)
 
     logger.notice("The Following config has been saved in S23openpyn. \
 You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start', \

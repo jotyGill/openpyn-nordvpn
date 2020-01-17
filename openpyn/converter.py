@@ -184,6 +184,13 @@ class Converter:
 
         self._comp = compression
 
+    def set_openvpn_options(self, options):
+        """Options for the VPN connection"""
+        if options is None:
+            return
+
+        self._extracted_data[T_CUSTOM_CONFIGURATION] = options
+
     def set_redirect_gateway(self, rgw):
         """Redirect Internet traffic for the VPN connection"""
         if rgw is None:
