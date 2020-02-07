@@ -31,6 +31,7 @@ from openpyn import firewall
 from openpyn import initd
 from openpyn import locations
 from openpyn import root
+from openpyn import routes
 from openpyn import systemd
 from openpyn import __basefilepath__, __version__, log_folder, ovpn_folder, log_format  # variables
 
@@ -77,12 +78,17 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument(
         '-n', '--nvram', type=str, help='Specify client to save configuration to NVRAM (ASUSWRT-Merlin)')
     parser.add_argument(
-        '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
-        options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
-    parser.add_argument(
         '-app', '--application', dest='app', help=argparse.SUPPRESS, action='store_true')
     parser.add_argument(
         '-loc', '--location', nargs=2, type=float, metavar=('latitude', 'longitude'), help=argparse.SUPPRESS)
+
+    openvpn_internal_options = parser.add_argument_group(
+        "OpenVPN Options", "Configurable Options Being Passed Downed To OpenVPN")
+    openvpn_internal_options.add_argument(
+        '--no-redirect-gateway', dest='no_redirect', help='Don\'t set --redirect-gateway', action='store_true')
+    openvpn_internal_options.add_argument(
+       '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
+        options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
 
     connect_options = parser.add_argument_group("Connect Options",
                             "Connect To A Specific Server Or Any In A Country; TCP or UDP")
@@ -130,13 +136,16 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     display_options.add_argument(
         '--stats', dest='show_stats', help='Show openvpn connection stats', action='store_true')
 
-    fw_options = parser.add_argument_group("Firewall Options", "Firewall and KillSwitch Options")
+    fw_options = parser.add_argument_group("Firewall Options", "Firewall, KillSwitch and Route Options")
     fw_options.add_argument(
         '-f', '--force-fw-rules', help='Enforce firewall rules to drop traffic when tunnel breaks\
         , force disable DNS traffic going to any other interface', action='store_true')
+    fw_options.add_argument('-r', '--add-route', dest="add_route", help='Add route to default-gateway; Needed to \
+        continue serving any service including ssh. Required on VPSs. To insure it doesn\'t leak traffic use it with \
+        -f and --allow', action='store_true')
     fw_options.add_argument(
         '--allow-locally', dest='allow_locally', help='To be used with "-f" to allow input traffic \
-        on all ports from locally connected / INTERNAL IP RANGEs. for example 192.168.1.* range', action='store_true')
+        on all ports from locally connected / INTERNAL IP SUBNET. for example 192.168.1.* range', action='store_true')
     fw_options.add_argument(
         '--allow', dest='internally_allowed', help='To be used with "-f" to allow TCP connections to given ports \
         but ONLY to INTERNAL IP RANGE. for example: you can use your PC as SSH, HTTP server \
@@ -159,10 +168,11 @@ def main() -> bool:
         args.init, args.server, args.country_code, args.country, args.area, args.tcp,
         args.daemon, args.max_load, args.top_servers,
         args.kill, args.kill_flush, args.update, args.list_servers,
-        args.force_fw_rules, args.allow_locally, args.p2p, args.dedicated, args.double_vpn,
+        args.force_fw_rules, args.add_route, args.allow_locally, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
         args.internally_allowed_config, args.internally_allowed_config_json, args.skip_dns_patch,
-        args.silent, args.nvram, args.openvpn_options, args.app, args.location, args.show_status, args.show_stats)
+        args.silent, args.nvram, args.app, args.location, args.no_redirect, args.openvpn_options,
+        args.show_status, args.show_stats)
     return return_code
 
 
@@ -170,10 +180,10 @@ def main() -> bool:
 # pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
         max_load: int, top_servers: int, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
-        force_fw_rules: bool, allow_locally: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
+        force_fw_rules: bool, add_route: bool, allow_locally: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
         netflix: bool, test: bool, internally_allowed: List, internally_allowed_config: str, internally_allowed_config_json: dict,
-        skip_dns_patch: bool, silent: bool, nvram: str, openvpn_options: str, app: bool, location: float, show_status: bool,
-        show_stats: bool) -> bool:
+        skip_dns_patch: bool, silent: bool, nvram: str,  app: bool, location: float,
+        no_redirect: bool, openvpn_options: str, show_status: bool, show_stats: bool) -> bool:
     fieldstyles = {
         'asctime': {'color': 'green'},
         'hostname': {'color': 'magenta'},
@@ -197,7 +207,6 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
     # in this case only log messages originating from this logger will show up on the terminal.
     coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
-
     stats = True
     # if non-interactive shell
     if not sys.__stdin__.isatty():
@@ -339,6 +348,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --top-servers " + str(top_servers)
         if force_fw_rules:
             openpyn_options += " --force-fw-rules"
+        if add_route:
+            openpyn_options += " --add-route"
         if allow_locally:
             openpyn_options += " --allow-locally"
         if p2p:
@@ -373,6 +384,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             openpyn_options += " --skip-dns-patch"
         if nvram:
             openpyn_options += " --nvram " + nvram
+        if no_redirect:
+            openpyn_options += " --no-redirect-gateway"
         if openvpn_options:
             openpyn_options += " --openvpn-options '" + openvpn_options + "'"
         # logger.debug(openpyn_options)
@@ -531,7 +544,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     )
                     continue
 
-                connect(aserver, port, silent, skip_dns_patch, app, openvpn_options, use_systemd_resolved, use_resolvconf)
+                connect(aserver, port, silent, skip_dns_patch, app, no_redirect, openvpn_options, add_route, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -585,7 +598,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
 
             # keep trying to connect to same server
             for _ in range(3 * top_servers):
-                connect(server, port, silent, skip_dns_patch, app, openvpn_options, use_systemd_resolved, use_resolvconf)
+                connect(server, port, silent, skip_dns_patch, app, no_redirect, openvpn_options, add_route, use_systemd_resolved, use_resolvconf)
         except RuntimeError as e:
             logger.critical(e)
             return 1
@@ -1150,7 +1163,8 @@ def uses_systemd_resolved() -> bool:
 
 
 def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: bool,
-            openvpn_options: str, use_systemd_resolved: bool, use_resolvconf: bool, server_provider="nordvpn") -> None:
+            no_redirect: bool, openvpn_options: str, add_route: str, use_systemd_resolved: bool, use_resolvconf: bool,
+            server_provider="nordvpn") -> None:
     detected_os = sys.platform
     if server_provider == "nordvpn":
         vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
@@ -1182,6 +1196,14 @@ when asked, provide the sudo credentials")
     if not openvpn_options:
         openvpn_options = ""
 
+    # if add_route used, allow incoming traffic to go back through default interface,
+    if add_route:
+        routes.add_route()
+        no_redirect = True     # otherwise, routing won't work
+    # if not specified, force --redirect-gateway
+    if not no_redirect:
+        openvpn_options += " --redirect-gateway"
+
     logger.success("CONNECTING TO SERVER " + server + " ON PORT " + port)
 
     if (use_systemd_resolved or use_resolvconf) and skip_dns_patch is False:  # Debian Based OS + do DNS patching
@@ -1206,7 +1228,6 @@ when asked, provide the sudo credentials")
             def run_openvpn(*args):
                 cmdline = [
                     "sudo", "openvpn",
-                    "--redirect-gateway",
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
@@ -1214,7 +1235,7 @@ when asked, provide the sudo credentials")
                     "--script-security", "2",
                     "--up", up_down_script,
                     "--down", up_down_script,
-                    "--down-pre",
+                    # "--down-pre",
                     *args,
                 ] + openvpn_options.split()
                 completed = subprocess.run(cmdline, check=True)
@@ -1253,7 +1274,6 @@ when asked, provide the sudo credentials")
             def run_openvpn(*args):
                 cmdline = [
                     "sudo", "openvpn",
-                    "--redirect-gateway",
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,
