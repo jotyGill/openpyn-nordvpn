@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import time
+import locale
 from typing import List, Set
 
 import coloredlogs
@@ -24,6 +25,8 @@ from openpyn import locations
 from openpyn import root
 from openpyn import systemd
 from openpyn import __basefilepath__, __version__, log_folder, log_format    # variables
+
+locale.setlocale(locale.LC_ALL, '')
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -505,11 +508,12 @@ Least Busy " + Fore.GREEN + str(len(better_servers_list)) + Fore.BLUE + " Server
 # Pings servers with the specified no of "ping",
 # returns a sorted list by Ping Avg and Median Deviation
 def ping_servers(better_servers_list: List, pings: str, stats: bool) -> List:
+
     pinged_servers_list = []
     ping_supports_option_i = True       # older ping command doesn't support "-i"
 
     try:
-        subprocess.check_output(["ping", "-n", "-i", ".2", "-c", "2", "8.8.8.8"],
+        subprocess.check_output(["ping", "-n", "-i", locale.str(.2), "-c", "2", "8.8.8.8"],
                                 stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
@@ -522,7 +526,7 @@ falling back to wait of 1 second between pings, pings will be slow")
         try:
             if ping_supports_option_i:
                 ping_proc = subprocess.Popen(
-                    ["ping", "-n", "-i", ".2", "-c", pings, i[0] + ".nordvpn.com"],
+                    ["ping", "-n", "-i", locale.str(.2), "-c", pings, i[0] + ".nordvpn.com"],
                     stdout=subprocess.PIPE)
             else:
                 ping_proc = subprocess.Popen(
