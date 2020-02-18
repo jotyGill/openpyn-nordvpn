@@ -15,6 +15,7 @@ import time
 import zipfile
 from email.utils import parsedate
 from pathlib import Path
+import locale
 from typing import List, Set
 
 import coloredlogs
@@ -34,6 +35,8 @@ from openpyn import root
 from openpyn import routes
 from openpyn import systemd
 from openpyn import __basefilepath__, __version__, log_folder, ovpn_folder, log_format  # variables
+
+locale.setlocale(locale.LC_ALL, '')
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -762,14 +765,14 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
     ping_supports_option_i = True  # older ping command doesn't support "-i"
 
     try:
-        subprocess.check_output(["ping", "-n", "-i", ".2", "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["ping", "-n", "-i", locale.str(.2), "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
         logger.warning("Your 'ping' command doesn't support '-i' or '-n', \
 falling back to wait of 1 second between pings, pings will be slow")
     if ping_supports_option_i is True:
-        ping_subprocess_command = ["ping", "-n", "-i", ".2", "-c", "5", "dns_placeholder"]
+        ping_subprocess_command = ["ping", "-n", "-i", locale.str(.2), "-c", "5", "dns_placeholder"]
     else:
         ping_subprocess_command = ["ping", "-c", "5", "dns_placeholder"]
 
