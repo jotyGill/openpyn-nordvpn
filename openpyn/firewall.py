@@ -144,12 +144,16 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ip: str, skip_dns_patch:
 
 
 # open sepecified ports for devices in the local network
-def internally_allow_ports(interfaces_details: List, internally_allowed: List) -> None:
+def internally_allow_ports(interfaces_details: List, internally_allowed: List, internally_allowed_udp: List) -> None:
     for interface in interfaces_details:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:
             # Allow the specified ports on internal network
-            for port in internally_allowed:
+            for port in internally_allowed or []:
                 subprocess.call(
                     ("sudo iptables -A INPUT -p tcp --dport " + port + " -i " +
+                        interface[0] + " -s " + interface[2] + " -j ACCEPT").split())
+            for port in internally_allowed_udp or []:
+                subprocess.call(
+                    ("sudo iptables -A INPUT -p udp --dport " + port + " -i " +
                         interface[0] + " -s " + interface[2] + " -j ACCEPT").split())

@@ -91,6 +91,10 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         but ONLY to INTERNAL IP RANGE. for example: you can use your PC as SSH, HTTP server \
         for local devices (i.e. 192.168.1.* range) by "openpyn us --allow 22 80"', nargs='+')
     parser.add_argument(
+        '--allow-udp', dest='internally_allowed_udp', help='To be used with "f" to allow UDP ports \
+        but ONLY to INTERNAL IP RANGE. for example: you can use your PC as a DNS server \
+        for local devices (i.e. 192.168.1.* range) by "openpyn us --allow-udp 53"', nargs='+')
+    parser.add_argument(
         '-l', '--list', dest="list_servers", type=str, nargs='?', default="nope",
         help='If no argument given prints all Country Names and Country Codes; \
         If country code supplied ("-l us"): Displays all servers in that given\
@@ -141,7 +145,8 @@ def main() -> bool:
         args.kill, args.kill_flush, args.update, args.list_servers,
         args.force_fw_rules, args.p2p, args.dedicated, args.double_vpn,
         args.tor_over_vpn, args.anti_ddos, args.netflix, args.test, args.internally_allowed,
-        args.skip_dns_patch, args.silent, args.nvram, args.openvpn_options, args.location)
+        args.internally_allowed_udp, args.skip_dns_patch, args.silent, args.nvram,
+        args.openvpn_options, args.location)
     return return_code
 
 
@@ -149,8 +154,8 @@ def main() -> bool:
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool, daemon: bool,
         max_load: int, top_servers: int, pings: str, kill: bool, kill_flush: bool, update: bool, list_servers: bool,
         force_fw_rules: bool, p2p: bool, dedicated: bool, double_vpn: bool, tor_over_vpn: bool, anti_ddos: bool,
-        netflix: bool, test: bool, internally_allowed: List, skip_dns_patch: bool, silent: bool, nvram: str,
-        openvpn_options: str, location: float) -> bool:
+        netflix: bool, test: bool, internally_allowed: List, internally_allowed_udp: List, skip_dns_patch: bool,
+        silent: bool, nvram: str, openvpn_options: str, location: float) -> bool:
 
     if init:
         initialise(log_folder)
@@ -309,6 +314,11 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             for port_number in internally_allowed:
                 open_ports += " " + port_number
             openpyn_options += " --allow" + open_ports
+        if internally_allowed_udp:
+            open_ports = ""
+            for port_number in internally_allowed_udp:
+                open_ports += " " + port_number
+            openpyn_options += " --allow_udp" + open_ports
         if skip_dns_patch:
             openpyn_options += " --skip-dns-patch"
         if nvram:
@@ -335,9 +345,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         # if --allow present, allow those ports internally
         logger.info("Re-enabling ipv6")
         firewall.manage_ipv6(disable=False)
-        if internally_allowed:
+        if internally_allowed or internally_allowed_udp:
             network_interfaces = get_network_interfaces()
-            firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            firewall.internally_allow_ports(network_interfaces, internally_allowed, internally_allowed_udp)
         kill_management_client()
         kill_vpn_processes()
         kill_openpyn_process()
@@ -406,8 +416,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     network_interfaces = get_network_interfaces()
                     vpn_server_ip = get_vpn_server_ip(aserver, port)
                     firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-                    if internally_allowed:
-                        firewall.internally_allow_ports(network_interfaces, internally_allowed)
+                    if internally_allowed or internally_allowed_udp:
+                        firewall.internally_allow_ports(network_interfaces, internally_allowed, internally_allowed_udp)
                 if nvram:
                     # TODO return 0 on success else 1 in asus.run()
                     asus.run(aserver, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
@@ -425,8 +435,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             network_interfaces = get_network_interfaces()
             vpn_server_ip = get_vpn_server_ip(server, port)
             firewall.apply_fw_rules(network_interfaces, vpn_server_ip, skip_dns_patch)
-            if internally_allowed:
-                firewall.internally_allow_ports(network_interfaces, internally_allowed)
+            if internally_allowed or internally_allowed_udp:
+                firewall.internally_allow_ports(network_interfaces, internally_allowed, internally_allowed_udp)
         if nvram:
             asus.run(server, country_code, nvram, "All", "adaptive", "Strict", tcp, test)
             logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM")

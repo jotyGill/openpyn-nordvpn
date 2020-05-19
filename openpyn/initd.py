@@ -44,6 +44,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     parser.add_argument('--skip-dns-patch', dest='skip_dns_patch')
     parser.add_argument('-f', '--force-fw-rules')
     parser.add_argument('--allow', dest='internally_allowed')
+    parser.add_argument('--allow-udp', dest='internally_allowed_udp')
     # parser.add_argument('-l', '--list', dest="list_servers", type=str, nargs='?', default="nope")
     parser.add_argument('--silent')
     parser.add_argument('--p2p')
@@ -83,6 +84,7 @@ Default(Just Press Enter) is, uk : ") or "uk"
     netflix = args.netflix
     test = args.test
     internally_allowed = args.internally_allowed
+    internally_allowed_udp = args.internally_allowed_udp
     skip_dns_patch = args.skip_dns_patch
     silent = args.silent
     nvram = args.nvram
@@ -146,6 +148,11 @@ Default(Just Press Enter) is, uk : ") or "uk"
         for port_number in internally_allowed:
             open_ports += " " + port_number
         openpyn_options += " --allow" + open_ports
+    if internally_allowed_udp:
+        open_ports = ""
+        for port_number in internally_allowed_udp:
+            open_ports += " " + port_number
+        openpyn_options += " --allow-udp" + open_ports
     if skip_dns_patch:
         openpyn_options += " --skip-dns-patch"
     if silent:
