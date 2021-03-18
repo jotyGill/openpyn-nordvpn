@@ -3,11 +3,13 @@
 import argparse
 import io
 import json
+import locale
 import logging
 import logging.handlers
 import os
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -15,7 +17,6 @@ import time
 import zipfile
 from email.utils import parsedate
 from pathlib import Path
-import locale
 from typing import List, Set
 
 import coloredlogs
@@ -402,12 +403,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             systemd.update_service(openpyn_options, run=True)
 
     elif kill:
-        try:
-            kill_all()
-            # returns exit code 143
-        except RuntimeError as e:
-            logger.critical(e)
-            return 1
+        kill_all()
 
     elif kill_flush:
         if detected_os == "linux":
@@ -424,12 +420,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 if internally_allowed:
                     network_interfaces = get_network_interfaces()
                     firewall.internally_allow_ports(network_interfaces, internally_allowed)
-        try:
-            kill_all()
-            # returns exit code 143
-        except RuntimeError as e:
-            logger.critical(e)
-            return 1
+        kill_all()
 
     elif update:
         try:
@@ -861,6 +852,11 @@ def kill_all() -> None:
     root_access = root.verify_root_access("Root access needed to kill 'openvpn', 'openpyn', 'openpyn-management' processes")
     if root_access is False:
         root.obtain_root_access()
+
+    # ignore interrupt from keyboard (CTRL + C)
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    # ignore termination signal (143)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
     kill_management_client()
     kill_vpn_processes()
