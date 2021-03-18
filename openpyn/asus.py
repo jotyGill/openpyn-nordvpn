@@ -3,7 +3,7 @@ import os
 import subprocess
 
 import verboselogs
-from openpyn import api, credentials_file_path, ovpn_folder
+from openpyn import api, credentials_file_path, ovpn_folder, sudo_user
 from openpyn.converter import T_CLIENT, Converter
 
 verboselogs.install()
@@ -102,6 +102,6 @@ def write(c, key, value, unit, service, test=False):
                 return
         c.pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
-            subprocess.run(["sudo", "/bin/nvram", "set", argument2], check=True)
+            subprocess.run(["sudo", "-u", sudo_user, "/bin/nvram", "set", argument2], check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(e.output)

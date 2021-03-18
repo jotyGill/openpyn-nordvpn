@@ -34,7 +34,7 @@ from openpyn import locations
 from openpyn import root
 from openpyn import routes
 from openpyn import systemd
-from openpyn import __basefilepath__, __version__, log_folder, ovpn_folder, log_format  # variables
+from openpyn import __basefilepath__, __version__, log_folder, ovpn_folder, log_format, sudo_user  # variables
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -308,9 +308,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.addHandler(file_handler)
         except PermissionError:
             root.verify_root_access("Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run(["sudo", "chmod", "777", log_folder])
-            subprocess.run(["sudo", "chmod", "666", log_folder + "/openpyn.log"])
-            subprocess.run(["sudo", "chmod", "666", log_folder + "/openpyn-notifications.log"])
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder])
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"])
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"])
         else:
             break
 
@@ -612,7 +612,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         logger.info("To see usage options type: 'openpyn -h' or 'openpyn --help'")
 
     # Darwin: Revert /etc/resolv.conf back to the original if it was modified
-    subprocess.call(["sudo", __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+    subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
     # if everything went ok
     return 0
@@ -870,7 +870,7 @@ def kill_vpn_processes() -> None:
         subprocess.check_output(["pgrep", "openvpn"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openvpn process")
-        subprocess.check_output(["sudo", "killall", "openvpn"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openvpn"], stderr=subprocess.DEVNULL)
         time.sleep(1)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -882,7 +882,7 @@ def kill_openpyn_process() -> None:
         subprocess.check_output(["pgrep", "openpyn"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openpyn process")
-        subprocess.check_output(["sudo", "killall", "openpyn"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the openpyn_processes issued non 0 result, "not found"
         pass
@@ -894,7 +894,7 @@ def kill_management_client() -> None:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openvpn-management process")
-        subprocess.check_output(["sudo", "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
         time.sleep(3)
     except subprocess.CalledProcessError:
         # when Exception, the openpyn-management_processes issued non 0 result, "not found"
@@ -1230,7 +1230,7 @@ when asked, provide the sudo credentials")
 
             def run_openvpn(*args):
                 cmdline = [
-                    "sudo", "openvpn",
+                    "sudo", "-u", sudo_user, "openvpn",
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--auth-retry", "nointeract",
                     "--config", vpn_config_file,
@@ -1269,14 +1269,14 @@ when asked, provide the sudo credentials")
         if skip_dns_patch is False:
             logger.warning("Your OS '%s' Does not have '/sbin/resolvconf'", detected_os)
             logger.notice("Manually applying patch to tunnel DNS through the VPN tunnel by modifying '/etc/resolv.conf'")
-            subprocess.call(["sudo", __basefilepath__ + "scripts/manual-dns-patch.sh"])
+            subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/manual-dns-patch.sh"])
         else:
             logger.warning("Not modifying '/etc/resolv.conf', DNS traffic likely won't go through the encrypted tunnel")
 
         try:
             def run_openvpn(*args):
                 cmdline = [
-                    "sudo", "openvpn",
+                    "sudo", "-u", sudo_user, "openvpn",
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,

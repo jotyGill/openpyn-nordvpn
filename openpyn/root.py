@@ -4,6 +4,7 @@ import pwd
 import subprocess
 
 import verboselogs
+from openpyn import sudo_user
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -20,7 +21,7 @@ def verify_root_access(message: str) -> bool:
     #        return False
 
     try:
-        subprocess.check_output(["sudo", "-n", "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["sudo", "-u", sudo_user, "-n", "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL)
     # -n 'non-interactive' mode used to, not prompt for password (if user not sudo) but throw err.
     except subprocess.CalledProcessError:
         logger.notice(message)
@@ -39,7 +40,7 @@ def verify_running_as_root() -> bool:
 def obtain_root_access() -> None:
     # asks for sudo password to be cached
     try:    # try accessing root read only file "600" permission, ask for sudo pass
-        subprocess.call(["sudo", "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.call(["sudo", "-u", sudo_user, "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         raise RuntimeError("except occurred while running obtain_root_access() 'sudo cat /etc/resolv.conf' command")
     except KeyboardInterrupt:

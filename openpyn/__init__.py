@@ -13,9 +13,16 @@ ovpn_folder = os.path.join(__basefilepath__, "files")  # .ovpn config files loca
 log_folder = "/var/log/openpyn"  # logs will be saved here
 credentials_file_path = os.path.join(__basefilepath__, "credentials")  # nordvpn username/password
 
+sudo_user = "root"
+
 if sys.platform == "linux":
     if subprocess.check_output(["/bin/uname", "-o"]).decode(sys.stdout.encoding).strip() == "ASUSWRT-Merlin":
         __data_files__ = [("/opt/etc/init.d", ["./openpyn/S23openpyn"])]
+        # admin is Asuswrt's UID 1. It's root, but with a different name
+        # standard installation Entware
+        sudo_user = "admin"
+        # alternative installation Entware (not recommended)
+        # sudo_user = "root"
     elif os.path.exists("/etc/openwrt_release"):
         __data_files__ = [("/opt/etc/init.d", ["./openpyn/S23openpyn"])]
 
