@@ -31,7 +31,8 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     certs_folder = "/jffs/openvpn/"
 
     if not os.path.exists(certs_folder):
-        os.mkdir(certs_folder, mode=0o700)
+        os.mkdir(certs_folder, 0o700)
+        os.chmod(certs_folder, 0o700)
 
     c = Converter(debug)
     c.set_username(lines[0])

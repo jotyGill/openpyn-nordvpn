@@ -40,6 +40,7 @@ def update_service(openpyn_options: str, run=False) -> None:
 
     if not os.path.exists(systemd_service_path):
         os.makedirs(systemd_service_path)
+        os.chmod(systemd_service_path, 0o777)
     with open(systemd_service_file, "w+") as service_file:
         service_file.write(service_text)
 
