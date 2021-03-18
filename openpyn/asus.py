@@ -1,8 +1,9 @@
 import logging
+import os
 import subprocess
 
 import verboselogs
-from openpyn import credentials_file_path, api, ovpn_folder
+from openpyn import api, credentials_file_path, ovpn_folder
 from openpyn.converter import T_CLIENT, Converter
 
 verboselogs.install()
@@ -27,6 +28,11 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
 
     vpn_config_file = server + ".nordvpn.com." + port + ".ovpn"
 
+    certs_folder = "/jffs/openvpn/"
+
+    if not os.path.exists(certs_folder):
+        os.mkdir(certs_folder, mode=0o700)
+
     c = Converter(debug)
     c.set_username(lines[0])
     c.set_password(lines[1])
@@ -36,7 +42,7 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
 
     c.set_name(server)
     c.set_source_folder(ovpn_folder + folder)
-    c.set_certs_folder("/jffs/openvpn/")
+    c.set_certs_folder(certs_folder)
 
     c.set_accept_dns_configuration(adns)
     c.set_compression(comp)
