@@ -10,7 +10,8 @@ import verboselogs
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
-# ASUSWRT-Merlin 384.18
+# ASUSWRT-Merlin
+# github.com/RMerl/asuswrt-merlin.ng/blob/5491c35d99160fefd3c8c89e7de5a635215009a2/release/src/router/shared/defaults.c
 
 # CONFIGURATION PLACEHOLDERS
 # spaces are intentionally left at the end of the word
@@ -36,7 +37,7 @@ T_PASSWORD = 'password'
 T_PORT = 'port'
 T_PROTOCOL = 'proto'
 T_TLS_RENEGOTIATION_TIME = 'reneg'
-T_CONNECTION_RETRY = 'retry'
+T_CONNECTION_RETRY = 'connretry'
 T_REDIRECT_GATEWAY = 'rgw'
 T_CLIENT = 'unit'
 T_USERAUTH = 'userauth'
@@ -97,7 +98,7 @@ class Converter:
         self._extracted_data[T_PORT] = "1194"
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
-        self._extracted_data[T_CONNECTION_RETRY] = "-1"
+        self._extracted_data[T_CONNECTION_RETRY] = "15"
         self._extracted_data[T_REDIRECT_GATEWAY] = "1"
         self._extracted_data[T_CLIENT] = "5"
         self._extracted_data[T_USERAUTH] = "1"
