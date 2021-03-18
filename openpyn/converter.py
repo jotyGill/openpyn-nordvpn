@@ -10,8 +10,10 @@ import verboselogs
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
+# ASUSWRT-Merlin 384.18
+
 # CONFIGURATION PLACEHOLDERS
-# spaces are intentionally let by the end of the word
+# spaces are intentionally left at the end of the word
 SERVER_ADDRESS = 'remote '
 CIPHER = 'cipher '
 AUTH_DIGEST = 'auth '
@@ -25,7 +27,7 @@ T_SERVER_ADDRESS = 'addr'
 T_ACCEPT_DNS_CONFIGURATION = 'adns'
 T_CIPHER = 'cipher'
 T_COMPRESSION = 'comp'
-T_CUSTOM_CONFIGURATION = 'custom2'
+T_CUSTOM_CONFIGURATION = 'cust2'
 T_DESCRIPTION = 'desc'
 T_AUTH_DIGEST = 'digest'
 T_TLS_CONTROL_CHANNEL_SECURITY = 'hmac'
