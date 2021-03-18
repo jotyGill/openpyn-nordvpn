@@ -308,9 +308,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.addHandler(file_handler)
         except PermissionError:
             root.verify_root_access("Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run("sudo chmod 777 {}".format(log_folder).split())
-            subprocess.run("sudo chmod 666 {}/openpyn.log".format(log_folder).split())
-            subprocess.run("sudo chmod 666 {}/openpyn-notifications.log".format(log_folder).split())
+            subprocess.run(["sudo", "chmod", "777", log_folder])
+            subprocess.run(["sudo", "chmod", "666", log_folder + "/openpyn.log"])
+            subprocess.run(["sudo", "chmod", "666", log_folder + "/openpyn-notifications.log"])
         else:
             break
 
@@ -1180,7 +1180,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
             time.sleep(6)
             update_config_files()
 
-    root_access = root.verify_root_access("Sudo credentials required to run 'openvpn'")
+    root_access = root.verify_root_access("Root access needed to run 'openvpn'")
     if root_access is False:
         root.obtain_root_access()
 
@@ -1243,7 +1243,7 @@ when asked, provide the sudo credentials")
                 ] + openvpn_options.split()
                 completed = subprocess.run(cmdline, check=True)
 
-                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # "killall openvpn" - the default signal sent is SIGTERM
                 # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
                 # logger.debug("RETURN CODE, {}".format(completed.returncode))
                 if completed.returncode == 0:
@@ -1283,7 +1283,7 @@ when asked, provide the sudo credentials")
                 ] + openvpn_options.split()
                 completed = subprocess.run(cmdline, check=True)
 
-                # "sudo killall openvpn" - the default signal sent is SIGTERM
+                # "killall openvpn" - the default signal sent is SIGTERM
                 # SIGTERM signal causes OpenVPN to exit gracefully - OpenVPN exits with 0 status
                 # logger.debug("RETURN CODE, {}".format(completed.returncode))
                 if completed.returncode == 0:

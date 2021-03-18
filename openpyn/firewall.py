@@ -29,19 +29,19 @@ def clear_fw_rules() -> None:
     logger.info("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
     subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
     # allow all outgoing traffic
-    subprocess.call("sudo iptables -P OUTPUT ACCEPT".split())
+    subprocess.call(["sudo", "iptables", "-P", "OUTPUT", "ACCEPT"])
 
     subprocess.call(["sudo", "iptables", "-F", "INPUT"])
     subprocess.call(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
     subprocess.call(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
     subprocess.call(
-        "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT".split())
+        ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-j", "ACCEPT"])
     # allow ICMP traffic
-    subprocess.call("sudo iptables -A INPUT -p icmp --icmp-type any -j ACCEPT".split())
+    subprocess.call(["sudo", "iptables", "-A", "INPUT", "-p", "icmp", "--icmp-type", "any", "-j", "ACCEPT"])
     # best practice, stops spoofing
-    subprocess.call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
+    subprocess.call(["sudo", "iptables", "-A", "INPUT", "-s", "127.0.0.0/8", "-j", "DROP"])
     # drop anything else incoming
-    subprocess.call("sudo iptables -P INPUT DROP".split())
+    subprocess.call(["sudo", "iptables", "-P", "INPUT", "DROP"])
 
 
 NORDVPN_DNS = [
@@ -103,8 +103,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
     ])
     # accept traffic that comes through tun that you connect to
     subprocess.check_call(
-        "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
-         -i tun+ -j ACCEPT".split())
+        ["sudo", "iptables", "-A", "INPUT", "-m", "conntrack", "--ctstate", "ESTABLISHED,RELATED", "-i", "tun+", "-j", "ACCEPT"])
 
     for interface in interfaces_details:
         if len(interface) != 3:
@@ -158,15 +157,15 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
         ])
 
     # allow loopback traffic
-    subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
-    subprocess.check_call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
+    subprocess.check_call(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
+    subprocess.check_call(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
 
     # best practice, stops spoofing
-    subprocess.check_call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
+    subprocess.check_call(["sudo", "iptables", "-A", "INPUT", "-s", "127.0.0.0/8", "-j", "DROP"])
 
     # default action if no other rules match
-    subprocess.check_call("sudo iptables -P OUTPUT DROP".split())
-    subprocess.check_call("sudo iptables -P INPUT DROP".split())
+    subprocess.check_call(["sudo", "iptables", "-P", "OUTPUT", "DROP"])
+    subprocess.check_call(["sudo", "iptables", "-P", "INPUT", "DROP"])
 
 
 # Open specified ports for devices in the local network
@@ -257,7 +256,7 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
             if ip_ranges != []:
                 ip_flag = ' -s ' + ','.join(ip_ranges)
 
-            ip_table_rules.append("sudo iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
+            ip_table_rules.append("sudo" + " iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
                 port_type=port_type, port_flag=port_flag, interface=interface[0], ip_flag=ip_flag
             ))
 
