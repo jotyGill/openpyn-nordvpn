@@ -611,8 +611,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     else:
         logger.info("To see usage options type: 'openpyn -h' or 'openpyn --help'")
 
+    if skip_dns_patch is False:
     # Darwin: Revert /etc/resolv.conf back to the original if it was modified
-    subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+        subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
     # if everything went ok
     return 0
