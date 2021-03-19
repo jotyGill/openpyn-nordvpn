@@ -984,11 +984,11 @@ def update_config_files() -> None:
             pbar.update(file.file_size)
 
     # change dir permissions so non root can delete/write them
-    for root, dirs, files in os.walk(temp_folder):
-        for dir in dirs:
-            os.chmod(os.path.join(root, dir), 0o777)
-        for file in files:
-            # os.chmod(os.path.join(root, file), 0o666)
+    for dirpath, dirnames, filenames in os.walk(temp_folder):
+        for name in dirnames:
+            os.chmod(os.path.join(dirpath, name), 0o777)
+        for name in filenames:
+            # os.chmod(os.path.join(dirpath, name), 0o666)
             pass
 
     # remove dirs, because non-root can't chmod if files/dirs were created by root
