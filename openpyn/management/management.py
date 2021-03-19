@@ -9,7 +9,9 @@ from time import sleep
 from typing import List
 
 import verboselogs
-from openpyn import log_folder, log_format
+
+from openpyn import log_folder
+from openpyn import log_format
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -17,8 +19,7 @@ logger = logging.getLogger(__package__)
 logger.setLevel(logging.VERBOSE)
 
 # Add another rotating handler to log to .log files
-file_handler = logging.FileHandler(
-    log_folder + '/openpyn-notifications.log')
+file_handler = logging.FileHandler(log_folder + "/openpyn-notifications.log")
 file_handler_formatter = logging.Formatter(log_format)
 file_handler.setFormatter(file_handler_formatter)
 logger.addHandler(file_handler)
@@ -68,7 +69,7 @@ def show(do_notify) -> bool:
             logger.warning("%s %s", summary, body)
         elif detected_os == "darwin":
             if do_notify:
-                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                notification = '"{}" with title "{}"'.format(body, summary)
                 os.system("""osascript -e 'display notification {}'""".format(notification))
         last_status_UP = False
         # s.send(str.encode("state on"))
@@ -77,11 +78,11 @@ def show(do_notify) -> bool:
             data_str = repr(data)
             # logger.debug(data_str)
             # if 'UPDOWN:DOWN' or 'UPDOWN:UP' or 'INFO' in data_str:
-            if 'UPDOWN:UP' in data_str:
+            if "UPDOWN:UP" in data_str:
                 last_status_UP = True
                 # logger.debug("Received AN UP")
 
-            if 'UPDOWN:DOWN' in data_str:
+            if "UPDOWN:DOWN" in data_str:
                 last_status_UP = False
 
                 # logger.debug("Received A DOWN" + data_str)
@@ -94,7 +95,7 @@ def show(do_notify) -> bool:
                     logger.info("%s %s", summary, body)
                 elif detected_os == "darwin":
                     if do_notify:
-                        notification = "\"{}\" with title \"{}\"".format(body, summary)
+                        notification = '"{}" with title "{}"'.format(body, summary)
                         os.system("""osascript -e 'display notification {}'""".format(notification))
 
             server_name_location = data_str.find("common_name=")
@@ -111,7 +112,7 @@ def show(do_notify) -> bool:
                     logger.info("%s %s", summary, body)
                 elif detected_os == "darwin":
                     if do_notify:
-                        notification = "\"{}\" with title \"{}\"".format(body, summary)
+                        notification = '"{}" with title "{}"'.format(body, summary)
                         os.system("""osascript -e 'display notification {}'""".format(notification))
 
             # break of data stream is empty
@@ -127,7 +128,7 @@ def show(do_notify) -> bool:
                 notification.show()
         elif detected_os == "darwin":
             if do_notify:
-                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                notification = '"{}" with title "{}"'.format(body, summary)
                 os.system("""osascript -e 'display notification {}'""".format(notification))
     except ConnectionResetError:
         body = "Disconnected, Bye. (ConnectionReset)"
@@ -138,7 +139,7 @@ def show(do_notify) -> bool:
                 notification.show()
         elif detected_os == "darwin":
             if do_notify:
-                notification = "\"{}\" with title \"{}\"".format(body, summary)
+                notification = '"{}" with title "{}"'.format(body, summary)
                 os.system("""osascript -e 'display notification {}'""".format(notification))
 
     s.close()
@@ -148,10 +149,10 @@ def show(do_notify) -> bool:
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Management interface for openpyn to display notifications and log"
-        "them to {}/openpyn-notifications.log".format(log_folder), allow_abbrev=False)
-    parser.add_argument(
-        '--do-notify', dest='do_notify', help='try to display desktop notifications.',
-        action='store_true')
+        "them to {}/openpyn-notifications.log".format(log_folder),
+        allow_abbrev=False,
+    )
+    parser.add_argument("--do-notify", dest="do_notify", help="try to display desktop notifications.", action="store_true")
 
     return parser.parse_args(argv[1:])
 
@@ -162,5 +163,5 @@ def main() -> bool:
     return show(args.do_notify)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

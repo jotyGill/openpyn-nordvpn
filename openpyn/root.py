@@ -4,6 +4,7 @@ import pwd
 import subprocess
 
 import verboselogs
+
 from openpyn import sudo_user
 
 verboselogs.install()
@@ -39,8 +40,12 @@ def verify_running_as_root() -> bool:
 
 def obtain_root_access() -> None:
     # asks for sudo password to be cached
-    try:    # try accessing root read only file "600" permission, ask for sudo pass
-        subprocess.call(["sudo", "-u", sudo_user, "cat", "/etc/resolv.conf"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    try:  # try accessing root read only file "600" permission, ask for sudo pass
+        subprocess.call(
+            ["sudo", "-u", sudo_user, "cat", "/etc/resolv.conf"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
     except subprocess.CalledProcessError:
         raise RuntimeError("except occurred while running obtain_root_access() 'sudo cat /etc/resolv.conf' command")
     except KeyboardInterrupt:
@@ -61,8 +66,8 @@ def running_with_sudo() -> bool:
         try:
             logged_in_user = os.getlogin()
             if logged_in_user_is_root(logged_in_user):
-                return False    # when logged in as 'root' user notifications will work.
-            return True     # 'sudo' is used notification won't work.
+                return False  # when logged in as 'root' user notifications will work.
+            return True  # 'sudo' is used notification won't work.
         except FileNotFoundError:
             logger.verbose("os.getlogin(), returned FileNotFoundError, assuming 'openpyn' is running with 'SUDO'")
             return True
@@ -70,4 +75,4 @@ def running_with_sudo() -> bool:
             logger.verbose("os.getlogin(), returned error, assuming 'openpyn' is running with 'SUDO'")
             return True
 
-    return False    # regular user without 'sudo'
+    return False  # regular user without 'sudo'

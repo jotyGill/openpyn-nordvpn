@@ -10,22 +10,12 @@ from openpyn import sudo_user
 def add_route():
     table_number = "175"
 
-    default_route = (
-        subprocess.check_output(["ip", "route", "show", "default"])
-        .decode(sys.stdout.encoding)
-        .strip()
-        .split()
-    )
+    default_route = subprocess.check_output(["ip", "route", "show", "default"]).decode(sys.stdout.encoding).strip().split()
     default_gateway_ip = default_route[2]
     # default_interface = default_route[4]
 
     # Get the first ip addr reported by 'hostname --all-ip-addresses'
-    ip_addr = (
-        subprocess.check_output(["hostname", "--all-ip-addresses"])
-        .decode(sys.stdout.encoding)
-        .strip()
-        .split()[0]
-    )
+    ip_addr = subprocess.check_output(["hostname", "--all-ip-addresses"]).decode(sys.stdout.encoding).strip().split()[0]
 
     route_rule = "from {} lookup {}".format(ip_addr, table_number)
     # print(route_rule)
@@ -42,15 +32,5 @@ def add_route():
         # )
 
         subprocess.call(
-            [
-                "sudo", "-u", sudo_user,
-                "ip",
-                "route",
-                "add",
-                "table",
-                table_number,
-                "default",
-                "via",
-                default_gateway_ip,
-            ]
+            ["sudo", "-u", sudo_user, "ip", "route", "add", "table", table_number, "default", "via", default_gateway_ip]
         )

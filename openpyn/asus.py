@@ -3,8 +3,13 @@ import os
 import subprocess
 
 import verboselogs
-from openpyn import api, credentials_file_path, ovpn_folder, sudo_user
-from openpyn.converter import T_CLIENT, Converter
+
+from openpyn import api
+from openpyn import credentials_file_path
+from openpyn import ovpn_folder
+from openpyn import sudo_user
+from openpyn.converter import T_CLIENT
+from openpyn.converter import Converter
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -13,7 +18,7 @@ logger = logging.getLogger(__package__)
 def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False, test=False, debug=False):
     country_name = api.get_country_name(server[:2])
 
-    with open(credentials_file_path, 'r') as f:
+    with open(credentials_file_path, "r") as f:
         lines = f.read().splitlines()
 
     port = "udp"
@@ -51,7 +56,7 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     c.set_client(client)
 
     if options:
-        c.set_openvpn_options("\n".join(filter(None, options.split("--")))+"\n")
+        c.set_openvpn_options("\n".join(filter(None, options.split("--"))) + "\n")
 
     extracted_info = c.extract_information(vpn_config_file)
     if not test:

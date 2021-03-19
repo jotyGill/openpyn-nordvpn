@@ -3,6 +3,7 @@ import operator
 from typing import List
 
 import verboselogs
+
 from openpyn import locations
 
 verboselogs.install()
@@ -36,8 +37,7 @@ def filter_by_country(country_code: str, type_filtered_servers: List) -> List:
 def filter_by_location(location: float, type_filtered_servers: List) -> List:
     remaining_servers = []
     for aServer in type_filtered_servers:
-        if aServer["location"]["lat"] == location[0] and \
-                aServer["location"]["long"] == location[1]:
+        if aServer["location"]["lat"] == location[0] and aServer["location"]["long"] == location[1]:
             remaining_servers.append(aServer)
             # logger.debug(aServer)
     return remaining_servers
