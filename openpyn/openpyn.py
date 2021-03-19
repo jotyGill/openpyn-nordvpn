@@ -987,9 +987,8 @@ def update_config_files() -> None:
     for dirpath, dirnames, filenames in os.walk(temp_folder):
         for name in dirnames:
             os.chmod(os.path.join(dirpath, name), 0o777)
-        for name in filenames:
+        # for name in filenames:
             # os.chmod(os.path.join(dirpath, name), 0o666)
-            pass
 
     # remove dirs, because non-root can't chmod if files/dirs were created by root
     shutil.rmtree(os.path.join(ovpn_folder, "ovpn_tcp"), True)
