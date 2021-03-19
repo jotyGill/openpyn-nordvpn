@@ -299,7 +299,11 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
             try:
                 allowed_ports_config = json.load(file_handle)
             except json.JSONDecodeError as json_decode_error:
-                logger.error("Failed to decode allowed ports JSON")
+                logger.error(
+                    "Failed to decode allowed ports JSON Error at line {line}:{col} {msg} ".format(
+                        line=json_decode_error.lineno, col=json_decode_error.colno, msg=json_decode_error.msg
+                    )
+                )
                 return False
 
     except EnvironmentError as file_read_error:
