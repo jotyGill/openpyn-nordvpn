@@ -1240,7 +1240,7 @@ when asked, provide the sudo credentials")
                     "--down", up_down_script,
                     # "--down-pre",
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "sudo killall openvpn" - the default signal sent is SIGTERM
@@ -1280,7 +1280,7 @@ when asked, provide the sudo credentials")
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "sudo killall openvpn" - the default signal sent is SIGTERM
