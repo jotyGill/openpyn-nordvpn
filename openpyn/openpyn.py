@@ -145,14 +145,14 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     display_options.add_argument(
         '--status', dest='show_status', help='Show last change in connection status', action='store_true')
     display_options.add_argument(
-        '--stats', dest='show_stats', help='Show openvpn connection stats', action='store_true')
+        '--stats', dest='show_stats', help='Show OpenVPN connection stats', action='store_true')
 
     fw_options = parser.add_argument_group("Firewall Options", "Firewall, KillSwitch and Route Options")
     fw_options.add_argument(
         '-f', '--force-fw-rules', help='Enforce firewall rules to drop traffic when tunnel breaks\
         , force disable DNS traffic going to any other interface', action='store_true')
     fw_options.add_argument('-r', '--add-route', dest="add_route", help='Add route to default-gateway; Needed to \
-        continue serving any service including ssh. Required on VPSs. To insure it doesn\'t leak traffic use it with \
+        continue serving any service including SSH. Required on VPSs. To ensure it doesn\'t leak traffic use it with \
         -f and --allow', action='store_true')
     fw_options.add_argument(
         '--allow-locally', dest='allow_locally', help='To be used with "-f" to allow input traffic \
