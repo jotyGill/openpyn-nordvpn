@@ -71,7 +71,7 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     service = "client"
 
     for key, value in extracted_info.items():
-        write(c, key, value, unit, service, test)
+        write(key, value, unit, service, test)
 
     extracted_info = dict(extracted_info)
     if T_CLIENT in extracted_info:
@@ -86,7 +86,7 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     service = "client"
 
     for key, value in extracted_info.items():
-        write(c, key, value, unit, service, test)
+        write(key, value, unit, service, test)
 
     # 'vpn_upload_unit'
     key = T_CLIENT
@@ -94,20 +94,101 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     unit = ""
     service = "upload"
 
-    write(c, key, value, unit, service, test)
+    write(key, value, unit, service, test)
 
 
-def write(c, key, value, unit, service, test=False):
+def write(key, value, unit, service, test=False):
     argument1 = "vpn" + "_" + service + unit + "_" + key
     argument2 = argument1 + "=" + value
     try:
-        c.pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        pprint("/bin/nvram" + " " + "get" + " " + argument1)
         if not test:
             current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
             if current.decode("utf-8").strip() == value:
                 return
-        c.pprint("/bin/nvram" + " " + "set" + " " + argument2)
+        pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
             subprocess.run(["sudo", "-u", sudo_user, "/bin/nvram", "set", argument2], check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(e.output)
+
+
+def connect(unit, test=False):
+    argument1 = "vpn" + "_" + "client" + unit + "_" + "state"
+    argument2 = "start" + "_" + "vpnclient" + unit
+    try:
+        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        if not test:
+            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            if current.decode("utf-8").strip() in {"1", "2"}:  # Connected
+                return
+        pprint("/sbin/service" + " " + argument2)
+        if not test:
+            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(e.output)
+
+
+def disconnect(unit, test=False):
+    argument1 = "vpn" + "_" + "client" + unit + "_" + "state"
+    argument2 = "stop" + "_" + "vpnclient" + unit
+    try:
+        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        if not test:
+            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            if not current.decode("utf-8").strip() in {"1", "2"}:  # Disconnected
+                return
+        pprint("/sbin/service" + " " + argument2)
+        if not test:
+            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(e.output)
+
+
+def state(unit, test=False) -> bool:
+    argument1 = "vpn" + "_" + "client" + unit + "_" + "state"
+    try:
+        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        if not test:
+            client_state = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            code = client_state.decode("utf-8").strip()
+            if code == "1":
+                logger.success("Connecting...")
+            elif code == "2":
+                logger.success("Connected")
+            elif code == "-1":
+                return errno(unit, test)
+
+        return 0
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(e.output)
+
+
+def errno(unit, test=False) -> bool:
+    argument1 = "vpn" + "_" + "client" + unit + "_" + "errno"
+    try:
+        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        if not test:
+            client_errno = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
+            code = client_errno.decode("utf-8").strip()
+            if code == "1":
+                logger.error("Error - IP conflict!")
+            elif code == "2":
+                logger.error("Error - Routing conflict!")
+            elif code == "4":
+                logger.error("Error - SSL/TLS issue!")
+            elif code == "5":
+                logger.error("Error - DH issue!")
+            elif code == "6":
+                logger.error("Error - Authentication failure!")
+            else:
+                logger.error("Error - check configuration!")
+
+        return 1
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(e.output)
+
+
+def pprint(msg, debug=False):
+    if debug:
+        logger.debug(msg)

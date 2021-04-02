@@ -17,6 +17,7 @@ import time
 import zipfile
 from email.utils import parsedate
 from pathlib import Path
+from time import sleep
 from typing import List
 from typing import Set
 
@@ -410,6 +411,12 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             systemd.update_service(openpyn_options, run=True)
 
     elif kill:
+        if detected_os == "linux":
+            if asuswrt_os:
+                if nvram:
+                    asus.disconnect(nvram, test)
+                    sleep(2)
+                    return asus.state(nvram, test)
         kill_all()
 
     elif kill_flush:
@@ -534,7 +541,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                     check_config_files()
                     asus.run(aserver, nvram, openvpn_options, "All", "adaptive", "Strict", tcp, test)
                     logger.success("SAVED SERVER " + aserver + " ON PORT " + port + " TO NVRAM " + nvram)
-                    return 0
+                    asus.connect(nvram, test)
+                    sleep(2)
+                    return asus.state(nvram, test)
 
                 if test:
                     logger.success(
@@ -601,7 +610,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
                 check_config_files()
                 asus.run(server, nvram, openvpn_options, "All", "adaptive", "Strict", tcp, test)
                 logger.success("SAVED SERVER " + server + " ON PORT " + port + " TO NVRAM " + nvram)
-                return 0
+                asus.connect(nvram, test)
+                sleep(2)
+                return asus.state(nvram, test)
 
             if test:
                 logger.success(

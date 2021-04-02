@@ -23,7 +23,7 @@ A python3 script (systemd service as well) to manage OpenVPN connections. Create
     "Tor Over VPN" --tor, "Double VPN" --double, "Anti DDos" --anti-ddos support.
 -   Desktop notification are shown when VPN connects and disconnects. (needs to run without sudo)
 -   Auto retry if \[soft,auth-failure\] received, auto failover to next best server if connection dies.
--   NVRAM write support for Asuswrt-merlin
+-   NVRAM support for Asuswrt-merlin
 -   Pass through OpenVPN options, e.g. openpyn uk -o '--status /var/log/status.log --log /var/log/log.log'
 -   Logs are stored in '/var/log/openpyn/' for information and troubleshooting.
 -   Temporarily disable IPv6 to prevent leakage (when using -f).
@@ -246,10 +246,16 @@ sudo openpyn -x # optionally --allow 22 if using as SSH server
 openpyn --update
 ```
 
--   To save the least busy NordVPN server in US to NVRAM for "OpenVPN Client 5".
+-   To quickly connect to United States "OpenVPN Client 5" (Asuswrt-Merlin).
 
 ```bash
-openpyn us --nvram 5 # (ASUSWRT-Merlin)
+openpyn us --nvram 5
+```
+
+-   To kill "OpenVPN Client 5" (Asuswrt-Merlin).
+
+```bash
+openpyn -k --nvram 5
 ```
 
 ## Usage Options
@@ -299,7 +305,7 @@ optional arguments:
                         server
   -n NVRAM, --nvram NVRAM
                         Specify client to save configuration to NVRAM
-                        (ASUSWRT-Merlin)
+                        (Asuswrt-Merlin)
 
 OpenVPN Options:
   Configurable Options Being Passed Downed To OpenVPN
