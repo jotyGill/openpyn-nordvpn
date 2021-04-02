@@ -124,7 +124,7 @@ def connect(unit, test=False):
                 return
         pprint("/sbin/service" + " " + argument2)
         if not test:
-            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True)
+            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(e.output)
 
@@ -140,7 +140,7 @@ def disconnect(unit, test=False):
                 return
         pprint("/sbin/service" + " " + argument2)
         if not test:
-            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True)
+            subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(e.output)
 
