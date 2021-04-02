@@ -574,7 +574,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         except SystemExit:
             logger.info("Shutting down safely, please wait until process exits")
         finally:
-            if skip_dns_patch is False:
+            if skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
                 subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
@@ -645,7 +645,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         except SystemExit:
             logger.info("Shutting down safely, please wait until process exits")
         finally:
-            if skip_dns_patch is False:
+            if skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
                 subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
