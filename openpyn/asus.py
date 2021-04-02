@@ -103,8 +103,8 @@ def write(key, value, unit, service, test=False):
     try:
         pprint("/bin/nvram" + " " + "get" + " " + argument1)
         if not test:
-            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
-            if current.decode("utf-8").strip() == value:
+            process = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE)
+            if process.stdout.decode("utf-8").strip() == value:
                 return
         pprint("/bin/nvram" + " " + "set" + " " + argument2)
         if not test:
@@ -114,13 +114,13 @@ def write(key, value, unit, service, test=False):
 
 
 def connect(unit, test=False):
-    argument1 = "vpn" + "_" + "client" + unit + "_" + "state"
+    argument1 = "vpnclient" + unit
     argument2 = "start" + "_" + "vpnclient" + unit
     try:
-        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        pprint("/bin/pidof" + " " + argument1)
         if not test:
-            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
-            if current.decode("utf-8").strip() in {"1", "2"}:  # Connected
+            process = subprocess.run(["/bin/pidof", argument1])
+            if process.returncode == 0:  # Connected
                 return
         pprint("/sbin/service" + " " + argument2)
         if not test:
@@ -130,13 +130,13 @@ def connect(unit, test=False):
 
 
 def disconnect(unit, test=False):
-    argument1 = "vpn" + "_" + "client" + unit + "_" + "state"
+    argument1 = "vpnclient" + unit
     argument2 = "stop" + "_" + "vpnclient" + unit
     try:
-        pprint("/bin/nvram" + " " + "get" + " " + argument1)
+        pprint("/bin/pidof" + " " + argument1)
         if not test:
-            current = subprocess.run(["/bin/nvram", "get", argument1], check=True, stdout=subprocess.PIPE).stdout
-            if not current.decode("utf-8").strip() in {"1", "2"}:  # Disconnected
+            process = subprocess.run(["/bin/pidof", argument1])
+            if process.returncode == 1:  # Disconnected
                 return
         pprint("/sbin/service" + " " + argument2)
         if not test:
