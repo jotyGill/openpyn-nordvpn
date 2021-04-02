@@ -119,7 +119,7 @@ def connect(unit, test=False):
     try:
         pprint("/bin/pidof" + " " + argument1)
         if not test:
-            process = subprocess.run(["/bin/pidof", argument1])
+            process = subprocess.run(["/bin/pidof", argument1], stdout=subprocess.DEVNULL)
             if process.returncode == 0:  # Connected
                 return
         pprint("/sbin/service" + " " + argument2)
@@ -135,7 +135,7 @@ def disconnect(unit, test=False):
     try:
         pprint("/bin/pidof" + " " + argument1)
         if not test:
-            process = subprocess.run(["/bin/pidof", argument1])
+            process = subprocess.run(["/bin/pidof", argument1], stdout=subprocess.DEVNULL)
             if process.returncode == 1:  # Disconnected
                 return
         pprint("/sbin/service" + " " + argument2)
