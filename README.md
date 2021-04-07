@@ -76,8 +76,12 @@ A python3 script (systemd service as well) to manage OpenVPN connections. Create
 3.  On macOS (credit: [1951FDG](https://github.com/1951FDG))
 
     ```bash
-    # install Homebrew
+    # install Xcode command line tools
     xcode-select --install
+    ```
+
+    ```bash
+    # install Homebrew
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
     echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.bash_profile
     ```
@@ -101,7 +105,7 @@ A python3 script (systemd service as well) to manage OpenVPN connections. Create
 
     ```bash
     # common dependencies
-    opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip wget
+    opkg install git git-http iputils-ping procps-ng-pgrep python3 python3-pip sudo unzip
     ```
 
     ```bash
