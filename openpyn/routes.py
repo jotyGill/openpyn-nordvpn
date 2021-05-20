@@ -1,6 +1,8 @@
 import subprocess
 import sys
 
+from openpyn import sudo_user
+
 
 # Add route to allow traffic to go out of the public ip
 # For opening services like ssh/http on anything on public net,
@@ -8,22 +10,12 @@ import sys
 def add_route():
     table_number = "175"
 
-    default_route = (
-        subprocess.check_output(["ip", "route", "show", "default"])
-        .decode(sys.stdout.encoding)
-        .strip()
-        .split()
-    )
+    default_route = subprocess.check_output(["ip", "route", "show", "default"]).decode(sys.stdout.encoding).strip().split()
     default_gateway_ip = default_route[2]
     # default_interface = default_route[4]
 
     # Get the first ip addr reported by 'hostname --all-ip-addresses'
-    ip_addr = (
-        subprocess.check_output(["hostname", "--all-ip-addresses"])
-        .decode(sys.stdout.encoding)
-        .strip()
-        .split()[0]
-    )
+    ip_addr = subprocess.check_output(["hostname", "--all-ip-addresses"]).decode(sys.stdout.encoding).strip().split()[0]
 
     route_rule = "from {} lookup {}".format(ip_addr, table_number)
     # print(route_rule)
@@ -33,22 +25,12 @@ def add_route():
     else:
         # Add ip rule and route to send traffic through the default gateway.
         subprocess.call(
-            ["sudo", "ip", "rule", "add", "from", ip_addr, "table", table_number]
+            ["sudo", "-u", sudo_user, "ip", "rule", "add", "from", ip_addr, "table", table_number]
         )
         # subprocess.call(
-        #     ["sudo", "ip", "route", "add", "table", table_number, "to", ip_addr + "/32", "dev", default_interface]
+        #     ["sudo", "-u", sudo_user, "ip", "route", "add", "table", table_number, "to", ip_addr + "/32", "dev", default_interface]
         # )
 
         subprocess.call(
-            [
-                "sudo",
-                "ip",
-                "route",
-                "add",
-                "table",
-                table_number,
-                "default",
-                "via",
-                default_gateway_ip,
-            ]
+            ["sudo", "-u", sudo_user, "ip", "route", "add", "table", table_number, "default", "via", default_gateway_ip]
         )

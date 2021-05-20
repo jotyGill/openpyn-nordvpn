@@ -10,37 +10,40 @@ import verboselogs
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
+# ASUSWRT-Merlin
+# github.com/RMerl/asuswrt-merlin.ng/blob/5491c35d99160fefd3c8c89e7de5a635215009a2/release/src/router/shared/defaults.c
+
 # CONFIGURATION PLACEHOLDERS
-# spaces are intentionally let by the end of the word
-SERVER_ADDRESS = 'remote '
-CIPHER = 'cipher '
-AUTH_DIGEST = 'auth '
-TLS_CONTROL_CHANNEL_SECURITY = 'key-direction '
-TLS_RENEGOTIATION_TIME = 'reneg-sec '
-CONNECTION_RETRY = 'resolv-retry '
-LOG_VERBOSITY = 'verb '
+# spaces are intentionally left at the end of the word
+SERVER_ADDRESS = "remote "
+CIPHER = "cipher "
+AUTH_DIGEST = "auth "
+TLS_CONTROL_CHANNEL_SECURITY = "key-direction "
+TLS_RENEGOTIATION_TIME = "reneg-sec "
+CONNECTION_RETRY = "resolv-retry "
+LOG_VERBOSITY = "verb "
 
 # TEMPLATE PLACEHOLDERS
-T_SERVER_ADDRESS = 'addr'
-T_ACCEPT_DNS_CONFIGURATION = 'adns'
-T_CIPHER = 'cipher'
-T_COMPRESSION = 'comp'
-T_CUSTOM_CONFIGURATION = 'custom2'
-T_DESCRIPTION = 'desc'
-T_AUTH_DIGEST = 'digest'
-T_TLS_CONTROL_CHANNEL_SECURITY = 'hmac'
-T_INTERFACE_TYPE = 'if'
-T_PASSWORD = 'password'
-T_PORT = 'port'
-T_PROTOCOL = 'proto'
-T_TLS_RENEGOTIATION_TIME = 'reneg'
-T_CONNECTION_RETRY = 'retry'
-T_REDIRECT_GATEWAY = 'rgw'
-T_CLIENT = 'unit'
-T_USERAUTH = 'userauth'
-T_USERNAME = 'username'
-T_USERONLY = 'useronly'
-T_LOG_VERBOSITY = 'verb'
+T_SERVER_ADDRESS = "addr"
+T_ACCEPT_DNS_CONFIGURATION = "adns"
+T_CIPHER = "cipher"
+T_COMPRESSION = "comp"
+T_CUSTOM_CONFIGURATION = "cust2"
+T_DESCRIPTION = "desc"
+T_AUTH_DIGEST = "digest"
+T_TLS_CONTROL_CHANNEL_SECURITY = "hmac"
+T_INTERFACE_TYPE = "if"
+T_PASSWORD = "password"
+T_PORT = "port"
+T_PROTOCOL = "proto"
+T_TLS_RENEGOTIATION_TIME = "reneg"
+T_CONNECTION_RETRY = "connretry"
+T_REDIRECT_GATEWAY = "rgw"
+T_CLIENT = "unit"
+T_USERAUTH = "userauth"
+T_USERNAME = "username"
+T_USERONLY = "useronly"
+T_LOG_VERBOSITY = "verb"
 
 
 class Converter:
@@ -95,7 +98,7 @@ class Converter:
         self._extracted_data[T_PORT] = "1194"
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
-        self._extracted_data[T_CONNECTION_RETRY] = "-1"
+        self._extracted_data[T_CONNECTION_RETRY] = "15"
         self._extracted_data[T_REDIRECT_GATEWAY] = "1"
         self._extracted_data[T_CLIENT] = "5"
         self._extracted_data[T_USERAUTH] = "1"
@@ -220,7 +223,7 @@ class Converter:
         self.pprint("Processing file {}".format(input_file), True)
 
         input_file_full = os.path.join(self._source_folder, input_file)
-        with open(input_file_full, 'r') as lines:
+        with open(input_file_full, "r") as lines:
             data = ""
             # for line in islice(lines, 10):
             # pass
@@ -445,13 +448,13 @@ class Converter:
         # write keys
         if self._ca is not None:
             cert_name = "vpn_crt_client" + client + "_ca"
-            cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
+            cert_file = open(os.path.join(self._certs_folder, cert_name), "w")
             cert_file.write(self._ca)
             cert_file.close()
 
         if self._static is not None:
             cert_name = "vpn_crt_client" + client + "_static"
-            cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
+            cert_file = open(os.path.join(self._certs_folder, cert_name), "w")
             cert_file.write(self._static)
             cert_file.close()
 

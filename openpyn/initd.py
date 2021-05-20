@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 import verboselogs
+
 from openpyn import api
 
 verboselogs.install()
@@ -16,9 +17,13 @@ def install_service() -> None:
     if not sys.__stdin__.isatty():
         raise RuntimeError("Please run %s in interactive mode" % __name__)
 
-    openpyn_options = input("\nEnter Openpyn options to be stored in initd \
-service file (/opt/etc/init.d/S23openpyn, \
-Default(Just Press Enter) is, uk : ") or "uk"
+    openpyn_options = (
+        input(
+            "\nEnter Openpyn options to be stored in initd service file (/opt/etc/init.d/S23openpyn, Default(Just Press"
+            " Enter) is, uk : "
+        )
+        or "uk"
+    )
 
     # regex used
     # .*add_argument_group.*\n --> ""
@@ -58,9 +63,13 @@ Default(Just Press Enter) is, uk : ") or "uk"
         args = parser.parse_args(openpyn_options.split())
     except SystemExit as e:
         if e.code == 2:
-            openpyn_options = input("\nEnter Openpyn options to be stored in initd \
-service file (/opt/etc/init.d/S23openpyn, \
-Default(Just Press Enter) is, uk : ") or "uk"
+            openpyn_options = (
+                input(
+                    "\nEnter Openpyn options to be stored in initd service file (/opt/etc/init.d/S23openpyn, Default(Just"
+                    " Press Enter) is, uk : "
+                )
+                or "uk"
+            )
             args = parser.parse_args(openpyn_options.split())
 
     if args.update:
@@ -181,11 +190,14 @@ def update_service(openpyn_options: str, run=False) -> None:
         line = "=".join(sline)
         print(line)
 
-    logger.notice("The Following config has been saved in S23openpyn. \
-You can Start it or/and Stop it with: '/opt/etc/init.d/S23openpyn start', \
-'/opt/etc/init.d/S23openpyn stop' \n")
+    logger.notice(
+        "The Following config has been saved in S23openpyn. You can Start it or/and Stop it with:"
+        " '/opt/etc/init.d/S23openpyn start', '/opt/etc/init.d/S23openpyn stop' \n"
+    )
 
     if run:
-        logger.notice("Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\n\
-To check VPN status, run '/opt/etc/init.d/S23openpyn check'")
+        logger.notice(
+            "Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\nTo check VPN status, run"
+            " '/opt/etc/init.d/S23openpyn check'"
+        )
         subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])

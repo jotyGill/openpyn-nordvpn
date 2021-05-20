@@ -3,11 +3,14 @@ import json
 import logging
 import os
 import subprocess
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
 import verboselogs
 from jsonschema import Draft4Validator
+
 from openpyn import root
+from openpyn import sudo_user
 
 verboselogs.install()
 logger = logging.getLogger(__package__)
@@ -17,9 +20,10 @@ def manage_ipv6(disable: bool) -> None:
     value = 1 if disable else 0
     try:
         subprocess.check_call(
-            ["sudo", "sysctl", "-w", "net.ipv6.conf.all.disable_ipv6={}".format(value)],
-            stdout=subprocess.DEVNULL)
-    except subprocess.SubprocessError:      # in case systemd is not used
+            ["sudo", "-u", sudo_user, "sysctl", "-w", "net.ipv6.conf.all.disable_ipv6={}".format(value)],
+            stdout=subprocess.DEVNULL,
+        )
+    except subprocess.SubprocessError:  # in case systemd is not used
         logger.warning("Cant disable/enable ipv6 using sysctl, are you even using systemd?")
 
 
@@ -27,21 +31,31 @@ def manage_ipv6(disable: bool) -> None:
 def clear_fw_rules() -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     logger.info("Flushing iptables INPUT and OUTPUT chains AND Applying default Rules")
-    subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
-    # allow all outgoing traffic
-    subprocess.call("sudo iptables -P OUTPUT ACCEPT".split())
 
-    subprocess.call(["sudo", "iptables", "-F", "INPUT"])
-    subprocess.call(["sudo", "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
-    subprocess.call(["sudo", "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
-    subprocess.call(
-        "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT".split())
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-F", "OUTPUT"])
+
+    # allow all outgoing traffic
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-P", "OUTPUT", "ACCEPT"])
+
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-F", "INPUT"])
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
+    subprocess.call([
+        "sudo", "-u", sudo_user, "iptables",
+        "-A", "INPUT",
+        "-m", "conntrack",
+        "--ctstate", "ESTABLISHED,RELATED",
+        "-j", "ACCEPT"
+    ])
+
     # allow ICMP traffic
-    subprocess.call("sudo iptables -A INPUT -p icmp --icmp-type any -j ACCEPT".split())
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-A", "INPUT", "-p", "icmp", "--icmp-type", "any", "-j", "ACCEPT"])
+
     # best practice, stops spoofing
-    subprocess.call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-A", "INPUT", "-s", "127.0.0.0/8", "-j", "DROP"])
+
     # drop anything else incoming
-    subprocess.call("sudo iptables -P INPUT DROP".split())
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-P", "INPUT", "DROP"])
 
 
 NORDVPN_DNS = [
@@ -54,20 +68,20 @@ NORDVPN_DNS = [
 def flush_input_output() -> None:
     root.verify_root_access("Root access needed to modify 'iptables' rules")
     logger.info("Flushing ALL INPUT and OUTPUT Rules")
-    subprocess.call(["sudo", "iptables", "-F", "OUTPUT"])
-    subprocess.call(["sudo", "iptables", "-F", "INPUT"])
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-F", "OUTPUT"])
+    subprocess.call(["sudo", "-u", sudo_user, "iptables", "-F", "INPUT"])
 
 
 def do_dns(iface: str, dest: str, what: str) -> None:
     # for pp in ("udp", "tcp"):
     pp = "udp"
-    cmd = ["sudo",
-           "iptables",
-           "-A", "OUTPUT",
-           "-p", pp,
-           "-d", dest, "--destination-port", "53",
-           "-j", what,
-           ]
+    cmd = [
+        "sudo", "-u", sudo_user, "iptables",
+        "-A", "OUTPUT",
+        "-p", pp,
+        "-d", dest, "--destination-port", "53",
+        "-j", what
+    ]
     if iface is not None:
         cmd.extend(["-o", iface])
     subprocess.check_call(cmd)
@@ -91,20 +105,26 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
 
     # allow all traffic out over the VPN tunnel
     # except for DNS, which is handled by systemd-resolved script
-    # NOTE: that def helped with leaky DNS queries, nothing in wireshark too
+    # NOTE: that def helped with leaky DNS queries, nothing in Wireshark too
     # weird that ping ya.ru was showing "operation not permitted"
     subprocess.check_call([
-        "sudo", "iptables",
+        "sudo", "-u", sudo_user, "iptables",
         "-A", "OUTPUT",
         "-o", "tun+",
         # "-p", "all", "-d", "0.0.0.0/0", "!", "--dport", "53",
         "-p", "all", "-d", "0.0.0.0/0",
         "-j", "ACCEPT"
     ])
+
     # accept traffic that comes through tun that you connect to
-    subprocess.check_call(
-        "sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED\
-         -i tun+ -j ACCEPT".split())
+    subprocess.check_call([
+        "sudo", "-u", sudo_user, "iptables",
+        "-A", "INPUT",
+        "-m", "conntrack",
+        "--ctstate", "ESTABLISHED,RELATED",
+        "-i", "tun+",
+        "-j", "ACCEPT"
+    ])
 
     for interface in interfaces_details:
         if len(interface) != 3:
@@ -115,11 +135,11 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
             print("WARNING: empty {}".format(interface))
             continue
 
-        # Allow currently choosen vpn_server_ips
+        # Allow currently chosen vpn_server_ips
         for vpn_server_ip in vpn_server_ips:
             # allow access to vpn_server_ip
             subprocess.check_call([
-                "sudo", "iptables",
+                "sudo", "-u", sudo_user, "iptables",
                 "-A", "OUTPUT",
                 "-o", iname,
                 "-d", vpn_server_ip,
@@ -128,7 +148,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
 
             # talk to the vpn_server_ip to connect to it
             subprocess.check_call([
-                "sudo", "iptables",
+                "sudo", "-u", sudo_user, "iptables",
                 "-A", "INPUT",
                 "-m", "conntrack",
                 "--ctstate", "ESTABLISHED,RELATED",
@@ -140,7 +160,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
         # allow access to internal ip range
         # print("internal ip with range", interface[2])
         subprocess.check_call([
-            "sudo", "iptables",
+            "sudo", "-u", sudo_user, "iptables",
             "-A", "OUTPUT",
             "-o", iname,
             "-d", interface[2],
@@ -148,7 +168,7 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
         ])
 
         subprocess.check_call([
-            "sudo", "iptables",
+            "sudo", "-u", sudo_user, "iptables",
             "-A", "INPUT",
             "-m", "conntrack",
             "--ctstate", "ESTABLISHED,RELATED",
@@ -158,15 +178,15 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
         ])
 
     # allow loopback traffic
-    subprocess.check_call("sudo iptables -A INPUT -i lo -j ACCEPT".split())
-    subprocess.check_call("sudo iptables -A OUTPUT -o lo -j ACCEPT".split())
+    subprocess.check_call(["sudo", "-u", sudo_user, "iptables", "-A", "INPUT", "-i", "lo", "-j", "ACCEPT"])
+    subprocess.check_call(["sudo", "-u", sudo_user, "iptables", "-A", "OUTPUT", "-o", "lo", "-j", "ACCEPT"])
 
     # best practice, stops spoofing
-    subprocess.check_call("sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP".split())
+    subprocess.check_call(["sudo", "-u", sudo_user, "iptables", "-A", "INPUT", "-s", "127.0.0.0/8", "-j", "DROP"])
 
     # default action if no other rules match
-    subprocess.check_call("sudo iptables -P OUTPUT DROP".split())
-    subprocess.check_call("sudo iptables -P INPUT DROP".split())
+    subprocess.check_call(["sudo", "-u", sudo_user, "iptables", "-P", "OUTPUT", "DROP"])
+    subprocess.check_call(["sudo", "-u", sudo_user, "iptables", "-P", "INPUT", "DROP"])
 
 
 # Open specified ports for devices in the local network
@@ -177,7 +197,7 @@ def internally_allow_ports(interfaces_details: List, internally_allowed: List) -
             # allow the specified ports on internal network
             for port in internally_allowed:
                 subprocess.call([
-                    "sudo", "iptables",
+                    "sudo", "-u", sudo_user, "iptables",
                     "-A", "INPUT",
                     "-p", "tcp",
                     "--dport", port,
@@ -193,7 +213,7 @@ def internally_allow_all(interfaces_details: List) -> None:
         # if interface is active with an IP in it, and not "tun*"
         if len(interface) == 3 and "tun" not in interface[0]:
             subprocess.call([
-                "sudo", "iptables",
+                "sudo", "-u", sudo_user, "iptables",
                 "-A", "INPUT",
                 "-i", interface[0],
                 "-s", interface[2],
@@ -209,11 +229,7 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
 
     root.verify_root_access("Root access needed to pre load fire wall rules")
 
-    DEFAULT_PORT_CONFIG = {
-        "internal": True,
-        "protocol": "tcp",
-        "allowed_ip_range": None
-    }
+    DEFAULT_PORT_CONFIG = {"internal": True, "protocol": "tcp", "allowed_ip_range": None}
 
     # Merge default config with existing config
     allowed_ports_config = [{**DEFAULT_PORT_CONFIG, **port_config} for port_config in allowed_ports_config]
@@ -224,45 +240,47 @@ def apply_allowed_port_rules(interfaces_details: List, allowed_ports_config: Lis
         # Get perms for the connection type
         port_protocol_permiatations = []
 
-        if port_config['protocol'] in ['tcp', 'both']:
-            port_protocol_permiatations.append('tcp')
+        if port_config["protocol"] in ["tcp", "both"]:
+            port_protocol_permiatations.append("tcp")
 
-        if port_config['protocol'] in ['udp', 'both']:
-            port_protocol_permiatations.append('udp')
+        if port_config["protocol"] in ["udp", "both"]:
+            port_protocol_permiatations.append("udp")
 
         # Create the flags for the port range / port
-        if '-' in str(port_config['port']):
-            port_range = port_config['port'].split('-')
-            port_flag = '--match multiport --dports {0}:{1}'.format(*port_range)
+        if "-" in str(port_config["port"]):
+            port_range = port_config["port"].split("-")
+            port_flag = "--match multiport --dports {0}:{1}".format(*port_range)
         else:
-            port_flag = '--dport {0}'.format(port_config['port'])
+            port_flag = "--dport {0}".format(port_config["port"])
 
         for interface, port_type in itertools.product(interfaces_details, port_protocol_permiatations):
             # Skip any tunnel interfaces that might be invalid
             if len(interface) != 3 or "tun" in interface[0]:
                 continue
 
-            ip_flag = ''
+            ip_flag = ""
             ip_ranges = []
 
-            if port_config['internal']:
+            if port_config["internal"]:
                 ip_ranges.append(interface[2])
 
-            if port_config['allowed_ip_range'] is not None:
-                if isinstance(port_config['allowed_ip_range'], list):
-                    ip_ranges += port_config['allowed_ip_range']
+            if port_config["allowed_ip_range"] is not None:
+                if isinstance(port_config["allowed_ip_range"], list):
+                    ip_ranges += port_config["allowed_ip_range"]
                 else:
-                    ip_ranges.append(port_config['allowed_ip_range'])
+                    ip_ranges.append(port_config["allowed_ip_range"])
 
             if ip_ranges != []:
-                ip_flag = ' -s ' + ','.join(ip_ranges)
+                ip_flag = " -s " + ",".join(ip_ranges)
 
-            ip_table_rules.append("sudo iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
-                port_type=port_type, port_flag=port_flag, interface=interface[0], ip_flag=ip_flag
-            ))
+            ip_table_rules.append(
+                "sudo -u {user} iptables -A INPUT -p {port_type} {port_flag} -i {interface}{ip_flag} -j ACCEPT".format(
+                    user=sudo_user, port_type=port_type, port_flag=port_flag, interface=interface[0], ip_flag=ip_flag
+                )
+            )
 
     for rule in ip_table_rules:
-        subprocess.call(rule.split(' '))
+        subprocess.call(rule.split(" "))
 
     return True
 
@@ -277,16 +295,23 @@ def load_allowed_ports(path_to_allowed_ports: str) -> bool:
         return False
 
     try:
-        with open(path_to_allowed_ports, 'rt') as file_handle:
+        with open(path_to_allowed_ports, "rt") as file_handle:
             try:
                 allowed_ports_config = json.load(file_handle)
             except json.JSONDecodeError as json_decode_error:
-                logger.error("Failed to decode allowed ports JSON")
+                logger.error(
+                    "Failed to decode allowed ports JSON Error at line {line}:{col} {msg} ".format(
+                        line=json_decode_error.lineno, col=json_decode_error.colno, msg=json_decode_error.msg
+                    )
+                )
                 return False
 
     except EnvironmentError as file_read_error:
-        logger.error("Cannot preload allowed ports: failed to load \"{filename}\" {strerr}".format(
-            filename=file_read_error.filename, strerr=file_read_error.strerror))
+        logger.error(
+            'Cannot preload allowed ports: failed to load "{filename}" {strerr}'.format(
+                filename=file_read_error.filename, strerr=file_read_error.strerror
+            )
+        )
 
     return allowed_ports_config
 
@@ -353,7 +378,8 @@ def validate_allowed_ports_json(allowed_ports_config: Dict) -> bool:
         # Retrieve all validation errors yielded in schema
         for validation_error in allowed_ports_config_validator.iter_errors(allowed_ports_config):
             error_message += "\n\nError at root.{0} in config: {1}".format(
-                '.'.join([str(part) for part in validation_error.absolute_path]), validation_error.message)
+                ".".join([str(part) for part in validation_error.absolute_path]), validation_error.message
+            )
 
         logger.error(error_message)
 

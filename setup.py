@@ -1,11 +1,11 @@
 import sys
 
 import setuptools
+
 from openpyn import __data_files__, __version__
 
 if sys.version_info < (3, 5):
-    sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." +
-                     "Install using 'pip3' instead of just 'pip' \n")
+    sys.stderr.write("ERROR: openpyn requires Python 3.5 or above." + "Install using 'pip3' instead of just 'pip' \n")
     sys.exit(1)
 
 with open("README.md", encoding="utf-8") as readme_file:
@@ -20,18 +20,15 @@ setuptools.setup(
     zip_safe=False,
     author_email='joty@mygnu.org',
     url='https://github.com/jotyGill/openpyn-nordvpn/',
-    keywords=[
-        'openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn',
-        'vpn wrapper', 'private vpn', 'privacy'],
+    keywords=['openvpn wrapper', 'nordvpn', 'nordvpn client', 'secure vpn', 'vpn wrapper', 'private vpn', 'privacy'],
     python_requires='>=3.5',
     install_requires=['colorama', 'coloredlogs', 'jsonschema', 'requests', 'tqdm', 'verboselogs'],
     tests_require=['pytest', 'mock'],
     platforms=['GNU/Linux', 'Ubuntu', 'Debian', 'Kali', 'CentOS', 'Arch', 'Fedora'],
     packages=setuptools.find_packages(),
     entry_points={
-        'console_scripts': [
-            'openpyn = openpyn.openpyn:main',
-            'openpyn-management = openpyn.management.management:main']},
+        'console_scripts': ['openpyn = openpyn.openpyn:main', 'openpyn-management = openpyn.management.management:main']
+    },
     data_files=__data_files__,
     include_package_data=True,
     exclude_package_data={'openpyn': ['creds', 'credentials', 'install.sh', '.gitignore']},
