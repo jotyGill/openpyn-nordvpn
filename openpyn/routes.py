@@ -14,7 +14,7 @@ def add_route():
     default_gateway_ip = default_route[2]
     # default_interface = default_route[4]
 
-    # Get the first ip addr reported by 'hostname --all-ip-addresses'
+    # Get the first IP address reported by 'hostname --all-ip-addresses'
     ip_addr = subprocess.check_output(["hostname", "--all-ip-addresses"]).decode(sys.stdout.encoding).strip().split()[0]
 
     route_rule = "from {} lookup {}".format(ip_addr, table_number)

@@ -1171,7 +1171,7 @@ def get_network_interfaces() -> List:
 
 
 def get_vpn_server_ip(server: str, port: str) -> str:
-    # grab the ip address of VPN server from the config file
+    # grab the IP address of VPN server from the config file
     vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
     for _ in range(2):
         try:

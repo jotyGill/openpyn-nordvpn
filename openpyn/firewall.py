@@ -157,8 +157,8 @@ def apply_fw_rules(interfaces_details: List, vpn_server_ips: List, skip_dns_patc
                 "-j", "ACCEPT"
             ])
 
-        # allow access to internal ip range
-        # print("internal ip with range", interface[2])
+        # allow access to internal IP range
+        # print("internal IP with range", interface[2])
         subprocess.check_call([
             "sudo", "-u", sudo_user, "iptables",
             "-A", "OUTPUT",
