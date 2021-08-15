@@ -1,0 +1,5 @@
+# Example configuration for Black.
+
+[tool.black]
+line-length = 125
+target-version = ['py35']
