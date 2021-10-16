@@ -31,6 +31,7 @@ def socket_connect(server, port):
     return s
 
 
+# pylint: disable=C0415,E0401
 def show(do_notify) -> bool:
     detected_os = sys.platform
     sleep(1)

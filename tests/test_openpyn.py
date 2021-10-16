@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
-# pylint: disable=W0611
-
-import argparse
-import datetime
-import json
-import logging
-import logging.handlers
-import sys
-import time
 from unittest import mock
 
 from openpyn import openpyn
 
-import pytest
 
 # def test_version():
 #     assert openpyn.__version__ == "2.7.0"

@@ -10,6 +10,8 @@ import verboselogs
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
+# pylint: disable=R1732
+
 # ASUSWRT-Merlin
 # github.com/RMerl/asuswrt-merlin.ng/blob/5491c35d99160fefd3c8c89e7de5a635215009a2/release/src/router/shared/defaults.c
 

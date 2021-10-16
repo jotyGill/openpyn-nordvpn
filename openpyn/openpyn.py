@@ -189,7 +189,6 @@ def main() -> bool:
 
 
 # run openpyn
-# pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool,
         daemon: bool, max_load: int, top_servers: int,
         kill: bool, kill_flush: bool, update: bool, list_servers: bool,
@@ -998,6 +997,9 @@ def update_config_files() -> None:
             z.extract(file, path=temp_folder)
             pbar.update(file.file_size)
 
+    z.close()
+
+    # pylint: disable=W0612
     # change dir permissions so non root can delete/write them
     for dirpath, dirnames, filenames in os.walk(temp_folder):
         for name in dirnames:
@@ -1189,6 +1191,7 @@ def get_vpn_server_ip(server: str, port: str) -> str:
             raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
 
 
+# pylint: disable=C0415
 def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
     try:
