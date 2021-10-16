@@ -693,9 +693,9 @@ def print_status():
             raise RuntimeError("'openpyn' is not running")
     except subprocess.CalledProcessError:
         # when check_output issued non 0 result, "not found"
-        raise RuntimeError("command 'pgrep' not found")
+        raise RuntimeError("command 'pgrep' not found") from None
     except FileNotFoundError:
-        raise RuntimeError("{}/status not found".format(log_folder))
+        raise RuntimeError("{}/status not found".format(log_folder)) from None
 
 
 def print_stats():
@@ -714,9 +714,9 @@ def print_stats():
             raise RuntimeError("'openpyn' is not running")
     except subprocess.CalledProcessError:
         # when check_output issued non 0 result, "not found"
-        raise RuntimeError("command 'pgrep' not found")
+        raise RuntimeError("command 'pgrep' not found") from None
     except FileNotFoundError:
-        raise RuntimeError("{}/openvpn-status not found".format(log_folder))
+        raise RuntimeError("{}/openvpn-status not found".format(log_folder)) from None
 
 
 def load_tun_module():
@@ -846,7 +846,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
             logger.warning("Ping Failed to: %s, excluding it from the list", server_spec[0])
             continue
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
 
     for ping_subprocess in ping_subprocess_list:
         ping_subprocess.append(ping_subprocess[1].communicate())
@@ -967,7 +967,7 @@ def update_config_files() -> None:
     except requests.exceptions.RequestException:
         raise RuntimeError(
             "Error while connecting to {}, Check Your Network Connection. Forgot to flush iptables? (openpyn -x)".format(url)
-        )
+        ) from None
 
     last_modified = r.headers["last-modified"]
     last_update_path = os.path.join(ovpn_folder, "last_update")
@@ -1125,7 +1125,7 @@ def print_latest_servers(list_servers: str, port: str, server_set: Set) -> None:
         raise RuntimeError(
             "The supplied Country Code is likely wrong or you just don't have its config files (In which case run 'sudo"
             " openpyn --update')"
-        )
+        ) from None
     openvpn_files_str = str(server_files)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
@@ -1328,11 +1328,13 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                raise RuntimeError("Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file)
+                raise RuntimeError(
+                    "Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file
+                ) from openvpn_err
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
         except PermissionError:  # needed cause complains when killing sudo process
-            raise SystemExit
+            raise SystemExit from None
     else:  # if not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
@@ -1382,11 +1384,13 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                raise RuntimeError("Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file)
+                raise RuntimeError(
+                    "Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file
+                ) from openvpn_err
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
         except PermissionError:  # needed cause complains when killing sudo process
-            raise SystemExit
+            raise SystemExit from None
 
 
 if __name__ == "__main__":

@@ -24,11 +24,11 @@ def get_json(url) -> Dict:
     except requests.exceptions.HTTPError:
         raise RuntimeError(
             "Cannot GET the JSON from nordvpn.com, Manually Specify a Server using '-s' for example '-s au10'"
-        )
+        ) from None
     except requests.exceptions.RequestException:
         raise RuntimeError(
             "Error while connecting to {}, Check Your Network Connection. forgot to flush iptables? (openpyn -x)".format(url)
-        )
+        ) from None
     return json_response
 
 

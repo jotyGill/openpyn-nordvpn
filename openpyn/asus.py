@@ -110,7 +110,7 @@ def write(key, value, unit, service, test=False):
         if not test:
             subprocess.run(["sudo", "-u", sudo_user, "/bin/nvram", "set", argument2], check=True)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(e.output)
+        raise RuntimeError(e.output) from e
 
 
 def connect(unit, test=False):
@@ -126,7 +126,7 @@ def connect(unit, test=False):
         if not test:
             subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(e.output)
+        raise RuntimeError(e.output) from e
 
 
 def disconnect(unit, test=False):
@@ -142,7 +142,7 @@ def disconnect(unit, test=False):
         if not test:
             subprocess.run(["sudo", "-u", sudo_user, "/sbin/service", argument2], check=True, stdout=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(e.output)
+        raise RuntimeError(e.output) from e
 
 
 def state(unit, test=False) -> bool:
@@ -161,7 +161,7 @@ def state(unit, test=False) -> bool:
 
         return 0
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(e.output)
+        raise RuntimeError(e.output) from e
 
 
 def errno(unit, test=False) -> bool:
@@ -186,7 +186,7 @@ def errno(unit, test=False) -> bool:
 
         return 1
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(e.output)
+        raise RuntimeError(e.output) from e
 
 
 def pprint(msg, debug=False):
