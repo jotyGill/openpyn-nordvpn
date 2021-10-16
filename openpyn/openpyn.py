@@ -318,9 +318,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.addHandler(file_handler)
         except PermissionError:
             root.verify_root_access("Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder])
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"])
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"])
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder], check=False)
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"], check=False)
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"], check=False)
         else:
             break
 

@@ -200,4 +200,4 @@ def update_service(openpyn_options: str, run=False) -> None:
             "Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\nTo check VPN status, run"
             " '/opt/etc/init.d/S23openpyn check'"
         )
-        subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])
+        subprocess.run(["/opt/etc/init.d/S23openpyn", "start"], check=False)
