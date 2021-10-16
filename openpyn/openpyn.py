@@ -219,7 +219,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     logger.addHandler(logging.StreamHandler())
 
     # in this case only log messages originating from this logger will show up on the terminal.
-    coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
+    coloredlogs.install(level="DEBUG", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
     stats = True
     # if non-interactive shell
     if not sys.__stdin__.isatty():

@@ -62,8 +62,6 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     if not test:
         c.write_certificates(client)
 
-    c.pprint(extracted_info)
-
     # 'vpn_client_unit'
     key = ""
     value = ""
@@ -76,8 +74,6 @@ def run(server, client, options=None, rgw=None, comp=None, adns=None, tcp=False,
     extracted_info = dict(extracted_info)
     if T_CLIENT in extracted_info:
         del extracted_info[T_CLIENT]
-
-    c.pprint(extracted_info)
 
     # 'vpn_client_unit$'
     key = ""

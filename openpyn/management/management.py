@@ -16,7 +16,7 @@ from openpyn import log_format
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
-logger.setLevel(logging.VERBOSE)
+logger.setLevel(logging.INFO)
 
 # Add another rotating handler to log to .log files
 file_handler = logging.FileHandler(log_folder + "/openpyn-notifications.log")

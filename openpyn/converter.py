@@ -280,21 +280,23 @@ class Converter:
         # self._extract_name(input_file)
         self._extract_certificates(data)
 
-        self.pprint(self._ca)
-        self.pprint(self._static)
+        self.pprint("\n" + self._ca)
+        self.pprint("\n" + self._static)
         self.pprint(self._extracted_data)
 
         line = self._extracted_data[T_CUSTOM_CONFIGURATION]
         if line[-1:] == "\n":
             line = line[:-1]
 
-        self.pprint(line)
+        self.pprint("\n" + line)
 
         line = self.string_to_b64(line)
         line = line.decode("utf-8")
         self._extracted_data[T_CUSTOM_CONFIGURATION] = line
 
-        self.pprint(line)
+        self.pprint("\n" + line)
+
+        self.pprint(self._extracted_data)
 
         return self._extracted_data
 
