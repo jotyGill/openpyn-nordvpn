@@ -719,6 +719,8 @@ def print_stats():
         raise RuntimeError("command 'pgrep' not found") from None
     except FileNotFoundError:
         raise RuntimeError("{}/openvpn-status not found".format(log_folder)) from None
+    except PermissionError:
+        raise RuntimeError("Option '--stats' requires sudo access. run 'sudo openpyn --stats' instead.") from None
 
 
 def load_tun_module():
