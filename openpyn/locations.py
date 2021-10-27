@@ -63,7 +63,7 @@ def get_locations(location_dic: Dict, req_headers: str) -> List:
         raise RuntimeError(
             "IndexError: Looks like you have reached APIs daily request limit. No location data for you :( you could restart"
             " your router to get a new IP."
-        )
+        ) from None
 
     geo_address_list.append(location_dic)
 

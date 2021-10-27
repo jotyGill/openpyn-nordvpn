@@ -36,14 +36,14 @@ This option defines the protocols the ports will be opened on. This defaults to 
 This can be either be set to `tcp`, `udp` or `both`.
 
 ### Internal
-This option specifies if ports should be only allowed on internal ip ranges. When set to `true` this will only allow ports to be exposed in the local network
+This option specifies if ports should be only allowed on internal IP ranges. When set to `true` this will only allow ports to be exposed in the local network
 
 Note: this option is overridden if extra IPs are set in
 
 ### Allowed IP Range
 This option specifies the ip(s) that the specified port(s) should be exposed to. This can either be a specific IP or an IP block.
 
-This can either be passed as a single ip (as a string) or an array of ips (as an array of srings). This can also be used 
+This can either be passed as a single IP (as a string) or an array of ips (as an array of srings). This can also be used 
 
 This defaults to null.
 

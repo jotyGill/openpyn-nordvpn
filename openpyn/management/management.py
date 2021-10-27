@@ -16,7 +16,7 @@ from openpyn import log_format
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
-logger.setLevel(logging.VERBOSE)
+logger.setLevel(logging.INFO)
 
 # Add another rotating handler to log to .log files
 file_handler = logging.FileHandler(log_folder + "/openpyn-notifications.log")
@@ -31,6 +31,7 @@ def socket_connect(server, port):
     return s
 
 
+# pylint: disable=C0415,E0401
 def show(do_notify) -> bool:
     detected_os = sys.platform
     sleep(1)
@@ -149,7 +150,7 @@ def show(do_notify) -> bool:
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Management interface for openpyn to display notifications and log"
-        "them to {}/openpyn-notifications.log".format(log_folder),
+        " them to {}/openpyn-notifications.log".format(log_folder),
         allow_abbrev=False,
     )
     parser.add_argument("--do-notify", dest="do_notify", help="try to display desktop notifications.", action="store_true")
@@ -158,7 +159,6 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 
 def main() -> bool:
-
     args = parse_args(sys.argv)
     return show(args.do_notify)
 

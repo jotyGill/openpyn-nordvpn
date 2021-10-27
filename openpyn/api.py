@@ -1,4 +1,8 @@
+import json
 import logging
+import os
+from datetime import datetime
+from datetime import timedelta
 from typing import Dict
 from typing import List
 
@@ -6,9 +10,36 @@ import requests
 import verboselogs
 
 from openpyn import filters
+from openpyn import ovpn_folder
 
 logger = logging.getLogger(__package__)
 verboselogs.install()
+
+
+def get_json_cached(url) -> Dict:
+    json_data = None
+    json_path = os.path.join(ovpn_folder, "nordvpn.json")
+
+    if os.path.exists(json_path):
+        t = os.path.getmtime(json_path)
+        last_updated = datetime.utcfromtimestamp(t)
+
+        if (datetime.utcnow() - last_updated) > timedelta(minutes=5):
+            try:
+                json_data = get_json(url)
+            except RuntimeError:
+                logger.error("Error occurred while updating nordvpn.json, rate limit exceeded?")
+    else:
+        json_data = get_json(url)
+
+    if json_data is not None:
+        with open(json_path, "w") as json_file:
+            json.dump(json_data, json_file)
+    else:
+        with open(json_path, "r") as json_file:
+            json_data = json.load(json_file)
+
+    return json_data
 
 
 # Using requests, GETs and returns JSON from a url.
@@ -20,16 +51,18 @@ def get_json(url) -> Dict:
     }
 
     try:
-        json_response = requests.get(url, headers=headers).json()
-    except requests.exceptions.HTTPError:
+        json_response = requests.get(url, headers=headers)
+        json_response.raise_for_status()
+        json_data = json_response.json()
+    except requests.exceptions.HTTPError as e:
         raise RuntimeError(
             "Cannot GET the JSON from nordvpn.com, Manually Specify a Server using '-s' for example '-s au10'"
-        )
-    except requests.exceptions.RequestException:
+        ) from e
+    except requests.exceptions.RequestException as e:
         raise RuntimeError(
             "Error while connecting to {}, Check Your Network Connection. forgot to flush iptables? (openpyn -x)".format(url)
-        )
-    return json_response
+        ) from e
+    return json_data
 
 
 # Gets JSON data, from api.nordvpn.com. filter servers by type, country, area.
@@ -38,7 +71,7 @@ def get_data_from_api(
         tor_over_vpn: bool, anti_ddos: bool, netflix: bool, location: float) -> List:
     country_code = country_code.lower()
     url = "https://api.nordvpn.com/server"
-    json_response = get_json(url)
+    json_response = get_json_cached(url)
 
     type_filtered_servers = []
     if netflix:
@@ -60,7 +93,7 @@ def get_data_from_api(
 def list_all_countries() -> None:
     countries_mapping = {}
     url = "https://api.nordvpn.com/server"
-    json_response = get_json(url)
+    json_response = get_json_cached(url)
     for res in json_response:
         if res["domain"][:2] not in countries_mapping:
             countries_mapping.update({res["domain"][:2]: res["country"]})
@@ -71,7 +104,7 @@ def list_all_countries() -> None:
 def get_country_code(full_name: str) -> str:
     full_name = full_name.lower()
     url = "https://api.nordvpn.com/server"
-    json_response = get_json(url)
+    json_response = get_json_cached(url)
     for res in json_response:
         if res["country"].lower() == full_name:
             code = res["domain"][:2]
@@ -82,7 +115,7 @@ def get_country_code(full_name: str) -> str:
 def get_country_name(iso_code: str) -> str:
     iso_code = iso_code.lower()
     url = "https://api.nordvpn.com/server"
-    json_response = get_json(url)
+    json_response = get_json_cached(url)
     for res in json_response:
         if res["domain"][:2] == iso_code:
             name = res["country"]

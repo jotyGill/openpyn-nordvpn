@@ -180,7 +180,7 @@ def install_service() -> None:
 
 
 def update_service(openpyn_options: str, run=False) -> None:
-    logger.debug(openpyn_options)
+    # logger.debug(openpyn_options)
 
     os.chmod("/opt/etc/init.d/S23openpyn", 0o755)
     for line in fileinput.FileInput("/opt/etc/init.d/S23openpyn", inplace=1):
@@ -200,4 +200,4 @@ def update_service(openpyn_options: str, run=False) -> None:
             "Started Openpyn by running '/opt/etc/init.d/S23openpyn start'\nTo check VPN status, run"
             " '/opt/etc/init.d/S23openpyn check'"
         )
-        subprocess.run(["/opt/etc/init.d/S23openpyn", "start"])
+        subprocess.run(["/opt/etc/init.d/S23openpyn", "start"], check=False)

@@ -39,4 +39,4 @@ def save_credentials() -> None:
 
         logger.info("Awesome, the credentials have been saved in '%s'", credentials_file_path)
     except (IOError, OSError):
-        raise RuntimeError("IOError while creating 'credentials' file.")
+        raise RuntimeError("IOError while creating 'credentials' file.") from None

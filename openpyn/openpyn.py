@@ -189,7 +189,6 @@ def main() -> bool:
 
 
 # run openpyn
-# pylint: disable=R0911
 def run(init: bool, server: str, country_code: str, country: str, area: str, tcp: bool,
         daemon: bool, max_load: int, top_servers: int,
         kill: bool, kill_flush: bool, update: bool, list_servers: bool,
@@ -220,7 +219,7 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
     logger.addHandler(logging.StreamHandler())
 
     # in this case only log messages originating from this logger will show up on the terminal.
-    coloredlogs.install(level="verbose", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
+    coloredlogs.install(level="DEBUG", logger=logger, fmt=log_format, level_styles=levelstyles, field_styles=fieldstyles)
     stats = True
     # if non-interactive shell
     if not sys.__stdin__.isatty():
@@ -319,9 +318,9 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.addHandler(file_handler)
         except PermissionError:
             root.verify_root_access("Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder])
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"])
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"])
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder], check=False)
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"], check=False)
+            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"], check=False)
         else:
             break
 
@@ -694,9 +693,9 @@ def print_status():
             raise RuntimeError("'openpyn' is not running")
     except subprocess.CalledProcessError:
         # when check_output issued non 0 result, "not found"
-        raise RuntimeError("command 'pgrep' not found")
+        raise RuntimeError("command 'pgrep' not found") from None
     except FileNotFoundError:
-        raise RuntimeError("{}/status not found".format(log_folder))
+        raise RuntimeError("{}/status not found".format(log_folder)) from None
 
 
 def print_stats():
@@ -715,9 +714,9 @@ def print_stats():
             raise RuntimeError("'openpyn' is not running")
     except subprocess.CalledProcessError:
         # when check_output issued non 0 result, "not found"
-        raise RuntimeError("command 'pgrep' not found")
+        raise RuntimeError("command 'pgrep' not found") from None
     except FileNotFoundError:
-        raise RuntimeError("{}/openvpn-status not found".format(log_folder))
+        raise RuntimeError("{}/openvpn-status not found".format(log_folder)) from None
 
 
 def load_tun_module():
@@ -847,7 +846,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
             logger.warning("Ping Failed to: %s, excluding it from the list", server_spec[0])
             continue
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
 
     for ping_subprocess in ping_subprocess_list:
         ping_subprocess.append(ping_subprocess[1].communicate())
@@ -968,7 +967,7 @@ def update_config_files() -> None:
     except requests.exceptions.RequestException:
         raise RuntimeError(
             "Error while connecting to {}, Check Your Network Connection. Forgot to flush iptables? (openpyn -x)".format(url)
-        )
+        ) from None
 
     last_modified = r.headers["last-modified"]
     last_update_path = os.path.join(ovpn_folder, "last_update")
@@ -998,6 +997,9 @@ def update_config_files() -> None:
             z.extract(file, path=temp_folder)
             pbar.update(file.file_size)
 
+    z.close()
+
+    # pylint: disable=W0612
     # change dir permissions so non root can delete/write them
     for dirpath, dirnames, filenames in os.walk(temp_folder):
         for name in dirnames:
@@ -1123,7 +1125,7 @@ def print_latest_servers(list_servers: str, port: str, server_set: Set) -> None:
         raise RuntimeError(
             "The supplied Country Code is likely wrong or you just don't have its config files (In which case run 'sudo"
             " openpyn --update')"
-        )
+        ) from None
     openvpn_files_str = str(server_files)
     openvpn_files_str = openvpn_files_str[2:-3]
     openvpn_files_list = openvpn_files_str.split("\\n")
@@ -1171,7 +1173,7 @@ def get_network_interfaces() -> List:
 
 
 def get_vpn_server_ip(server: str, port: str) -> str:
-    # grab the ip address of VPN server from the config file
+    # grab the IP address of VPN server from the config file
     vpn_config_file = os.path.join(ovpn_folder, "ovpn_{}".format(port), "{}.nordvpn.com.{}.ovpn").format(server, port)
     for _ in range(2):
         try:
@@ -1189,6 +1191,7 @@ def get_vpn_server_ip(server: str, port: str) -> str:
             raise RuntimeError("FileNotFoundError: Get the latest config files by running 'sudo openpyn --update'")
 
 
+# pylint: disable=C0415
 def uses_systemd_resolved() -> bool:
     # see https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html
     try:
@@ -1325,11 +1328,13 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                raise RuntimeError("Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file)
+                raise RuntimeError(
+                    "Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file
+                ) from openvpn_err
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
         except PermissionError:  # needed cause complains when killing sudo process
-            raise SystemExit
+            raise SystemExit from None
     else:  # if not Debian Based or skip_dns_patch
         # if skip_dns_patch, do not touch etc/resolv.conf
         if skip_dns_patch is False:
@@ -1379,11 +1384,13 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
         except subprocess.CalledProcessError as openvpn_err:
             # logger.debug(openvpn_err.output)
             if "Error opening configuration file" in str(openvpn_err.output):
-                raise RuntimeError("Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file)
+                raise RuntimeError(
+                    "Error opening config %s, make sure it exists, run 'openpyn --update'" % vpn_config_file
+                ) from openvpn_err
         except KeyboardInterrupt:
-            raise SystemExit
+            raise SystemExit from None
         except PermissionError:  # needed cause complains when killing sudo process
-            raise SystemExit
+            raise SystemExit from None
 
 
 if __name__ == "__main__":

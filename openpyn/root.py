@@ -46,10 +46,10 @@ def obtain_root_access() -> None:
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
-    except subprocess.CalledProcessError:
-        raise RuntimeError("except occurred while running obtain_root_access() 'sudo cat /etc/resolv.conf' command")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("except occurred while running obtain_root_access() 'sudo cat /etc/resolv.conf' command") from e
     except KeyboardInterrupt:
-        raise RuntimeError("Ctrl+C received, Bye")
+        raise RuntimeError("Ctrl+C received, Bye") from None
 
 
 def logged_in_user_is_root(username: str) -> bool:
