@@ -1,0 +1,7 @@
+verboselogs
+requests
+coloredlogs
+colorama
+tqdm
+jsonschema
+pytest

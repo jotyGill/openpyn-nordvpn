@@ -10,40 +10,45 @@ import verboselogs
 verboselogs.install()
 logger = logging.getLogger(__package__)
 
+# pylint: disable=R1732
+
+# ASUSWRT-Merlin
+# github.com/RMerl/asuswrt-merlin.ng/blob/5491c35d99160fefd3c8c89e7de5a635215009a2/release/src/router/shared/defaults.c
+
 # CONFIGURATION PLACEHOLDERS
-# spaces are intentionally let by the end of the word
-SERVER_ADDRESS = 'remote '
-CIPHER = 'cipher '
-AUTH_DIGEST = 'auth '
-TLS_CONTROL_CHANNEL_SECURITY = 'key-direction '
-TLS_RENEGOTIATION_TIME = 'reneg-sec '
-CONNECTION_RETRY = 'resolv-retry '
-LOG_VERBOSITY = 'verb '
+# spaces are intentionally left at the end of the word
+SERVER_ADDRESS = "remote "
+CIPHER = "cipher "
+AUTH_DIGEST = "auth "
+TLS_CONTROL_CHANNEL_SECURITY = "key-direction "
+TLS_RENEGOTIATION_TIME = "reneg-sec "
+CONNECTION_RETRY = "resolv-retry "
+LOG_VERBOSITY = "verb "
 
 # TEMPLATE PLACEHOLDERS
-T_SERVER_ADDRESS = 'addr'
-T_ACCEPT_DNS_CONFIGURATION = 'adns'
-T_CIPHER = 'cipher'
-T_COMPRESSION = 'comp'
-T_CUSTOM_CONFIGURATION = 'custom2'
-T_DESCRIPTION = 'desc'
-T_AUTH_DIGEST = 'digest'
-T_TLS_CONTROL_CHANNEL_SECURITY = 'hmac'
-T_INTERFACE_TYPE = 'if'
-T_PASSWORD = 'password'
-T_PORT = 'port'
-T_PROTOCOL = 'proto'
-T_TLS_RENEGOTIATION_TIME = 'reneg'
-T_CONNECTION_RETRY = 'retry'
-T_REDIRECT_GATEWAY = 'rgw'
-T_CLIENT = 'unit'
-T_USERAUTH = 'userauth'
-T_USERNAME = 'username'
-T_USERONLY = 'useronly'
-T_LOG_VERBOSITY = 'verb'
+T_SERVER_ADDRESS = "addr"
+T_ACCEPT_DNS_CONFIGURATION = "adns"
+T_CIPHER = "cipher"
+T_COMPRESSION = "comp"
+T_CUSTOM_CONFIGURATION = "cust2"
+T_DESCRIPTION = "desc"
+T_AUTH_DIGEST = "digest"
+T_TLS_CONTROL_CHANNEL_SECURITY = "hmac"
+T_INTERFACE_TYPE = "if"
+T_PASSWORD = "password"
+T_PORT = "port"
+T_PROTOCOL = "proto"
+T_TLS_RENEGOTIATION_TIME = "reneg"
+T_CONNECTION_RETRY = "connretry"
+T_REDIRECT_GATEWAY = "rgw"
+T_CLIENT = "unit"
+T_USERAUTH = "userauth"
+T_USERNAME = "username"
+T_USERONLY = "useronly"
+T_LOG_VERBOSITY = "verb"
 
 
-class Converter(object):
+class Converter:
     # NordVPN username
     _username = None
     # NordVPN password
@@ -95,7 +100,7 @@ class Converter(object):
         self._extracted_data[T_PORT] = "1194"
         self._extracted_data[T_PROTOCOL] = "udp"
         self._extracted_data[T_TLS_RENEGOTIATION_TIME] = "0"
-        self._extracted_data[T_CONNECTION_RETRY] = "-1"
+        self._extracted_data[T_CONNECTION_RETRY] = "15"
         self._extracted_data[T_REDIRECT_GATEWAY] = "1"
         self._extracted_data[T_CLIENT] = "5"
         self._extracted_data[T_USERAUTH] = "1"
@@ -106,56 +111,56 @@ class Converter(object):
     def set_name(self, name):
         """Name for the VPN connection"""
         if not name:
-            raise Exception("Please specify an name.")
+            raise RuntimeError("Please specify an name.")
 
         self._name = name
 
     def set_source_folder(self, source_input):
         """Sets the source folder for the configuration files"""
         if not source_input or not os.path.isdir(source_input):
-            raise Exception("Please specify a valid path for the configuration files.")
+            raise RuntimeError("Please specify a valid path for the configuration files.")
 
         self._source_folder = source_input
 
     def set_certs_folder(self, certs_output):
         """Sets the destination folder for the certificates"""
         if not certs_output or not os.path.isdir(certs_output):
-            raise Exception("Please specify a valid path for the certificates.")
+            raise RuntimeError("Please specify a valid path for the certificates.")
 
         self._certs_folder = certs_output
 
     def set_description(self, description):
         """Description for the VPN connection"""
         if not description:
-            raise Exception("Please specify an description.")
+            raise RuntimeError("Please specify an description.")
 
         self._description = description
 
     def set_password(self, password):
         """Password for the VPN connection"""
         if not password:
-            raise Exception("Please specify an password.")
+            raise RuntimeError("Please specify an password.")
 
         self._password = password
 
     def set_port(self, port):
         """Port for the VPN connection"""
         if not port:
-            raise Exception("Please specify an port.")
+            raise RuntimeError("Please specify an port.")
 
         self._port = port
 
     def set_protocol(self, protocol):
         """Protocol for the VPN connection"""
         if not protocol:
-            raise Exception("Please specify an protocol.")
+            raise RuntimeError("Please specify an protocol.")
 
         self._protocol = protocol
 
     def set_username(self, username):
         """Username for the VPN connection"""
         if not username:
-            raise Exception("Please specify an username.")
+            raise RuntimeError("Please specify an username.")
 
         self._username = username
 
@@ -177,12 +182,19 @@ class Converter(object):
         """Compression for the VPN connection"""
         if compression is None:
             return
-        values = ("-1", "no", "yes", "adaptive", "lz4")
+        # values = ("-1", "no", "yes", "adaptive", "lz4")
         values = ("yes", "adaptive")
         if compression not in values:
             raise ValueError("Value must be one of {0}".format(values))
 
         self._comp = compression
+
+    def set_openvpn_options(self, options):
+        """Options for the VPN connection"""
+        if options is None:
+            return
+
+        self._extracted_data[T_CUSTOM_CONFIGURATION] = options
 
     def set_redirect_gateway(self, rgw):
         """Redirect Internet traffic for the VPN connection"""
@@ -213,7 +225,7 @@ class Converter(object):
         self.pprint("Processing file {}".format(input_file), True)
 
         input_file_full = os.path.join(self._source_folder, input_file)
-        with open(input_file_full, 'r') as lines:
+        with open(input_file_full, "r") as lines:
             data = ""
             # for line in islice(lines, 10):
             # pass
@@ -251,7 +263,6 @@ class Converter(object):
                     self._extract_tls_control_channel_security(line)
                     continue
                 data = data + line
-            lines.close()
 
         # print(data, end="")
 
@@ -269,21 +280,23 @@ class Converter(object):
         # self._extract_name(input_file)
         self._extract_certificates(data)
 
-        self.pprint(self._ca)
-        self.pprint(self._static)
+        self.pprint("\n" + self._ca)
+        self.pprint("\n" + self._static)
         self.pprint(self._extracted_data)
 
         line = self._extracted_data[T_CUSTOM_CONFIGURATION]
         if line[-1:] == "\n":
             line = line[:-1]
 
-        self.pprint(line)
+        self.pprint("\n" + line)
 
-        line = self.stringToBase64(line)
-        line = line.decode('utf-8')
+        line = self.string_to_b64(line)
+        line = line.decode("utf-8")
         self._extracted_data[T_CUSTOM_CONFIGURATION] = line
 
-        self.pprint(line)
+        self.pprint("\n" + line)
+
+        self.pprint(self._extracted_data)
 
         return self._extracted_data
 
@@ -349,7 +362,7 @@ class Converter(object):
     def _extract_custom_configuration(self, line):
         """Specific extractor for Custom Configuration"""
         value = line.strip()
-        # These are already added by OpenVPN
+        # these are already added by OpenVPN
         if value == "tun-mtu 1500":
             pass
         elif value == "tun-mtu-extra 0":
@@ -358,7 +371,7 @@ class Converter(object):
             pass
         elif value == "mssfix 1450":
             pass
-        # These are already added by ASUSWRT-Merlin
+        # these are already added by ASUSWRT-Merlin
         elif value == "client":
             pass
         elif value == "nobind":
@@ -367,10 +380,10 @@ class Converter(object):
             pass
         elif value == "persist-tun":
             pass
-        # Pull is implied by "client"
+        # 'pull' is implied by "client"
         elif value == "pull":
             pass
-        # These are already added by us
+        # these are already added by us
         elif value.startswith("auth-user-pass"):
             pass
         elif value.startswith("comp-lzo"):
@@ -387,12 +400,12 @@ class Converter(object):
         return False
 
     @staticmethod
-    def stringToBase64(s):
-        return base64.b64encode(bytes(s, 'utf-8'))
+    def string_to_b64(s):
+        return base64.b64encode(bytes(s, "utf-8"))
 
     @staticmethod
-    def base64ToString(b):
-        return base64.b64decode(b).decode('utf-8')
+    def b64_to_string(b):
+        return base64.b64decode(b).decode("utf-8")
 
     def _extract_vpn_description(self):
         """Description for the VPN connection"""
@@ -439,13 +452,13 @@ class Converter(object):
         # write keys
         if self._ca is not None:
             cert_name = "vpn_crt_client" + client + "_ca"
-            cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
+            cert_file = open(os.path.join(self._certs_folder, cert_name), "w")
             cert_file.write(self._ca)
             cert_file.close()
 
         if self._static is not None:
             cert_name = "vpn_crt_client" + client + "_static"
-            cert_file = open(os.path.join(self._certs_folder, cert_name), 'w')
+            cert_file = open(os.path.join(self._certs_folder, cert_name), "w")
             cert_file.write(self._static)
             cert_file.close()
 

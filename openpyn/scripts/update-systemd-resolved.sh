@@ -28,7 +28,6 @@
 # Define what needs to be called via DBus
 DBUS_DEST="org.freedesktop.resolve1"
 DBUS_NODE="/org/freedesktop/resolve1"
-PATH="$PATH:/usr/sbin"
 
 SCRIPT_NAME="${BASH_SOURCE[0]##*/}"
 
@@ -74,6 +73,8 @@ dhcp_settings() {
 }
 
 up() {
+  # echo UP with date but strip timezone info
+  echo "UP $(date '+%T %F')" > /var/log/openpyn/status
   local link="$1"
   shift
   local if_index="$1"
@@ -138,6 +139,8 @@ up() {
 }
 
 down() {
+  # echo DOWN with date but strip timezone info
+  echo "DOWN $(date '+%T %F')" > /var/log/openpyn/status
   local link="$1"
   shift
   local if_index="$1"

@@ -4,6 +4,7 @@ build
 dist
 deb_dist
 .*
+!.pylintrc
 .python-version
 openpyn/test.py
 openpyn/credentials
