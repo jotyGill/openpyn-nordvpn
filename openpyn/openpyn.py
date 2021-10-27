@@ -573,7 +573,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         except SystemExit:
             logger.info("Shutting down safely, please wait until process exits")
         finally:
-            if skip_dns_patch is False and test is False:
+            # Run revert-manual-dns-patch.sh, if this is not Debian Based OS and manual-dns-patch was applied
+            if (use_systemd_resolved or use_resolvconf) is False and skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
                 subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
@@ -644,7 +645,8 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
         except SystemExit:
             logger.info("Shutting down safely, please wait until process exits")
         finally:
-            if skip_dns_patch is False and test is False:
+            # Run revert-manual-dns-patch.sh, if this is not Debian Based OS and manual-dns-patch was applied
+            if (use_systemd_resolved or use_resolvconf) is False and skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
                 subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
