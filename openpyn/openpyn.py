@@ -1313,7 +1313,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
                     "--down", up_down_script,
                     # "--down-pre",
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "killall openvpn" - the default signal sent is SIGTERM
@@ -1356,7 +1356,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "killall openvpn" - the default signal sent is SIGTERM
