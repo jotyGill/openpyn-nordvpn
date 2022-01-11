@@ -31,8 +31,12 @@ def update_service(openpyn_options: str, run=False) -> None:
     kill_option = " --kill"
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
-    openpyn_location = shutil.which("openpyn")
     sleep_location = shutil.which("sleep")
+    openpyn_location = shutil.which("openpyn")
+    if openpyn_location is None:
+        # Handle case when openpyn is not in the PATH - we assume it was run with abspath
+        logger.notice('Unable to find openpyn in the PATH. Using: {}'.format(sys.argv[0]))
+        openpyn_location = sys.argv[0]
 
     service_text = (
         "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\n"
