@@ -318,9 +318,14 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             logger.addHandler(file_handler)
         except PermissionError:
             root.verify_root_access("Root access needed to set permissions of {}/openpyn.log".format(log_folder))
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder], check=False)
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"], check=False)
-            subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"], check=False)
+            try:
+                subprocess.run(["sudo", "-u", sudo_user, "chmod", "777", log_folder], check=False)
+                subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"], check=False)
+                subprocess.run(["sudo", "-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"], check=False)
+            except FileNotFoundError:
+                subprocess.run(["-u", sudo_user, "chmod", "777", log_folder], check=False)
+                subprocess.run(["-u", sudo_user, "chmod", "666", log_folder + "/openpyn.log"], check=False)
+                subprocess.run(["-u", sudo_user, "chmod", "666", log_folder + "/openpyn-notifications.log"], check=False)
         else:
             break
 
@@ -576,7 +581,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             # Run revert-manual-dns-patch.sh, if this is not Debian Based OS and manual-dns-patch was applied
             if (use_systemd_resolved or use_resolvconf) is False and skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
-                subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+                try:
+                    subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+                except FileNotFoundError:
+                    subprocess.call(["-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
     elif server:
         try:
@@ -648,7 +656,10 @@ def run(init: bool, server: str, country_code: str, country: str, area: str, tcp
             # Run revert-manual-dns-patch.sh, if this is not Debian Based OS and manual-dns-patch was applied
             if (use_systemd_resolved or use_resolvconf) is False and skip_dns_patch is False and test is False:
                 # Darwin: Revert /etc/resolv.conf back to the original if it was modified
-                subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+                try:
+                    subprocess.call(["sudo", "-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
+                except FileNotFoundError:
+                    subprocess.call(["-u", sudo_user, __basefilepath__ + "scripts/revert-manual-dns-patch.sh"])
 
     else:
         logger.info("To see usage options type: 'openpyn -h' or 'openpyn --help'")
@@ -927,7 +938,10 @@ def kill_vpn_processes() -> None:
         subprocess.check_output(["pgrep", "openvpn"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openvpn process")
-        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openvpn"], stderr=subprocess.DEVNULL)
+        try:
+            subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openvpn"], stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            subprocess.check_output(["-u", sudo_user, "killall", "openvpn"], stderr=subprocess.DEVNULL)
         time.sleep(1)
     except subprocess.CalledProcessError:
         # when Exception, the openvpn_processes issued non 0 result, "not found"
@@ -939,7 +953,10 @@ def kill_openpyn_process() -> None:
         subprocess.check_output(["pgrep", "openpyn"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openpyn process")
-        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn"], stderr=subprocess.DEVNULL)
+        try:
+            subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn"], stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            subprocess.check_output(["-u", sudo_user, "killall", "openpyn"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the openpyn_processes issued non 0 result, "not found"
         pass
@@ -951,7 +968,10 @@ def kill_management_client() -> None:
         subprocess.check_output(["pgrep", "openpyn-management"], stderr=subprocess.DEVNULL)
         # when it returns "0", proceed
         logger.notice("Killing the running openvpn-management process")
-        subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
+        try:
+            subprocess.check_output(["sudo", "-u", sudo_user, "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            subprocess.check_output(["-u", sudo_user, "killall", "openpyn-management"], stderr=subprocess.DEVNULL)
         time.sleep(3)
     except subprocess.CalledProcessError:
         # when Exception, the openpyn-management_processes issued non 0 result, "not found"
