@@ -813,7 +813,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
     ping_supports_option_i = True  # older ping command doesn't support "-i"
 
     try:
-        subprocess.check_output(["ping", "-n", "-i", locale.str(0.2), "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["ping", "-n", "-i", "0.2", "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
