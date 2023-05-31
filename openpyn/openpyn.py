@@ -100,7 +100,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '--no-redirect-gateway', dest='no_redirect', help='Don\'t set --redirect-gateway', action='store_true')
     openvpn_internal_options.add_argument(
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
-        options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
+        options, e.g. openpyn uk -o \'--redirect-gateway --pull-filter ignore "redirect-gateway def1"\'')
 
     connect_options = parser.add_argument_group("Connect Options",
                                                 "Connect To A Specific Server Or Any In A Country; TCP or UDP")
@@ -1356,7 +1356,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "killall openvpn" - the default signal sent is SIGTERM
