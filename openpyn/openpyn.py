@@ -822,7 +822,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
             " slow"
         )
     if ping_supports_option_i is True:
-        ping_subprocess_command = ["ping", "-n", "-i", locale.str(0.2), "-c", "5", "dns_placeholder"]
+        ping_subprocess_command = ["ping", "-n", "-i", "0.2", "-c", "5", "dns_placeholder"]
     else:
         ping_subprocess_command = ["ping", "-c", "5", "dns_placeholder"]
 
