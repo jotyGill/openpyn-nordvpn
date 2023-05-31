@@ -32,16 +32,14 @@ def update_service(openpyn_options: str, run=False) -> None:
     openpyn_options = openpyn_options.replace("-d ", "")
     openpyn_options = openpyn_options.replace("--daemon", "")
     openpyn_location = shutil.which("openpyn")
-    sleep_location = shutil.which("sleep")
 
     service_text = (
         "[Unit]\nDescription=NordVPN connection manager\nWants=network-online.target\n"
         + "After=network-online.target\nAfter=multi-user.target\n[Service]\nType=simple\nUser=root\n"
         + "WorkingDirectory="
         + __basefilepath__
-        + "\nExecStartPre="
-        + sleep_location
-        + " 5\nExecStart="
+        + "\nExecStartPre=/bin/sh -c 'until host google.com; do sleep 1; done'"
+        + "\nExecStart="
         + openpyn_location
         + " "
         + openpyn_options
