@@ -100,7 +100,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         '--no-redirect-gateway', dest='no_redirect', help='Don\'t set --redirect-gateway', action='store_true')
     openvpn_internal_options.add_argument(
         '-o', '--openvpn-options', dest='openvpn_options', type=str, help='Pass through OpenVPN \
-        options, e.g. openpyn uk -o \'--status /var/log/status.log --log /var/log/log.log\'')
+        options, e.g. openpyn uk -o \'--redirect-gateway --pull-filter ignore "redirect-gateway def1"\'')
 
     connect_options = parser.add_argument_group("Connect Options",
                                                 "Connect To A Specific Server Or Any In A Country; TCP or UDP")
@@ -813,7 +813,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
     ping_supports_option_i = True  # older ping command doesn't support "-i"
 
     try:
-        subprocess.check_output(["ping", "-n", "-i", locale.str(0.2), "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
+        subprocess.check_output(["ping", "-n", "-i", "0.2", "-c", "2", "8.8.8.8"], stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         # when Exception, the processes issued error, "option is not supported"
         ping_supports_option_i = False
@@ -822,7 +822,7 @@ def ping_servers(better_servers_list: List, stats: bool) -> List:
             " slow"
         )
     if ping_supports_option_i is True:
-        ping_subprocess_command = ["ping", "-n", "-i", locale.str(0.2), "-c", "5", "dns_placeholder"]
+        ping_subprocess_command = ["ping", "-n", "-i", "0.2", "-c", "5", "dns_placeholder"]
     else:
         ping_subprocess_command = ["ping", "-c", "5", "dns_placeholder"]
 
@@ -1356,7 +1356,7 @@ def connect(server: str, port: str, silent: bool, skip_dns_patch: bool, app: boo
                     "--status", "{}/openvpn-status".format(log_folder), "30",
                     "--config", vpn_config_file,
                     *args,
-                ] + openvpn_options.split()
+                ] + shlex.split(openvpn_options)
                 completed = subprocess.run(cmdline, check=True)
 
                 # "killall openvpn" - the default signal sent is SIGTERM
